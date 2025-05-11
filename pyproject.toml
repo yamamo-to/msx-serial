@@ -4,14 +4,24 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "msx-serial"
-version = "0.1.0"
+dynamic = ["version"]
+authors = [
+    {name = "yamamo-to", email = "humorum@gmail.com"}
+]
 description = "MSXシリアルターミナル"
 readme = "README.md"
 requires-python = ">=3.9"
-license = {text = "MIT"}
-authors = [
-    {name = "yamamo-to"}
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
 ]
+license-files = ["LICEN[CS]E*"]
 dependencies = [
     "colorama",
     "prompt-toolkit",
@@ -27,3 +37,11 @@ msx-serial = "msx_serial:main"
 [tool.setuptools]
 packages = ["msx_serial"]
 package-data = {msx_serial = ["commands.yml"]} 
+
+[tool.setuptools_scm]
+write_to = "msx_charset/_version.py"
+local_scheme = "no-local-version"
+
+[project.urls]
+Repository = "https://github.com/yamamo-to/msx-serial"
+Issue = "https://github.com/yamamo-to/msx-serial/issues"
