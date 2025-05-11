@@ -73,6 +73,7 @@ class TerminalConfig:
 
     port: str = "/dev/tty.usbserial"
     baudrate: int = 115200
+    encoding: str = "msx-jp"
     prompt_style: str = "#00ff00 bold"
 
 
@@ -120,7 +121,7 @@ class MSXSerialTerminal:
             try:
                 if self.ser.in_waiting > 0:
                     data = self.ser.read(self.ser.in_waiting)
-                    decoded_code = bytes(data).decode("msx-jp")
+                    decoded_code = bytes(data).decode(self.config.encoding)
                     print(f"{Fore.GREEN}{decoded_code}{ColorStyle.RESET_ALL}", end="")
             except Exception as e:
                 if self.running:
@@ -152,7 +153,7 @@ class MSXSerialTerminal:
                 with open(file_path, "r", encoding=encoding) as f:
                     for line in f:
                         msx_codes = line.rstrip() + "\r\n"
-                        self.ser.write(msx_codes.encode("msx-jp"))
+                        self.ser.write(msx_codes.encode(self.config.encoding))
                         self.ser.flush()
 
     def _send_binary_file(self, file_path: Union[str, Path]) -> None:
@@ -285,7 +286,7 @@ class MSXSerialTerminal:
                 self.ser.write(b"\x1b")  # ESC
             else:
                 msx_code = line + "\r\n"
-                self.ser.write(msx_code.encode("msx-jp"))
+                self.ser.write(msx_code.encode(self.config.encoding))
         self.ser.flush()
 
     def run(self) -> None:
@@ -325,9 +326,10 @@ def main() -> None:
         "--port", type=str, default="/dev/tty.usbserial", help="シリアルポート"
     )
     parser.add_argument("--baudrate", type=int, default=115200, help="ボーレート")
+    parser.add_argument("--encoding", type=str, default='msx-jp', help="エンコーディング")
     args = parser.parse_args()
 
-    config = TerminalConfig(port=args.port, baudrate=args.baudrate)
+    config = TerminalConfig(port=args.port, baudrate=args.baudrate, encoding=args.encoding)
     terminal = MSXSerialTerminal(config)
     terminal.run()
 
