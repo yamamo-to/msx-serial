@@ -1,0 +1,378 @@
+nodes:
+  - name: host/battery/current
+    type: integer
+    description: バッテリー電流
+    unit: mA
+    note: ボトムベース装着時は測定不可
+
+  - name: host/battery/level
+    type: integer
+    description: バッテリー残量レベル
+    unit: "%"
+
+  - name: host/heap
+    type: integer
+    description: ヒープメモリ残量
+
+  - name: host/ip
+    type: string
+    description: IPアドレス
+
+  - name: host/media/dsk/*
+    type: string
+    description: ファイル名
+
+  - name: host/name
+    type: string
+    description: ホスト名
+
+  - name: host/power/off
+    type: integer
+    description: システムシャットダウン
+    note: 1を書き込むとシャットダウン
+
+  - name: host/power/reboot
+    type: integer
+    description: システム再起動
+    note: 1を書き込むとシステム再起動
+
+  - name: host/power/wait
+    type: integer
+    description: シャットダウンから起動するまでの待ち時間
+    unit: sec
+
+  - name: host/sw_version
+    type: string
+    description: システムソフトウエアバージョン
+
+  - name: host/wifi/aplist/*
+    type: string
+    description: Wi-Fi アクセスポイントSSID
+
+  - name: host/wifi/level
+    type: integer
+    description: Wi-Fi RSSI
+
+  - name: host/wifi/restart
+    type: integer
+    description: Wi-Fi 設定値反映
+    note: 1を書き込むと設定値を反映し、必要に応じて再接続
+
+  - name: device/accel/x
+    type: integer
+    description: 加速度センサX
+    note: バッテリーボトムなどIMUデバイス接続
+
+  - name: device/accel/y
+    type: integer
+    description: 加速度センサY
+
+  - name: device/accel/z
+    type: integer
+    description: 加速度センサZ
+
+  - name: device/analog/in
+    type: integer
+    description: アナログ入力
+    note: 12bit
+
+  - name: device/analog/out
+    type: integer
+    description: アナログ出力
+    note: 12bit
+
+  - name: device/dht/humidity
+    type: integer
+    description: 湿度
+    unit: "%"
+    note: DHT20を利用する場合は起動時からPortAに接続しておいて下さい
+
+  - name: device/dht/temperature
+    type: integer
+    description: 温度
+    unit: "℃"
+
+  - name: device/i2c_i/*
+    type: bytes
+    description: i2c通信バッファ
+    note: メッセージボックス
+
+  - name: msx/me/drive/a
+    type: string
+    description: ファイル名
+    note: msx/meは動作しているUnit自身
+
+  - name: msx/me/id
+    type: integer
+    description: ユニット番号
+
+  - name: msx/me/if/NET0/conf/addr
+    type: string
+    description: IPアドレス
+
+  - name: msx/me/if/NET0/conf/port
+    type: integer
+    description: ポート番号
+
+  - name: msx/me/if/NET0/connect
+    type: integer
+    description: 接続状態, 制御
+
+  - name: msx/me/if/NET0/msg
+    type: bytes
+    description: メッセージボックス
+
+  - name: msx/me/kb
+    type: string
+    description: コンソール入力
+
+  - name: msx/me/pm/cpu/load
+    type: integer
+    description: Z80 CPUエミュレーション処理負荷
+    unit: "%"
+
+  - name: msx/me/pm/cpu/percent
+    type: integer
+    description: Z80 CPUレート
+    unit: "%"
+
+  - name: msx/me/pm/fps
+    type: integer
+    description: 画面更新フレームレート
+    unit: fps
+
+  - name: msx/me/pm/reboot
+    type: integer
+    description: エミュレータの再起動
+    note: 1を書き込むとエミュレータの再起動
+
+  - name: msx/u0/drive/a
+    type: string
+    description: ディスクイメージファイル名
+
+  - name: msx/u0/id
+    type: integer
+    description: ユニット番号
+
+  - name: msx/u0/if/NET0/conf/addr
+    type: string
+    description: IPアドレス
+
+  - name: msx/u0/if/NET0/conf/port
+    type: integer
+    description: ポート番号
+
+  - name: msx/u0/if/NET0/connect
+    type: integer
+    description: 接続状態, 制御
+
+  - name: msx/u0/if/NET0/msg
+    type: bytes
+    description: メッセージボックス
+
+  - name: msx/u0/kb
+    type: string
+    description: コンソール入力
+
+  - name: msx/u0/pm/cpu/load
+    type: integer
+    description: Z80 CPUエミュレーション処理負荷
+
+  - name: msx/u0/pm/cpu/percent
+    type: integer
+    description: Z80 CPUレート
+    unit: "%"
+
+  - name: msx/u0/pm/fps
+    type: integer
+    description: 画面更新フレームレート
+    unit: fps
+
+  - name: msx/u0/pm/reboot
+    type: integer
+    description: エミュレータの再起動
+    note: 1を書き込むとエミュレータの再起動
+
+  - name: msx/u1/drive/a
+    type: string
+    description: ディスクイメージファイル名
+
+  - name: msx/u1/id
+    type: integer
+    description: ユニット番号
+
+  - name: msx/u1/if/NET0/conf/addr
+    type: string
+    description: IPアドレス
+
+  - name: msx/u1/if/NET0/conf/port
+    type: integer
+    description: ポート番号
+
+  - name: msx/u1/if/NET0/connect
+    type: integer
+    description: 接続状態, 制御
+
+  - name: msx/u1/if/NET0/msg
+    type: bytes
+    description: メッセージボックス
+
+  - name: msx/u1/kb
+    type: string
+    description: コンソール入力
+
+  - name: msx/u1/pm/cpu/load
+    type: integer
+    description: Z80 CPUエミュレーション処理負荷
+
+  - name: msx/u1/pm/cpu/percent
+    type: integer
+    description: Z80 CPUレート
+    unit: "%"
+
+  - name: msx/u1/pm/fps
+    type: integer
+    description: 画面更新フレームレート
+    unit: fps
+
+  - name: msx/u1/pm/reboot
+    type: integer
+    description: エミュレータの再起動
+    note: 1を書き込むとエミュレータの再起動
+
+  - name: conf/bg_cpu_perf
+    type: integer
+    description: バックグラウンドUnitのZ80実行速度の割合
+    note: 0:0%, 1:1%, 2:2%, 3:5%, 4:10%, 5:25%, 6:50%, 7:100%
+
+  - name: conf/bg_snd_mix
+    type: integer
+    description: バックグラウンドUnitの音声出力のON/OFF
+
+  - name: conf/bk_color
+    type: integer
+    description: 画面の周辺の色を強制的に黒
+
+  - name: conf/brightness
+    type: integer
+    description: LCDバックライトの明るさ
+    note: 0～10
+
+  - name: conf/cartridge_id
+    type: integer
+    description: Unit0のカートリッジ番号
+    note: 0:Zanac, 1:Paipanic
+
+  - name: conf/disp_id
+    type: integer
+    description: メイン画面の出力先
+    note: 0:OFF, 1:M5LCD
+
+  - name: conf/dsk0
+    type: string
+    description: Unit0のDiskイメージ
+
+  - name: conf/dsk1
+    type: string
+    description: Unit1のDiskイメージ
+
+  - name: conf/lcd_mode
+    type: integer
+    description: 液晶モード
+    note: 0:ノーマル, 1:左右反転
+
+  - name: conf/ram_size_id
+    type: integer
+    description: RAMのサイズ
+    note: 0:64K, 1:128K, 2:256K, 3:512K, 4:1M
+
+  - name: conf/remote/enable
+    type: integer
+    description: リモート機能のON/OFF
+
+  - name: conf/save
+    type: integer
+    description: 設定値保存
+    note: 1を書き込むと設定値を保存
+
+  - name: conf/setup
+    type: integer
+    description: SetupUtility起動
+    note: 1を書き込むとSetupUtility起動
+
+  - name: conf/sound/filter
+    type: integer
+    description: 音声出力フィルタのON/OFF
+
+  - name: conf/sound/volume
+    type: integer
+    description: 音量
+    note: 0～10
+
+  - name: conf/status_monitor
+    type: integer
+    description: ステータスモニタの表示モード
+    note: 0:OFF, 1:SIMPLE, 2:SIMPLE(S)
+
+  - name: conf/system_type
+    type: integer
+    description: MSXシステムタイプ
+    note: 0:MSX, 1:MSX2, 2:MSX2+
+
+  - name: conf/ui/m5faces_game
+    type: integer
+    description: M5ゲームパッド接続設定
+    note: 0:OFF, 1:KEYBOARD, 2:JOY1, 3:JOY2
+
+  - name: conf/ui/rensha_a
+    type: integer
+    description: 汎用ポートAの連射の速さ
+    note: 0:OFF, 1～3
+
+  - name: conf/ui/rensha_b
+    type: integer
+    description: 汎用ポートBの連射の速さ
+    note: 0:OFF, 1～3
+
+  - name: conf/ui/touch_joypad
+    type: integer
+    description: タッチJoyパッド接続設定
+    note: 0:OFF, 1:KEYBOARD, 2:JOY1, 3:JOY2
+
+  - name: conf/ui/touch_pad
+    type: integer
+    description: タッチパッド接続設定
+    note: 0:OFF, 1:KEYBOARD, 2:JOY1, 3:JOY2
+
+  - name: conf/version
+    type: integer
+    description: configurationバージョン
+
+  - name: conf/wifi/id
+    type: integer
+    description: Wi-Fiの接続先
+    note: 0:OFF, 1～3
+
+  - name: conf/wifi/list/1/pass
+    type: string
+    description: パスワード
+
+  - name: conf/wifi/list/1/ssid
+    type: string
+    description: SSID
+
+  - name: conf/wifi/list/2/pass
+    type: string
+    description: パスワード
+
+  - name: conf/wifi/list/2/ssid
+    type: string
+    description: SSID
+
+  - name: conf/wifi/list/3/pass
+    type: string
+    description: パスワード
+
+  - name: conf/wifi/list/3/ssid
+    type: string
+    description: SSID
