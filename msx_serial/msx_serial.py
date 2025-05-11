@@ -323,7 +323,7 @@ def main() -> None:
     """メイン関数"""
     parser = argparse.ArgumentParser(description="MSXシリアルターミナル")
     parser.add_argument(
-        "--port", type=str, default="/dev/tty.usbserial", help="シリアルポート"
+        "--port", type=str, required=True, help="シリアルポート"
     )
     parser.add_argument("--baudrate", type=int, default=115200, help="ボーレート")
     parser.add_argument("--encoding", type=str, default='msx-jp', help="エンコーディング")

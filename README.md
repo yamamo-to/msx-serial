@@ -41,13 +41,7 @@ pip install -e . --use-pep517
 ## 使用方法
 
 ```bash
-# 基本的な使用方法
-msx-serial
-
-# 開発モードで実行する場合（リポジトリのルートディレクトリで実行）
-python -m msx_serial
-
-# シリアルポートを指定
+# 基本的な使用方法（--portは必須）
 msx-serial --port COM3  # Windowsの場合
 python -m msx_serial --port COM3  # 開発モードの場合
 
@@ -61,6 +55,14 @@ python -m msx_serial --port COM3 --baudrate 115200  # 開発モードの場合
 msx-serial --port /dev/tty.usbserial --baudrate 115200  # Linuxの場合
 python -m msx_serial --port /dev/tty.usbserial --baudrate 115200  # 開発モードの場合
 ```
+
+### コマンドラインオプション
+
+- `--port`: シリアルポート（必須）
+  - Windowsの場合: `COM3`など
+  - Linuxの場合: `/dev/tty.usbserial`など
+- `--baudrate`: ボーレート（デフォルト: 115200）
+- `--encoding`: エンコーディング（デフォルト: msx-jp）
 
 ### 開発モードでの実行
 
