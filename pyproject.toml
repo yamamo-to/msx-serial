@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "msx-serial"
+version = "0.1.0"
+description = "MSXシリアルターミナル"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    {name = "yamamo-to"}
+]
+dependencies = [
+    "colorama",
+    "prompt-toolkit",
+    "pyserial",
+    "PyYAML",
+    "chardet",
+    "msx-charset"
+]
+
+[project.scripts]
+msx-serial = "msx_serial:main"
+
+[tool.setuptools]
+packages = ["msx_serial"]
+package-data = {msx_serial = ["commands.yml"]} 
