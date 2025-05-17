@@ -62,7 +62,7 @@ def basic_program(pathname: str):
 class CommandType(Enum):
     """コマンドタイプの列挙型"""
 
-    FILE = "@file"
+    PASTE = "@paste"
     BYTES = "@bytes"
     EXIT = "@exit"
     UPLOAD = "@upload"
@@ -129,17 +129,7 @@ class MSXSerialTerminal:
                     print(f"{Fore.RED}[シリアルエラー] {e}{ColorStyle.RESET_ALL}")
                 break
 
-    def _send_file(self, file_path: Union[str, Path], encode: bool = False) -> None:
-        """ファイルをシリアルポートに送信"""
-        try:
-            if encode:
-                self._send_text_file(file_path)
-            else:
-                self._send_binary_file(file_path)
-        except Exception as e:
-            print(f"{Fore.RED}[ファイル送信エラー] {e}{ColorStyle.RESET_ALL}")
-
-    def _send_text_file(self, file_path: Union[str, Path]) -> None:
+    def _paste_file(self, file_path: Union[str, Path]) -> None:
         """テキストファイルを送信"""
         with open(file_path, "rb") as f:
             raw_data = f.read()
@@ -156,13 +146,6 @@ class MSXSerialTerminal:
                         msx_codes = line.rstrip() + "\r\n"
                         self.ser.write(msx_codes.encode(self.config.encoding))
                         self.ser.flush()
-
-    def _send_binary_file(self, file_path: Union[str, Path]) -> None:
-        """バイナリファイルを送信"""
-        with open(file_path, "rb") as f:
-            data = f.read()
-            self.ser.write(data)
-            self.ser.flush()
 
     def _upload_file(self, file_path: Union[str, Path]) -> None:
         """ファイルをアップロード"""
@@ -214,11 +197,11 @@ class MSXSerialTerminal:
             self.running = False
             return True
 
-        if user_input.strip() == CommandType.FILE.value:
+        if user_input.strip() == CommandType.PASTE.value:
             file_path = self._select_file()
             if file_path:
                 print(f"{Fore.BLUE}[選択] {file_path}{ColorStyle.RESET_ALL}")
-                self._send_file(file_path)
+                self._paste_file(file_path)
             return True
 
         if user_input.strip() == CommandType.BYTES.value:
