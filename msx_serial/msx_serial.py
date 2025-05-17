@@ -12,6 +12,7 @@ import threading
 import serial
 import yaml
 import msx_charset
+import time
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -173,14 +174,17 @@ class MSXSerialTerminal:
         # RUNコマンドを送信
         self.ser.write("RUN\r\n".encode("ascii"))
         self.ser.flush()
+        time.sleep(1)
 
         # ファイルを送信
         with open(file_path, "rb") as f:
             data = f.read()
             encoded_data = base64.b64encode(data).decode("ascii")
             for i in range(0, len(encoded_data), 76):
-                self.ser.write(encoded_data[i : i + 76].encode("ascii") + b"\r\n")
+                chunk = encoded_data[i : i + 76]
+                self.ser.write(chunk.encode("ascii") + b"\r\n")
                 self.ser.flush()
+                time.sleep(0.5)
 
         self.ser.write(b"`\r\n")
         self.ser.flush()
