@@ -58,9 +58,7 @@ class MSXSerialTerminal:
         self.running: bool = True
         self.suppress_echo: bool = False  # エコー抑制フラグ
         iot_nodes = IotNodes()
-        self.commands: List[str] = (
-            iot_nodes.get_node_names() + self._load_commands()
-        )
+        self.commands: List[str] = iot_nodes.get_node_names() + self._load_commands()
         self._setup_ui()
         colorama.init()
 
@@ -102,7 +100,9 @@ class MSXSerialTerminal:
                     data = self.ser.read(self.ser.in_waiting)
                     if not self.suppress_echo:  # エコー抑制フラグをチェック
                         decoded_code = bytes(data).decode(self.config.encoding)
-                        print(f"{Fore.GREEN}{decoded_code}{ColorStyle.RESET_ALL}", end="")
+                        print(
+                            f"{Fore.GREEN}{decoded_code}{ColorStyle.RESET_ALL}", end=""
+                        )
             except Exception as e:
                 if self.running:
                     print(f"{Fore.RED}[シリアルエラー] {e}{ColorStyle.RESET_ALL}")
@@ -131,10 +131,10 @@ class MSXSerialTerminal:
         try:
             # エコー抑制を開始
             self.suppress_echo = True
-            
+
             # ファイルサイズを取得
             file_size = Path(file_path).stat().st_size
-            
+
             # BASICプログラムを送信
             self.ser.write(upload_program(file_path).encode("ascii"))
             self.ser.flush()
@@ -148,14 +148,14 @@ class MSXSerialTerminal:
             with open(file_path, "rb") as f:
                 data = f.read()
                 encoded_data = base64.b64encode(data).decode("ascii")
-                
+
                 # プログレスバーの設定
                 with tqdm(
                     total=len(encoded_data),
-                    unit='B',
+                    unit="B",
                     unit_scale=True,
                     desc=f"{Fore.CYAN}アップロード中{ColorStyle.RESET_ALL}",
-                    bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}]"
+                    bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}]",
                 ) as pbar:
                     for i in range(0, len(encoded_data), 76):
                         chunk = encoded_data[i : i + 76]
@@ -167,7 +167,7 @@ class MSXSerialTerminal:
             self.ser.write(b"`\r\n")
             self.ser.flush()
             print(f"{Fore.GREEN}アップロード完了{ColorStyle.RESET_ALL}")
-            
+
         except Exception as e:
             print(f"{Fore.RED}アップロードエラー: {e}{ColorStyle.RESET_ALL}")
         finally:
@@ -245,10 +245,12 @@ class MSXSerialTerminal:
         """ディレクトリ移動コマンドの処理"""
         try:
             # @cd の後のパスを取得
-            path = user_input[len(CommandType.CD.value):].strip()
+            path = user_input[len(CommandType.CD.value) :].strip()
             if not path:
                 # パスが指定されていない場合は現在のディレクトリを表示
-                print(f"{Fore.CYAN}現在のディレクトリ: {Path.cwd()}{ColorStyle.RESET_ALL}")
+                print(
+                    f"{Fore.CYAN}現在のディレクトリ: {Path.cwd()}{ColorStyle.RESET_ALL}"
+                )
                 return
 
             # 新しいパスに移動
@@ -256,11 +258,17 @@ class MSXSerialTerminal:
             if new_path.exists() and new_path.is_dir():
                 # 現在のディレクトリを新しいパスに変更
                 os.chdir(str(new_path))
-                print(f"{Fore.GREEN}ディレクトリを変更しました: {new_path}{ColorStyle.RESET_ALL}")
+                print(
+                    f"{Fore.GREEN}ディレクトリを変更しました: {new_path}{ColorStyle.RESET_ALL}"
+                )
             else:
-                print(f"{Fore.RED}エラー: 指定されたディレクトリが存在しません: {path}{ColorStyle.RESET_ALL}")
+                print(
+                    f"{Fore.RED}エラー: 指定されたディレクトリが存在しません: {path}{ColorStyle.RESET_ALL}"
+                )
         except Exception as e:
-            print(f"{Fore.RED}エラー: ディレクトリの変更に失敗しました - {e}{ColorStyle.RESET_ALL}")
+            print(
+                f"{Fore.RED}エラー: ディレクトリの変更に失敗しました - {e}{ColorStyle.RESET_ALL}"
+            )
 
     def _read_keyboard(self) -> None:
         """キーボード入力監視"""
@@ -336,14 +344,16 @@ class MSXSerialTerminal:
 def main() -> None:
     """メイン関数"""
     parser = argparse.ArgumentParser(description="MSXシリアルターミナル")
-    parser.add_argument(
-        "--port", type=str, required=True, help="シリアルポート"
-    )
+    parser.add_argument("--port", type=str, required=True, help="シリアルポート")
     parser.add_argument("--baudrate", type=int, default=115200, help="ボーレート")
-    parser.add_argument("--encoding", type=str, default='msx-jp', help="エンコーディング")
+    parser.add_argument(
+        "--encoding", type=str, default="msx-jp", help="エンコーディング"
+    )
     args = parser.parse_args()
 
-    config = TerminalConfig(port=args.port, baudrate=args.baudrate, encoding=args.encoding)
+    config = TerminalConfig(
+        port=args.port, baudrate=args.baudrate, encoding=args.encoding
+    )
     terminal = MSXSerialTerminal(config)
     terminal.run()
 
