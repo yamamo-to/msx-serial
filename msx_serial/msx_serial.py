@@ -28,6 +28,7 @@ from tqdm import tqdm
 from .iot_nodes import IotNodes
 from .upload import upload_program
 import os
+from urllib.parse import urlparse, parse_qs
 
 
 class ConnectionType(Enum):
@@ -437,48 +438,73 @@ class MSXSerialTerminal:
             self.connection.close()
 
 
-def _detect_connection_type(port: str) -> tuple[ConnectionType, str, str, int]:
-    """接続先の文字列から接続タイプを判定する"""
-    # IPアドレス:ポート番号の形式をチェック
-    if ":" in port:
-        host, port_str = port.split(":")
-        try:
-            port_num = int(port_str)
-            return ConnectionType.TELNET, host, port_str, 0
-        except ValueError:
-            pass
+def _detect_connection_type(uri: str) -> tuple[ConnectionType, str, str, int]:
+    """URI形式の接続先から接続タイプを判定する"""
+    # URI形式でない場合は従来の形式として処理
+    if "://" not in uri:
+        # IPアドレス:ポート番号の形式をチェック
+        if ":" in uri:
+            host, port_str = uri.split(":")
+            try:
+                port_num = int(port_str)
+                return ConnectionType.TELNET, host, port_str, 0
+            except ValueError:
+                pass
 
-    # COMポートまたは/dev/ttyの形式をチェック
-    if port.startswith(("COM", "/dev/tty")):
-        return ConnectionType.SERIAL, "", port, 115200
+        # COMポートまたは/dev/ttyの形式をチェック
+        if uri.startswith(("COM", "/dev/tty")):
+            return ConnectionType.SERIAL, "", uri, 115200
 
-    # デフォルトはシリアル接続
-    return ConnectionType.SERIAL, "", port, 115200
+        # デフォルトはシリアル接続
+        return ConnectionType.SERIAL, "", uri, 115200
+
+    # URI形式の解析
+    try:
+        parsed = urlparse(uri)
+        scheme = parsed.scheme.lower()
+        query = parse_qs(parsed.query)
+
+        if scheme == "telnet":
+            host = parsed.hostname or "localhost"
+            port = str(parsed.port or 23)
+            return ConnectionType.TELNET, host, port, 0
+        elif scheme == "serial":
+            port = parsed.path.lstrip("/")
+            baudrate = int(query.get("baud", ["115200"])[0])
+            return ConnectionType.SERIAL, "", port, baudrate
+        else:
+            raise ValueError(f"未対応のスキーム: {scheme}")
+    except Exception as e:
+        raise ValueError(f"無効なURI形式: {uri} ({str(e)})")
 
 
 def main() -> None:
     """メイン関数"""
     parser = argparse.ArgumentParser(description="MSXシリアルターミナル")
     parser.add_argument("connection", type=str,
-                      help="接続先 (例: COM4, /dev/ttyUSB0, 192.168.1.100:23)")
+                      help="接続先 (例: COM4, /dev/ttyUSB0, 192.168.1.100:23, telnet://192.168.1.100:23, serial://COM1?baud=9600)")
     parser.add_argument("--baudrate", type=int, default=115200,
-                      help="シリアル接続時のボーレート")
+                      help="シリアル接続時のボーレート (URI形式で指定する場合は不要)")
     parser.add_argument("--encoding", type=str, default="msx-jp",
                       help="エンコーディング")
     args = parser.parse_args()
 
-    # 接続タイプを自動判定
-    conn_type, host, port, default_baudrate = _detect_connection_type(args.connection)
-    
-    config = ConnectionConfig(
-        type=conn_type,
-        port=port,
-        host=host,
-        baudrate=args.baudrate if conn_type == ConnectionType.SERIAL else default_baudrate,
-        encoding=args.encoding
-    )
-    terminal = MSXSerialTerminal(config)
-    terminal.run()
+    try:
+        # 接続タイプを自動判定
+        conn_type, host, port, default_baudrate = _detect_connection_type(args.connection)
+        
+        config = ConnectionConfig(
+            type=conn_type,
+            port=port,
+            host=host,
+            baudrate=args.baudrate if conn_type == ConnectionType.SERIAL else default_baudrate,
+            encoding=args.encoding
+        )
+        terminal = MSXSerialTerminal(config)
+        terminal.run()
+    except ValueError as e:
+        print(f"{Fore.RED}エラー: {e}{ColorStyle.RESET_ALL}")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

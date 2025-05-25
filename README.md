@@ -1,6 +1,6 @@
-# MSX Serial Terminal
+# MSXシリアルターミナル
 
-MSXとのシリアル通信を行うターミナルプログラムです。
+MSXとのシリアル通信またはtelnet接続を行うターミナルプログラム
 
 ## 機能
 
@@ -15,10 +15,9 @@ MSXとのシリアル通信を行うターミナルプログラムです。
 - Python 3.9以上
 - 必要なパッケージ（pyproject.tomlに記載）
 
-## インストール方法
+## インストール
 
 ```bash
-# パッケージのインストール
 pip install msx-serial
 ```
 
@@ -40,87 +39,53 @@ pip install -e . --use-pep517
 
 ## 使用方法
 
+### 基本的な使い方
+
 ```bash
-# 基本的な使用方法（--portは必須）
-msx-serial --port COM3  # Windowsの場合
-python -m msx_serial --port COM3  # 開発モードの場合
+# シリアル接続
+msx-serial serial:///COM1?baud=9600
+msx-serial serial:///dev/ttyUSB0?baud=115200
+msx-serial COM1 --baudrate 9600
+msx-serial /dev/ttyUSB0 --baudrate 115200
 
-msx-serial --port /dev/tty.usbserial  # Linuxの場合
-python -m msx_serial --port /dev/tty.usbserial  # 開発モードの場合
-
-# ボーレートを指定
-msx-serial --port COM3 --baudrate 115200  # Windowsの場合
-python -m msx_serial --port COM3 --baudrate 115200  # 開発モードの場合
-
-msx-serial --port /dev/tty.usbserial --baudrate 115200  # Linuxの場合
-python -m msx_serial --port /dev/tty.usbserial --baudrate 115200  # 開発モードの場合
+# Telnet接続（URI形式）
+msx-serial telnet://192.168.86.30:2223
+msx-serial 192.168.86.30:2223
 ```
 
 ### コマンドラインオプション
 
-- `--port`: シリアルポート（必須）
-  - Windowsの場合: `COM3`など
-  - Linuxの場合: `/dev/tty.usbserial`など
-- `--baudrate`: ボーレート（デフォルト: 115200）
-- `--encoding`: エンコーディング（デフォルト: msx-jp）
+```
+usage: msx-serial [-h] [--baudrate BAUDRATE] [--encoding ENCODING] connection
 
-### 開発モードでの実行
+MSXシリアルターミナル
 
-開発モードで実行する場合は、以下の手順に従ってください：
+positional arguments:
+  connection           接続先 (例: COM1, /dev/ttyUSB0, 192.168.1.100:2223, telnet://192.168.1.100:2223, serial:///COM1?baud=9600)
 
-1. リポジトリをクローン
-```bash
-git clone https://github.com/yamamo-to/msx-serial
-cd msx-serial
+options:
+  -h, --help           ヘルプメッセージを表示して終了
+  --baudrate BAUDRATE  シリアル接続時のボーレート (URI形式で指定する場合は不要)
+  --encoding ENCODING  エンコーディング (デフォルト: msx-jp)
 ```
 
-2. 仮想環境を作成して有効化
-```bash
-python -m venv venv
-.\venv\Scripts\activate  # Windowsの場合
-source venv/bin/activate  # Linuxの場合
-```
+### 接続先の指定方法
 
-3. 依存関係をインストール
-```bash
-pip install -r requirements.txt
-```
+1. URI形式
+   - シリアル接続: `serial:///COM1?baud=9600`
+   - Telnet接続: `telnet://192.168.1.100:2223`
 
-4. 開発モードでインストール
-```bash
-pip install -e . --use-pep517
-```
+2. 従来の形式
+   - シリアル接続: `COM1` または `/dev/ttyUSB0`
+   - Telnet接続: `192.168.1.100:2223`
 
-5. プログラムを実行
-```bash
-python -m msx_serial
-```
+### 特殊コマンド
 
-### シリアルポートの確認方法
-
-#### Windows
-1. デバイスマネージャーを開く
-2. 「ポート（COMとLPT）」を展開
-3. 「USB Serial Port (COM3)」などのポート名を確認
-
-#### Linux
-1. ターミナルで以下のコマンドを実行
-```bash
-ls /dev/tty.*
-```
-
-### コマンド一覧
-
-- `@cd`: ローカルディレクトリを移動
-- `@paste`: ファイルを選択して内容をテキストとして貼り付け
+- `@paste`: テキストファイルを送信
 - `@bytes`: 16進数のバイト列を送信
-- `@upload`: ファイルをBase64エンコードしてアップロード
-- `@exit`: プログラムを終了
-
-### 特殊キー
-
-- `^C`: Ctrl+Cを送信
-- `^[`: ESCキーを送信
+- `@exit`: 終了
+- `@upload`: ファイルをアップロード
+- `@cd`: ディレクトリを変更
 
 ## 文字コード対応
 
