@@ -29,7 +29,8 @@ dependencies = [
     "PyYAML",
     "chardet",
     "msx-charset",
-    "tqdm"
+    "tqdm",
+    "standard-telnetlib",
 ]
 
 [project.scripts]
