@@ -24,6 +24,7 @@ from prompt_toolkit.shortcuts import radiolist_dialog
 from prompt_toolkit.styles import Style
 from .iot_nodes import IotNodes
 from .upload import upload_program
+import os
 
 
 class CommandType(Enum):
@@ -33,6 +34,7 @@ class CommandType(Enum):
     BYTES = "@bytes"
     EXIT = "@exit"
     UPLOAD = "@upload"
+    CD = "@cd"
 
 
 @dataclass
@@ -179,6 +181,10 @@ class MSXSerialTerminal:
             self._handle_upload_command()
             return True
 
+        if user_input.startswith(CommandType.CD.value):
+            self._handle_cd_command(user_input)
+            return True
+
         return False
 
     def _handle_bytes_command(self) -> None:
@@ -201,6 +207,27 @@ class MSXSerialTerminal:
             print(f"{Fore.BLUE}[選択] {file_path}{ColorStyle.RESET_ALL}")
             self._upload_file(file_path)
         return True
+
+    def _handle_cd_command(self, user_input: str) -> None:
+        """ディレクトリ移動コマンドの処理"""
+        try:
+            # @cd の後のパスを取得
+            path = user_input[len(CommandType.CD.value):].strip()
+            if not path:
+                # パスが指定されていない場合は現在のディレクトリを表示
+                print(f"{Fore.CYAN}現在のディレクトリ: {Path.cwd()}{ColorStyle.RESET_ALL}")
+                return
+
+            # 新しいパスに移動
+            new_path = Path(path).resolve()
+            if new_path.exists() and new_path.is_dir():
+                # 現在のディレクトリを新しいパスに変更
+                os.chdir(str(new_path))
+                print(f"{Fore.GREEN}ディレクトリを変更しました: {new_path}{ColorStyle.RESET_ALL}")
+            else:
+                print(f"{Fore.RED}エラー: 指定されたディレクトリが存在しません: {path}{ColorStyle.RESET_ALL}")
+        except Exception as e:
+            print(f"{Fore.RED}エラー: ディレクトリの変更に失敗しました - {e}{ColorStyle.RESET_ALL}")
 
     def _read_keyboard(self) -> None:
         """キーボード入力監視"""
