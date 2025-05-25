@@ -65,13 +65,20 @@ class MSXSerialTerminal:
     def _setup_ui(self) -> None:
         """UIの初期設定"""
         self.style = Style.from_dict({"prompt": self.config.prompt_style})
+
+        # @で始まるコマンドを優先的に表示
+        special_commands = [cmd.value for cmd in CommandType]
+        normal_commands = [cmd for cmd in self.commands if not cmd.startswith("@")]
+
         self.session = PromptSession(
             completer=WordCompleter(
-                self.commands + [cmd.value for cmd in CommandType], ignore_case=True
+                special_commands + normal_commands,
+                ignore_case=True,
+                sentence=True,  # 文全体を補完対象とする
             ),
             style=self.style,
             complete_in_thread=True,
-            complete_while_typing=False,
+            complete_while_typing=True,  # タイピング中に補完を有効化
             refresh_interval=0.1,
             enable_history_search=True,
         )
