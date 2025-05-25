@@ -22,6 +22,7 @@ from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.shortcuts import radiolist_dialog
 from prompt_toolkit.styles import Style
+from tqdm import tqdm
 from .iot_nodes import IotNodes
 from .upload import upload_program
 import os
@@ -55,6 +56,7 @@ class MSXSerialTerminal:
         self.config = config
         self.ser: Optional[serial.Serial] = None
         self.running: bool = True
+        self.suppress_echo: bool = False  # エコー抑制フラグ
         iot_nodes = IotNodes()
         self.commands: List[str] = (
             iot_nodes.get_node_names() + self._load_commands()
@@ -98,8 +100,9 @@ class MSXSerialTerminal:
             try:
                 if self.ser.in_waiting > 0:
                     data = self.ser.read(self.ser.in_waiting)
-                    decoded_code = bytes(data).decode(self.config.encoding)
-                    print(f"{Fore.GREEN}{decoded_code}{ColorStyle.RESET_ALL}", end="")
+                    if not self.suppress_echo:  # エコー抑制フラグをチェック
+                        decoded_code = bytes(data).decode(self.config.encoding)
+                        print(f"{Fore.GREEN}{decoded_code}{ColorStyle.RESET_ALL}", end="")
             except Exception as e:
                 if self.running:
                     print(f"{Fore.RED}[シリアルエラー] {e}{ColorStyle.RESET_ALL}")
@@ -125,28 +128,51 @@ class MSXSerialTerminal:
 
     def _upload_file(self, file_path: Union[str, Path]) -> None:
         """ファイルをアップロード"""
+        try:
+            # エコー抑制を開始
+            self.suppress_echo = True
+            
+            # ファイルサイズを取得
+            file_size = Path(file_path).stat().st_size
+            
+            # BASICプログラムを送信
+            self.ser.write(upload_program(file_path).encode("ascii"))
+            self.ser.flush()
 
-        # BASICプログラムを送信
-        self.ser.write(upload_program(file_path).encode("ascii"))
-        self.ser.flush()
+            # RUNコマンドを送信
+            self.ser.write("RUN\r\n".encode("ascii"))
+            self.ser.flush()
+            time.sleep(1)
 
-        # RUNコマンドを送信
-        self.ser.write("RUN\r\n".encode("ascii"))
-        self.ser.flush()
-        time.sleep(1)
+            # ファイルを送信
+            with open(file_path, "rb") as f:
+                data = f.read()
+                encoded_data = base64.b64encode(data).decode("ascii")
+                
+                # プログレスバーの設定
+                with tqdm(
+                    total=len(encoded_data),
+                    unit='B',
+                    unit_scale=True,
+                    desc=f"{Fore.CYAN}アップロード中{ColorStyle.RESET_ALL}",
+                    bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}]"
+                ) as pbar:
+                    for i in range(0, len(encoded_data), 76):
+                        chunk = encoded_data[i : i + 76]
+                        self.ser.write(chunk.encode("ascii") + b"\r\n")
+                        self.ser.flush()
+                        pbar.update(len(chunk))
+                        time.sleep(0.5)
 
-        # ファイルを送信
-        with open(file_path, "rb") as f:
-            data = f.read()
-            encoded_data = base64.b64encode(data).decode("ascii")
-            for i in range(0, len(encoded_data), 76):
-                chunk = encoded_data[i : i + 76]
-                self.ser.write(chunk.encode("ascii") + b"\r\n")
-                self.ser.flush()
-                time.sleep(0.5)
-
-        self.ser.write(b"`\r\n")
-        self.ser.flush()
+            self.ser.write(b"`\r\n")
+            self.ser.flush()
+            print(f"{Fore.GREEN}アップロード完了{ColorStyle.RESET_ALL}")
+            
+        except Exception as e:
+            print(f"{Fore.RED}アップロードエラー: {e}{ColorStyle.RESET_ALL}")
+        finally:
+            # エコー抑制を解除
+            self.suppress_echo = False
 
     def _select_file(self) -> Optional[str]:
         """ファイル選択ダイアログを表示"""

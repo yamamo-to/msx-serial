@@ -28,7 +28,8 @@ dependencies = [
     "pyserial",
     "PyYAML",
     "chardet",
-    "msx-charset"
+    "msx-charset",
+    "tqdm"
 ]
 
 [project.scripts]
