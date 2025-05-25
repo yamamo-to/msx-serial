@@ -16,47 +16,14 @@ import time
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Union
 from colorama import Fore, Style as ColorStyle
 from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.shortcuts import radiolist_dialog
 from prompt_toolkit.styles import Style
 from .iot_nodes import IotNodes
-
-def basic_program(pathname: str):
-    filename = Path(pathname).name
-    return f'''
-10 DEFINTA-Z:DIM F$, I$, O$:CLEAR 10000,&HDFFF\r\n
-15 FORI=0TO81:POKE&HE000+I,VAL("&H"+MID$("EB7E235E2356424BF5C50604298F298F298F298F298F298FF51A13FE2B2818FE2F2819FE3A3808FE5B3808C6B9180FC604180BC6BF18073E3E3718023E3FB56FF110C9C102037C02037D0203F1D60420B7C9",2*I+1,2)):NEXT:DEFUSR=&HE000\r\n
-20 LET F$ = "{filename}"\r\n
-30 ON ERROR GOTO 9000:KILL F$\r\n
-40 S=57:OPEN F$ AS #1 LEN=S\r\n
-50 INPUT ":"; I$\r\n
-60 IF I$="`" THEN CLOSE #1:END\r\n
-70 GOSUB 100 'CALL Base64 decoder\r\n
-80 GOSUB 1000'CALL SAVE\r\n
-90 GOTO 50\r\n
-100 'Base64 decoder(I$:encoded text, O$:output text)\r\n
-110 L=LEN(I$):O$=LEFT$(USR(I$),(L \\ 4)*3+(MID$(I$,L-1,1)="=")+(MID$(I$,L,1)="="))\r\n
-200 RETURN\r\n
-1000 'SAVE APPEND(O$:decoded text)\r\n
-1010 IF LEN(O$)<S THEN 1100 \r\n
-1020 FIELD #1,INT(S) AS T$\r\n
-1030 LSET T$=O$:PUT #1\r\n
-1040 RETURN\r\n
-1100 CLOSE#1\r\n
-1110 S=1:OPEN F$ AS #1 LEN=S\r\n
-1120 F=LOF(1)\r\n
-1130 FIELD #1,1 AS T$\r\n
-1140 FOR I=1 TO LEN(O$)\r\n
-1150   LSET T$=MID$(O$,I,1)\r\n
-1160   PUT #1,F+I\r\n
-1170 NEXT I\r\n
-1180 RETURN\r\n
-9000 IF ERL=30 AND ERR=53 THEN RESUME 40\r\n
-9100 ON ERROR GOTO 0\r\n
-'''
+from .upload import upload_program
 
 
 class CommandType(Enum):
@@ -151,7 +118,7 @@ class MSXSerialTerminal:
         """ファイルをアップロード"""
 
         # BASICプログラムを送信
-        self.ser.write(basic_program(file_path).encode("ascii"))
+        self.ser.write(upload_program(file_path).encode("ascii"))
         self.ser.flush()
 
         # RUNコマンドを送信
