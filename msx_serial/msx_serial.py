@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 MSXシリアルターミナル
-MSXとのシリアル通信を行うターミナルプログラム
+MSXとのシリアル通信またはtelnet接続を行うターミナルプログラム
 """
 
 import argparse
@@ -10,13 +10,15 @@ import chardet
 import colorama
 import threading
 import serial
+import socket
+import telnetlib
 import yaml
 import msx_charset
 import time
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Protocol
 from colorama import Fore, Style as ColorStyle
 from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import WordCompleter
@@ -26,6 +28,107 @@ from tqdm import tqdm
 from .iot_nodes import IotNodes
 from .upload import upload_program
 import os
+
+
+class ConnectionType(Enum):
+    """接続タイプの列挙型"""
+    SERIAL = "serial"
+    TELNET = "telnet"
+
+
+@dataclass
+class ConnectionConfig:
+    """接続設定"""
+    type: ConnectionType
+    port: str = "/dev/tty.usbserial"  # シリアルポートまたはtelnetポート
+    host: str = "localhost"  # telnet接続時のホスト
+    baudrate: int = 115200  # シリアル接続時のボーレート
+    encoding: str = "msx-jp"
+    prompt_style: str = "#00ff00 bold"
+
+
+class Connection(Protocol):
+    """接続インターフェース"""
+    def write(self, data: bytes) -> None: ...
+    def flush(self) -> None: ...
+    def read(self, size: int) -> bytes: ...
+    def in_waiting(self) -> int: ...
+    def close(self) -> None: ...
+    def is_open(self) -> bool: ...
+
+
+class SerialConnection:
+    """シリアル接続クラス"""
+    def __init__(self, config: ConnectionConfig):
+        self.connection = serial.Serial(
+            config.port,
+            config.baudrate,
+            timeout=1
+        )
+
+    def write(self, data: bytes) -> None:
+        self.connection.write(data)
+
+    def flush(self) -> None:
+        self.connection.flush()
+
+    def read(self, size: int) -> bytes:
+        return self.connection.read(size)
+
+    def in_waiting(self) -> int:
+        return self.connection.in_waiting
+
+    def close(self) -> None:
+        self.connection.close()
+
+    def is_open(self) -> bool:
+        return self.connection.is_open
+
+
+class TelnetConnection:
+    """Telnet接続クラス"""
+    def __init__(self, config: ConnectionConfig):
+        self.connection = telnetlib.Telnet(config.host, int(config.port))
+        self._buffer = bytearray()
+
+    def write(self, data: bytes) -> None:
+        self.connection.write(data)
+
+    def flush(self) -> None:
+        pass  # Telnetでは不要
+
+    def read(self, size: int) -> bytes:
+        try:
+            # バッファにデータがない場合は新しいデータを読み取る
+            if len(self._buffer) < size:
+                # タイムアウトを設定してデータを読み取る
+                new_data = self.connection.read_until(b"\n", timeout=0.1)
+                if new_data:
+                    self._buffer.extend(new_data)
+            
+            # バッファから要求されたサイズのデータを返す
+            data = self._buffer[:size]
+            self._buffer = self._buffer[size:]
+            return bytes(data)
+        except Exception as e:
+            print(f"{Fore.RED}[Telnet読み取りエラー] {e}{ColorStyle.RESET_ALL}")
+            return b""
+
+    def in_waiting(self) -> int:
+        try:
+            # 新しいデータを確認
+            new_data = self.connection.read_until(b"\n", timeout=0.1)
+            if new_data:
+                self._buffer.extend(new_data)
+            return len(self._buffer)
+        except Exception:
+            return len(self._buffer)
+
+    def close(self) -> None:
+        self.connection.close()
+
+    def is_open(self) -> bool:
+        return True  # Telnet接続は常に開いていると仮定
 
 
 class CommandType(Enum):
@@ -38,23 +141,13 @@ class CommandType(Enum):
     CD = "@cd"
 
 
-@dataclass
-class TerminalConfig:
-    """ターミナル設定"""
-
-    port: str = "/dev/tty.usbserial"
-    baudrate: int = 115200
-    encoding: str = "msx-jp"
-    prompt_style: str = "#00ff00 bold"
-
-
 class MSXSerialTerminal:
     """MSXシリアルターミナルのメインクラス"""
 
-    def __init__(self, config: TerminalConfig):
+    def __init__(self, config: ConnectionConfig):
         """初期化"""
         self.config = config
-        self.ser: Optional[serial.Serial] = None
+        self.connection: Optional[Connection] = None
         self.running: bool = True
         self.suppress_echo: bool = False  # エコー抑制フラグ
         iot_nodes = IotNodes()
@@ -94,10 +187,10 @@ class MSXSerialTerminal:
 
     def _read_serial(self) -> None:
         """シリアル受信処理"""
-        while self.running and self.ser:
+        while self.running and self.connection:
             try:
-                if self.ser.in_waiting > 0:
-                    data = self.ser.read(self.ser.in_waiting)
+                if self.connection.in_waiting() > 0:
+                    data = self.connection.read(self.connection.in_waiting())
                     if not self.suppress_echo:  # エコー抑制フラグをチェック
                         decoded_code = bytes(data).decode(self.config.encoding)
                         print(
@@ -105,7 +198,7 @@ class MSXSerialTerminal:
                         )
             except Exception as e:
                 if self.running:
-                    print(f"{Fore.RED}[シリアルエラー] {e}{ColorStyle.RESET_ALL}")
+                    print(f"{Fore.RED}[接続エラー] {e}{ColorStyle.RESET_ALL}")
                 break
 
     def _paste_file(self, file_path: Union[str, Path]) -> None:
@@ -117,14 +210,14 @@ class MSXSerialTerminal:
             if encoding in ["SHIFT_JIS", "CP932", "EUC-JP"]:
                 for line in raw_data.split(b"\n"):
                     if line:
-                        self.ser.write(line + b"\r\n")
-                        self.ser.flush()
+                        self.connection.write(line + b"\r\n")
+                        self.connection.flush()
             else:
                 with open(file_path, "r", encoding=encoding) as f:
                     for line in f:
                         msx_codes = line.rstrip() + "\r\n"
-                        self.ser.write(msx_codes.encode(self.config.encoding))
-                        self.ser.flush()
+                        self.connection.write(msx_codes.encode(self.config.encoding))
+                        self.connection.flush()
 
     def _upload_file(self, file_path: Union[str, Path]) -> None:
         """ファイルをアップロード"""
@@ -136,12 +229,12 @@ class MSXSerialTerminal:
             file_size = Path(file_path).stat().st_size
 
             # BASICプログラムを送信
-            self.ser.write(upload_program(file_path).encode("ascii"))
-            self.ser.flush()
+            self.connection.write(upload_program(file_path).encode("ascii"))
+            self.connection.flush()
 
             # RUNコマンドを送信
-            self.ser.write("RUN\r\n".encode("ascii"))
-            self.ser.flush()
+            self.connection.write("RUN\r\n".encode("ascii"))
+            self.connection.flush()
             time.sleep(1)
 
             # ファイルを送信
@@ -159,13 +252,13 @@ class MSXSerialTerminal:
                 ) as pbar:
                     for i in range(0, len(encoded_data), 76):
                         chunk = encoded_data[i : i + 76]
-                        self.ser.write(chunk.encode("ascii") + b"\r\n")
-                        self.ser.flush()
+                        self.connection.write(chunk.encode("ascii") + b"\r\n")
+                        self.connection.flush()
                         pbar.update(len(chunk))
                         time.sleep(0.5)
 
-            self.ser.write(b"`\r\n")
-            self.ser.flush()
+            self.connection.write(b"`\r\n")
+            self.connection.flush()
             print(f"{Fore.GREEN}アップロード完了{ColorStyle.RESET_ALL}")
 
         except Exception as e:
@@ -227,8 +320,8 @@ class MSXSerialTerminal:
         )
         try:
             bytes_data = bytes.fromhex(hex_input.replace(" ", ""))
-            self.ser.write(bytes_data)
-            self.ser.flush()
+            self.connection.write(bytes_data)
+            self.connection.flush()
             print(f"{Fore.GREEN}送信: {hex_input}{ColorStyle.RESET_ALL}")
         except ValueError as e:
             print(f"{Fore.RED}エラー: 無効な16進数です - {e}{ColorStyle.RESET_ALL}")
@@ -286,7 +379,7 @@ class MSXSerialTerminal:
                     continue
 
                 if user_input.strip() == "":
-                    self.ser.write(b"\r\n")
+                    self.connection.write(b"\r\n")
                 else:
                     self._send_user_input(user_input)
 
@@ -303,18 +396,21 @@ class MSXSerialTerminal:
         """ユーザー入力を送信"""
         for line in user_input.splitlines():
             if line.strip() == "^C":
-                self.ser.write(b"\x03")  # Ctrl-C
+                self.connection.write(b"\x03")  # Ctrl-C
             elif line.strip() == "^[":
-                self.ser.write(b"\x1b")  # ESC
+                self.connection.write(b"\x1b")  # ESC
             else:
                 msx_code = line + "\r\n"
-                self.ser.write(msx_code.encode(self.config.encoding))
-        self.ser.flush()
+                self.connection.write(msx_code.encode(self.config.encoding))
+        self.connection.flush()
 
     def run(self) -> None:
         """ターミナルを実行"""
         try:
-            self.ser = serial.Serial(self.config.port, self.config.baudrate, timeout=1)
+            if self.config.type == ConnectionType.SERIAL:
+                self.connection = SerialConnection(self.config)
+            else:
+                self.connection = TelnetConnection(self.config)
 
             serial_thread = threading.Thread(target=self._read_serial, daemon=True)
             keyboard_thread = threading.Thread(target=self._read_keyboard, daemon=True)
@@ -337,22 +433,49 @@ class MSXSerialTerminal:
         """リソースのクリーンアップ"""
         serial_thread.join(timeout=1)
         keyboard_thread.join(timeout=1)
-        if self.ser and self.ser.is_open:
-            self.ser.close()
+        if self.connection and self.connection.is_open():
+            self.connection.close()
+
+
+def _detect_connection_type(port: str) -> tuple[ConnectionType, str, str, int]:
+    """接続先の文字列から接続タイプを判定する"""
+    # IPアドレス:ポート番号の形式をチェック
+    if ":" in port:
+        host, port_str = port.split(":")
+        try:
+            port_num = int(port_str)
+            return ConnectionType.TELNET, host, port_str, 0
+        except ValueError:
+            pass
+
+    # COMポートまたは/dev/ttyの形式をチェック
+    if port.startswith(("COM", "/dev/tty")):
+        return ConnectionType.SERIAL, "", port, 115200
+
+    # デフォルトはシリアル接続
+    return ConnectionType.SERIAL, "", port, 115200
 
 
 def main() -> None:
     """メイン関数"""
     parser = argparse.ArgumentParser(description="MSXシリアルターミナル")
-    parser.add_argument("--port", type=str, required=True, help="シリアルポート")
-    parser.add_argument("--baudrate", type=int, default=115200, help="ボーレート")
-    parser.add_argument(
-        "--encoding", type=str, default="msx-jp", help="エンコーディング"
-    )
+    parser.add_argument("connection", type=str,
+                      help="接続先 (例: COM4, /dev/ttyUSB0, 192.168.1.100:23)")
+    parser.add_argument("--baudrate", type=int, default=115200,
+                      help="シリアル接続時のボーレート")
+    parser.add_argument("--encoding", type=str, default="msx-jp",
+                      help="エンコーディング")
     args = parser.parse_args()
 
-    config = TerminalConfig(
-        port=args.port, baudrate=args.baudrate, encoding=args.encoding
+    # 接続タイプを自動判定
+    conn_type, host, port, default_baudrate = _detect_connection_type(args.connection)
+    
+    config = ConnectionConfig(
+        type=conn_type,
+        port=port,
+        host=host,
+        baudrate=args.baudrate if conn_type == ConnectionType.SERIAL else default_baudrate,
+        encoding=args.encoding
     )
     terminal = MSXSerialTerminal(config)
     terminal.run()
