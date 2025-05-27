@@ -1,0 +1,52 @@
+from typing import Union
+from urllib.parse import urlparse, parse_qs
+from .serial import SerialConfig
+from .telnet import TelnetConfig
+
+
+def detect_connection_type(uri: str) -> Union[TelnetConfig, SerialConfig]:
+    """URI形式の接続先から接続タイプを判定する"""
+    # URI形式でない場合は従来の形式として処理
+    if "://" not in uri:
+        # IPアドレス:ポート番号の形式をチェック
+        if ":" in uri:
+            host, port_str = uri.split(":")
+            try:
+                return TelnetConfig(host=host, port=int(port_str))
+            except ValueError:
+                pass
+
+        # COMポートまたは/dev/ttyの形式をチェック
+        if uri.startswith(("COM", "/dev/tty")):
+            return SerialConfig(port=uri)
+
+        # デフォルトはシリアル接続
+        return SerialConfig(port=uri)
+
+    # URI形式の解析
+    try:
+        parsed = urlparse(uri)
+        scheme = parsed.scheme.lower()
+        query = parse_qs(parsed.query)
+
+        if scheme == "telnet":
+            return TelnetConfig(
+                host=parsed.hostname or "localhost",
+                port=parsed.port or 23
+            )
+        elif scheme == "serial":
+            return SerialConfig(
+                port=parsed.netloc,
+                baudrate=int(query.get("baudrate", ["115200"])[0]),
+                bytesize=int(query.get("bytesize", ["8"])[0]),
+                parity=query.get("parity", "N")[0],
+                stopbits=int(query.get("stopbits", "1")),
+                timeout=int(query["timeout"][0]) if "timeout" in query else None,
+                xonxoff=bool(query.get("xonxoff", False)[0]),
+                rtscts=bool(query.get("rtscts", False)[0]),
+                dsrdtr=bool(query.get("dsrdtr", False)[0]),
+            )
+        else:
+            raise ValueError(f"未対応のスキーム: {scheme}")
+    except Exception as e:
+        raise ValueError(f"無効なURI形式: {uri} ({str(e)})")

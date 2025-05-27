@@ -38,7 +38,7 @@ msx-serial = "msx_serial:main"
 
 [tool.setuptools]
 packages = ["msx_serial"]
-package-data = {msx_serial = ["commands.yml", "iot_nodes.yml"]} 
+package-data = {msx_serial = ["iot_nodes.yml"]} 
 
 [tool.setuptools_scm]
 write_to = "msx_serial/_version.py"

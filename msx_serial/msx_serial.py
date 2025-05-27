@@ -8,128 +8,41 @@ import argparse
 import base64
 import chardet
 import colorama
+import os
 import threading
-import serial
-import socket
-import telnetlib
 import yaml
-import msx_charset
+import sys
 import time
-from dataclasses import dataclass
+import msx_charset
+
 from enum import Enum
 from pathlib import Path
-from typing import List, Optional, Union, Protocol
-from colorama import Fore, Style as ColorStyle
+from typing import List, Optional, Union
 from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.shortcuts import radiolist_dialog
 from prompt_toolkit.styles import Style
+from prompt_toolkit.lexers import PygmentsLexer
+from pygments_msxbasic.lexer import MSXBasicLexer
+from .completion.msx0 import MSX0Completer
+
 from tqdm import tqdm
 from .iot_nodes import IotNodes
 from .upload import upload_program
-import os
-from urllib.parse import urlparse, parse_qs
+from .connection.serial import SerialConfig, SerialConnection
+from .connection.telnet import TelnetConfig, TelnetConnection
+from .connection.base import Connection
+from .connection.connection import detect_connection_type
 
 
-class ConnectionType(Enum):
-    """接続タイプの列挙型"""
-    SERIAL = "serial"
-    TELNET = "telnet"
-
-
-@dataclass
-class ConnectionConfig:
-    """接続設定"""
-    type: ConnectionType
-    port: str = "/dev/tty.usbserial"  # シリアルポートまたはtelnetポート
-    host: str = "localhost"  # telnet接続時のホスト
-    baudrate: int = 115200  # シリアル接続時のボーレート
-    encoding: str = "msx-jp"
-    prompt_style: str = "#00ff00 bold"
-
-
-class Connection(Protocol):
-    """接続インターフェース"""
-    def write(self, data: bytes) -> None: ...
-    def flush(self) -> None: ...
-    def read(self, size: int) -> bytes: ...
-    def in_waiting(self) -> int: ...
-    def close(self) -> None: ...
-    def is_open(self) -> bool: ...
-
-
-class SerialConnection:
-    """シリアル接続クラス"""
-    def __init__(self, config: ConnectionConfig):
-        self.connection = serial.Serial(
-            config.port,
-            config.baudrate,
-            timeout=1
-        )
-
-    def write(self, data: bytes) -> None:
-        self.connection.write(data)
-
-    def flush(self) -> None:
-        self.connection.flush()
-
-    def read(self, size: int) -> bytes:
-        return self.connection.read(size)
-
-    def in_waiting(self) -> int:
-        return self.connection.in_waiting
-
-    def close(self) -> None:
-        self.connection.close()
-
-    def is_open(self) -> bool:
-        return self.connection.is_open
-
-
-class TelnetConnection:
-    """Telnet接続クラス"""
-    def __init__(self, config: ConnectionConfig):
-        self.connection = telnetlib.Telnet(config.host, int(config.port))
-        self._buffer = bytearray()
-
-    def write(self, data: bytes) -> None:
-        self.connection.write(data)
-
-    def flush(self) -> None:
-        pass  # Telnetでは不要
-
-    def read(self, size: int) -> bytes:
-        try:
-            # バッファにデータがない場合は新しいデータを読み取る
-            if len(self._buffer) < size:
-                # タイムアウトを設定してデータを読み取る
-                new_data = self.connection.read_until(b"\n", timeout=0.1)
-                if new_data:
-                    self._buffer.extend(new_data)
-            
-            # バッファから要求されたサイズのデータを返す
-            data = self._buffer[:size]
-            self._buffer = self._buffer[size:]
-            return bytes(data)
-        except Exception as e:
-            print(f"{Fore.RED}[Telnet読み取りエラー] {e}{ColorStyle.RESET_ALL}")
-            return b""
-
-    def in_waiting(self) -> int:
-        try:
-            # 新しいデータを確認
-            new_data = self.connection.read_until(b"\n", timeout=0.1)
-            if new_data:
-                self._buffer.extend(new_data)
-            return len(self._buffer)
-        except Exception:
-            return len(self._buffer)
-
-    def close(self) -> None:
-        self.connection.close()
-
-    def is_open(self) -> bool:
-        return True  # Telnet接続は常に開いていると仮定
+from .console import (
+    print_info,
+    print_warn,
+    print_error,
+    print_exception,
+    print_receive,
+    str_info,
+)
 
 
 class CommandType(Enum):
@@ -145,34 +58,35 @@ class CommandType(Enum):
 class MSXSerialTerminal:
     """MSXシリアルターミナルのメインクラス"""
 
-    def __init__(self, config: ConnectionConfig):
+    def __init__(
+        self,
+        config: Union[TelnetConfig, SerialConfig],
+        encoding: str,
+        prompt_style: str,
+    ):
         """初期化"""
         self.config = config
+        self.encoding = encoding
+        self.prompt_style = prompt_style
         self.connection: Optional[Connection] = None
         self.running: bool = True
         self.suppress_echo: bool = False  # エコー抑制フラグ
-        iot_nodes = IotNodes()
-        self.commands: List[str] = iot_nodes.get_node_names() + self._load_commands()
         self._setup_ui()
         colorama.init()
 
     def _setup_ui(self) -> None:
         """UIの初期設定"""
-        self.style = Style.from_dict({"prompt": self.config.prompt_style})
-
-        # @で始まるコマンドを優先的に表示
-        special_commands = [cmd.value for cmd in CommandType]
-        normal_commands = [cmd for cmd in self.commands if not cmd.startswith("@")]
+        self.style = Style.from_dict({"prompt": self.prompt_style})
 
         self.session = PromptSession(
-            completer=WordCompleter(
-                special_commands + normal_commands,
-                ignore_case=True,
-                sentence=True,  # 文全体を補完対象とする
+            #lexer=PygmentsLexer(MSXBasicLexer),
+            completer=MSX0Completer(
+                special_commands=[cmd.value for cmd in CommandType]
             ),
+            vi_mode=False,
             style=self.style,
             complete_in_thread=True,
-            complete_while_typing=True,  # タイピング中に補完を有効化
+            complete_while_typing=True,
             refresh_interval=0.1,
             enable_history_search=True,
         )
@@ -186,24 +100,22 @@ class MSXSerialTerminal:
                 return data.get("commands", []) if data else []
         return []
 
-    def _read_serial(self) -> None:
+    def _read(self) -> None:
         """シリアル受信処理"""
         while self.running and self.connection:
             try:
                 if self.connection.in_waiting() > 0:
                     data = self.connection.read(self.connection.in_waiting())
                     if not self.suppress_echo:  # エコー抑制フラグをチェック
-                        decoded_code = bytes(data).decode(self.config.encoding)
-                        print(
-                            f"{Fore.GREEN}{decoded_code}{ColorStyle.RESET_ALL}", end=""
-                        )
+                        decoded_code = bytes(data).decode(self.encoding)
+                        print_receive(f"{decoded_code}", end="")
             except Exception as e:
                 if self.running:
-                    print(f"{Fore.RED}[接続エラー] {e}{ColorStyle.RESET_ALL}")
+                    print_exception("接続エラー", e)
                 break
 
     def _paste_file(self, file_path: Union[str, Path]) -> None:
-        """テキストファイルを送信"""
+        """テキストファイルの内容を貼り付け"""
         with open(file_path, "rb") as f:
             raw_data = f.read()
             encoding = chardet.detect(raw_data)["encoding"]
@@ -217,7 +129,7 @@ class MSXSerialTerminal:
                 with open(file_path, "r", encoding=encoding) as f:
                     for line in f:
                         msx_codes = line.rstrip() + "\r\n"
-                        self.connection.write(msx_codes.encode(self.config.encoding))
+                        self.connection.write(msx_codes.encode(self.encoding))
                         self.connection.flush()
 
     def _upload_file(self, file_path: Union[str, Path]) -> None:
@@ -225,9 +137,6 @@ class MSXSerialTerminal:
         try:
             # エコー抑制を開始
             self.suppress_echo = True
-
-            # ファイルサイズを取得
-            file_size = Path(file_path).stat().st_size
 
             # BASICプログラムを送信
             self.connection.write(upload_program(file_path).encode("ascii"))
@@ -248,7 +157,7 @@ class MSXSerialTerminal:
                     total=len(encoded_data),
                     unit="B",
                     unit_scale=True,
-                    desc=f"{Fore.CYAN}アップロード中{ColorStyle.RESET_ALL}",
+                    desc=str_info("アップロード中"),
                     bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}]",
                 ) as pbar:
                     for i in range(0, len(encoded_data), 76):
@@ -260,12 +169,11 @@ class MSXSerialTerminal:
 
             self.connection.write(b"`\r\n")
             self.connection.flush()
-            print(f"{Fore.GREEN}アップロード完了{ColorStyle.RESET_ALL}")
+            print_info("アップロード完了")
 
         except Exception as e:
-            print(f"{Fore.RED}アップロードエラー: {e}{ColorStyle.RESET_ALL}")
+            print_exception("アップロードエラー", e)
         finally:
-            # エコー抑制を解除
             self.suppress_echo = False
 
     def _select_file(self) -> Optional[str]:
@@ -274,9 +182,7 @@ class MSXSerialTerminal:
         files = [(str(f), f.name) for f in current_dir.glob("*") if f.is_file()]
 
         if not files:
-            print(
-                f"{Fore.YELLOW}[警告] ファイルが見つかりません。{ColorStyle.RESET_ALL}"
-            )
+            print_warn("ファイルが見つかりません。")
             return None
 
         return radiolist_dialog(
@@ -289,14 +195,14 @@ class MSXSerialTerminal:
     def _handle_special_commands(self, user_input: str) -> bool:
         """特殊コマンドの処理"""
         if user_input.strip() == CommandType.EXIT.value:
-            print(f"{Fore.YELLOW}終了します。{ColorStyle.RESET_ALL}")
+            print_info("終了します。")
             self.running = False
             return True
 
         if user_input.strip() == CommandType.PASTE.value:
             file_path = self._select_file()
             if file_path:
-                print(f"{Fore.BLUE}[選択] {file_path}{ColorStyle.RESET_ALL}")
+                print_info(f"[選択] {file_path}")
                 self._paste_file(file_path)
             return True
 
@@ -316,22 +222,20 @@ class MSXSerialTerminal:
 
     def _handle_bytes_command(self) -> None:
         """バイトコマンドの処理"""
-        hex_input = input(
-            f"{Fore.CYAN}16進数のバイト列を入力してください: {ColorStyle.RESET_ALL}"
-        )
+        hex_input = input(str_info("16進数のバイト列を入力してください: "))
         try:
             bytes_data = bytes.fromhex(hex_input.replace(" ", ""))
             self.connection.write(bytes_data)
             self.connection.flush()
-            print(f"{Fore.GREEN}送信: {hex_input}{ColorStyle.RESET_ALL}")
+            print_info(f"送信: {hex_input}")
         except ValueError as e:
-            print(f"{Fore.RED}エラー: 無効な16進数です - {e}{ColorStyle.RESET_ALL}")
+            print_exception("エラー: 無効な16進数です", e)
 
     def _handle_upload_command(self) -> None:
         """アップロードコマンドの処理"""
         file_path = self._select_file()
         if file_path:
-            print(f"{Fore.BLUE}[選択] {file_path}{ColorStyle.RESET_ALL}")
+            print_info(f"[選択] {file_path}")
             self._upload_file(file_path)
         return True
 
@@ -341,28 +245,18 @@ class MSXSerialTerminal:
             # @cd の後のパスを取得
             path = user_input[len(CommandType.CD.value) :].strip()
             if not path:
-                # パスが指定されていない場合は現在のディレクトリを表示
-                print(
-                    f"{Fore.CYAN}現在のディレクトリ: {Path.cwd()}{ColorStyle.RESET_ALL}"
-                )
+                print_info(f"現在のディレクトリ: {Path.cwd()}")
                 return
 
             # 新しいパスに移動
             new_path = Path(path).resolve()
             if new_path.exists() and new_path.is_dir():
-                # 現在のディレクトリを新しいパスに変更
                 os.chdir(str(new_path))
-                print(
-                    f"{Fore.GREEN}ディレクトリを変更しました: {new_path}{ColorStyle.RESET_ALL}"
-                )
+                print_info(f"ディレクトリを変更しました: {new_path}")
             else:
-                print(
-                    f"{Fore.RED}エラー: 指定されたディレクトリが存在しません: {path}{ColorStyle.RESET_ALL}"
-                )
+                print_error(f"指定されたディレクトリが存在しません: {path}")
         except Exception as e:
-            print(
-                f"{Fore.RED}エラー: ディレクトリの変更に失敗しました - {e}{ColorStyle.RESET_ALL}"
-            )
+            print_exception(f"ディレクトリの変更に失敗しました: {path}", e)
 
     def _read_keyboard(self) -> None:
         """キーボード入力監視"""
@@ -385,11 +279,11 @@ class MSXSerialTerminal:
                     self._send_user_input(user_input)
 
             except KeyboardInterrupt:
-                print(f"\n{Fore.YELLOW}Ctrl+C で終了します。{ColorStyle.RESET_ALL}")
+                print_info("\nCtrl+C で終了します。")
                 self.running = False
                 break
             except Exception as e:
-                print(f"{Fore.RED}[キーボードエラー] {e}{ColorStyle.RESET_ALL}")
+                print_exception("キーボードエラー", e)
                 self.running = False
                 break
 
@@ -402,108 +296,75 @@ class MSXSerialTerminal:
                 self.connection.write(b"\x1b")  # ESC
             else:
                 msx_code = line + "\r\n"
-                self.connection.write(msx_code.encode(self.config.encoding))
+                self.connection.write(msx_code.encode(self.encoding))
         self.connection.flush()
 
     def run(self) -> None:
         """ターミナルを実行"""
         try:
-            if self.config.type == ConnectionType.SERIAL:
+            if isinstance(self.config, SerialConfig):
                 self.connection = SerialConnection(self.config)
-            else:
+            elif isinstance(self.config, TelnetConfig):
                 self.connection = TelnetConnection(self.config)
+            else:
+                raise ValueError(f"不明な接続タイプ: {self.config}")
 
-            serial_thread = threading.Thread(target=self._read_serial, daemon=True)
+            connection_thread = threading.Thread(target=self._read, daemon=True)
             keyboard_thread = threading.Thread(target=self._read_keyboard, daemon=True)
 
-            serial_thread.start()
+            connection_thread.start()
             keyboard_thread.start()
 
             while self.running:
                 pass
 
         except KeyboardInterrupt:
-            print(f"{Fore.YELLOW}Ctrl+C で終了します。{ColorStyle.RESET_ALL}")
+            print_info("Ctrl+C で終了します。")
             self.running = False
         finally:
-            self._cleanup(serial_thread, keyboard_thread)
+            self._cleanup(connection_thread, keyboard_thread)
 
     def _cleanup(
-        self, serial_thread: threading.Thread, keyboard_thread: threading.Thread
+        self, connection_thread: threading.Thread, keyboard_thread: threading.Thread
     ) -> None:
         """リソースのクリーンアップ"""
-        serial_thread.join(timeout=1)
+        connection_thread.join(timeout=1)
         keyboard_thread.join(timeout=1)
         if self.connection and self.connection.is_open():
             self.connection.close()
 
 
-def _detect_connection_type(uri: str) -> tuple[ConnectionType, str, str, int]:
-    """URI形式の接続先から接続タイプを判定する"""
-    # URI形式でない場合は従来の形式として処理
-    if "://" not in uri:
-        # IPアドレス:ポート番号の形式をチェック
-        if ":" in uri:
-            host, port_str = uri.split(":")
-            try:
-                port_num = int(port_str)
-                return ConnectionType.TELNET, host, port_str, 0
-            except ValueError:
-                pass
-
-        # COMポートまたは/dev/ttyの形式をチェック
-        if uri.startswith(("COM", "/dev/tty")):
-            return ConnectionType.SERIAL, "", uri, 115200
-
-        # デフォルトはシリアル接続
-        return ConnectionType.SERIAL, "", uri, 115200
-
-    # URI形式の解析
-    try:
-        parsed = urlparse(uri)
-        scheme = parsed.scheme.lower()
-        query = parse_qs(parsed.query)
-
-        if scheme == "telnet":
-            host = parsed.hostname or "localhost"
-            port = str(parsed.port or 23)
-            return ConnectionType.TELNET, host, port, 0
-        elif scheme == "serial":
-            port = parsed.path.lstrip("/")
-            baudrate = int(query.get("baud", ["115200"])[0])
-            return ConnectionType.SERIAL, "", port, baudrate
-        else:
-            raise ValueError(f"未対応のスキーム: {scheme}")
-    except Exception as e:
-        raise ValueError(f"無効なURI形式: {uri} ({str(e)})")
-
-
 def main() -> None:
     """メイン関数"""
     parser = argparse.ArgumentParser(description="MSXシリアルターミナル")
-    parser.add_argument("connection", type=str,
-                      help="接続先 (例: COM4, /dev/ttyUSB0, 192.168.1.100:23, telnet://192.168.1.100:23, serial://COM1?baud=9600)")
-    parser.add_argument("--baudrate", type=int, default=115200,
-                      help="シリアル接続時のボーレート (URI形式で指定する場合は不要)")
-    parser.add_argument("--encoding", type=str, default="msx-jp",
-                      help="エンコーディング")
+    parser.add_argument(
+        "connection",
+        type=str,
+        help="接続先 (例: COM4, /dev/ttyUSB0, 192.168.1.100:2223, telnet://192.168.1.100:2223, serial://COM1?baudrate=9600)",
+    )
+    parser.add_argument(
+        "--baudrate",
+        type=int,
+        default=115200,
+        help="シリアル接続時のボーレート (URI形式で指定する場合は不要)",
+    )
+    parser.add_argument(
+        "--encoding", type=str, default="msx-jp", help="エンコーディング"
+    )
     args = parser.parse_args()
 
     try:
         # 接続タイプを自動判定
-        conn_type, host, port, default_baudrate = _detect_connection_type(args.connection)
-        
-        config = ConnectionConfig(
-            type=conn_type,
-            port=port,
-            host=host,
-            baudrate=args.baudrate if conn_type == ConnectionType.SERIAL else default_baudrate,
-            encoding=args.encoding
+        config = detect_connection_type(args.connection)
+
+        terminal = MSXSerialTerminal(
+            config,
+            encoding=args.encoding,
+            prompt_style="#00ff00 bold",
         )
-        terminal = MSXSerialTerminal(config)
         terminal.run()
     except ValueError as e:
-        print(f"{Fore.RED}エラー: {e}{ColorStyle.RESET_ALL}")
+        print_exception("エラー", e)
         sys.exit(1)
 
 

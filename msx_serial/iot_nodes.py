@@ -1,6 +1,6 @@
-import os
 import yaml
 from pathlib import Path
+
 
 class IotNodes:
     def __init__(self):
@@ -23,15 +23,16 @@ class IotNodes:
             return self.nodes
         return [node for node in self.nodes if node.startswith(text)]
 
+
 # 使用例
 if __name__ == '__main__':
     iot_nodes = IotNodes()
     print("利用可能なノード名:")
     for node in iot_nodes.get_node_names():
         print(f"- {node}")
-    
+
     # 補完のテスト
     test_input = "host/battery"
     print(f"\n'{test_input}'で始まるノード名:")
     for node in iot_nodes.complete_node_name(test_input):
-        print(f"- {node}") 
+        print(f"- {node}")
