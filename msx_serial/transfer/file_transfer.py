@@ -2,7 +2,6 @@
 MSXシリアルターミナルのファイル転送処理
 """
 
-import os
 import time
 import base64
 import chardet
@@ -11,6 +10,10 @@ from tqdm import tqdm
 from .basic_sender import send_basic_program
 from ..ui.color_output import print_info, print_exception
 from ..connection.base import Connection
+from typing import TYPE_CHECKING, Optional, Union
+
+if TYPE_CHECKING:
+    from ..terminal import MSXTerminal
 
 
 class FileTransferManager:
@@ -27,39 +30,13 @@ class FileTransferManager:
         self.encoding = encoding
         self.chunk_size = 1024
         self.timeout = 10.0
-        self.terminal = None  # MSXTerminalインスタンスへの参照
+        self.terminal: Optional["MSXTerminal"] = None  # MSXTerminalインスタンスへの参照
 
-    def set_terminal(self, terminal):
+    def set_terminal(self, terminal: Optional["MSXTerminal"]) -> None:
         """MSXTerminalインスタンスを設定"""
         self.terminal = terminal
 
-    def send_file(self, file_path: str) -> None:
-        """ファイルを送信
-
-        Args:
-            file_path: 送信するファイルのパス
-        """
-        if not os.path.isfile(file_path):
-            raise FileNotFoundError(f"ファイルが見つかりません: {file_path}")
-
-        with open(file_path, "rb") as file:
-            self.connection.send_file(file)
-
-    def receive_file(self, file_path: str) -> None:
-        """ファイルを受信
-
-        Args:
-            file_path: 受信するファイルのパス
-        """
-        if not os.path.isdir(os.path.dirname(file_path)):
-            raise FileNotFoundError(
-                f"ディレクトリが存在しません: {os.path.dirname(file_path)}"
-            )
-
-        with open(file_path, "wb") as file:
-            self.connection.receive_file(file)
-
-    def paste_file(self, file_path: Path):
+    def paste_file(self, file_path: Union[Path, str]) -> None:
         with open(file_path, "rb") as f:
             raw = f.read()
             enc = chardet.detect(raw)["encoding"]
@@ -80,7 +57,7 @@ class FileTransferManager:
                 pass
         return False
 
-    def upload_file(self, file_path: str):
+    def upload_file(self, file_path: str) -> None:
         try:
             # 出力を抑制
             if self.terminal:

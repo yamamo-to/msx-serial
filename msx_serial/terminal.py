@@ -5,14 +5,13 @@ from .connection.manager import ConnectionManager
 from .input.user_input import UserInputHandler
 from .transfer.file_transfer import FileTransferManager
 from .ui.color_output import print_info, print_exception, print_receive
-from .connection.serial import SerialConfig
-from .connection.telnet import TelnetConfig
+from .connection.base import ConnectionConfig
 
 
 class MSXTerminal:
     def __init__(
         self,
-        config: Union[SerialConfig, TelnetConfig],
+        config: ConnectionConfig,
         encoding: str = "msx-jp",
         prompt_style: str = "#00ff00 bold",
     ):
@@ -34,7 +33,7 @@ class MSXTerminal:
         )
         self.file_transfer.set_terminal(self)  # 自身の参照を渡す
 
-    def run(self):
+    def run(self) -> None:
         """ターミナルメインループ"""
         try:
             # バックグラウンド受信スレッド
@@ -49,7 +48,7 @@ class MSXTerminal:
             self.stop_event.set()
             self.connection_manager.close()
 
-    def _read_loop(self):
+    def _read_loop(self) -> None:
         """受信データを非同期に表示"""
         while not self.stop_event.is_set():
             try:
@@ -64,7 +63,7 @@ class MSXTerminal:
                 print_exception("受信エラー", e)
                 break
 
-    def _input_loop(self):
+    def _input_loop(self) -> None:
         """ユーザー入力ループ"""
         while not self.stop_event.is_set():
             try:

@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Optional
 
 
 class CommandType(Enum):
@@ -11,12 +12,12 @@ class CommandType(Enum):
     PASTE = ("@paste", "ファイルを読み込んで送信します")
     UPLOAD = ("@upload", "ファイルをアップロードします")
 
-    def __init__(self, value, description):
+    def __init__(self, value: tuple[str, str], description: str):
         self._value_ = value  # Enumのvalueとして使われる値
         self.description = description  # 説明テキストを属性として保持
 
     @classmethod
-    def from_input(cls, user_input: str) -> "CommandType":
+    def from_input(cls, user_input: str) -> Optional["CommandType"]:
         """ユーザー入力からコマンドタイプを取得"""
         for cmd in cls:
             if user_input.startswith(cmd.value):

@@ -1,13 +1,15 @@
 import telnetlib
 from dataclasses import dataclass
-from .base import Connection
+from .base import Connection, ConnectionConfig
 from ..ui.color_output import print_exception
 
 
 @dataclass
-class TelnetConfig:
-    host: str
-    port: int
+class TelnetConfig(ConnectionConfig):
+    """Telnet接続設定"""
+
+    port: int = 23
+    host: str = "localhost"
 
 
 class TelnetConnection(Connection):

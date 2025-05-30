@@ -14,7 +14,7 @@ COLOR_CONFIG = {
 }
 
 
-def set_color_config(**kwargs):
+def set_color_config(**kwargs: str) -> None:
     """
     使用する色をユーザーがカスタマイズするための関数。
     例: set_color_config(info=Fore.BLUE, warn=Fore.MAGENTA)
@@ -25,19 +25,19 @@ def set_color_config(**kwargs):
 
 
 # 文字列生成関数
-def str_info(message):
+def str_info(message: str) -> str:
     return f"{COLOR_CONFIG['info']}[info]{message}{Style.RESET_ALL}"
 
 
-def str_warn(message):
+def str_warn(message: str) -> str:
     return f"{COLOR_CONFIG['warn']}[warn] {message}{Style.RESET_ALL}"
 
 
-def str_error(message):
+def str_error(message: str) -> str:
     return f"{COLOR_CONFIG['error']}[error] {message}{Style.RESET_ALL}"
 
 
-def str_exception(message, e):
+def str_exception(message: str, e: Exception) -> str:
     return f"{COLOR_CONFIG['exception']}[{message}] {e}{Style.RESET_ALL}"
 
 
@@ -142,5 +142,5 @@ def print_input(message: str) -> None:
     print(f"{Fore.GREEN}{message}{Style.RESET_ALL}")
 
 
-def print_receive(message, end="\n"):
+def print_receive(message: str, end: str = "\n") -> None:
     print(f"{COLOR_CONFIG['receive']}{message}{Style.RESET_ALL}", end=end)

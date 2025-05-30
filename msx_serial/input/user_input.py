@@ -3,18 +3,21 @@ MSXシリアルターミナルのユーザー入力処理
 """
 
 import os
+import threading
 from pathlib import Path
-from typing import Optional, Union
-
+from typing import Optional, Any, TYPE_CHECKING
 from prompt_toolkit import PromptSession
 from prompt_toolkit.styles import Style
 from prompt_toolkit.shortcuts import radiolist_dialog
 
 from .commands import CommandType
 from ..ui.color_output import print_info, print_warn, print_exception, print_help
-from ..connection.serial import SerialConfig
-from ..connection.telnet import TelnetConfig
+from ..connection.base import Connection
 from ..completion.command_completer import CommandCompleter
+
+
+if TYPE_CHECKING:
+    from ..transfer.file_transfer import FileTransferManager
 
 
 class UserInputHandler:
@@ -24,7 +27,7 @@ class UserInputHandler:
         self,
         prompt_style: str,
         encoding: str,
-        connection: Union[SerialConfig, TelnetConfig],
+        connection: Connection,
     ):
         """初期化
 
@@ -36,17 +39,17 @@ class UserInputHandler:
         self.prompt_style = prompt_style
         self.encoding = encoding
         self.connection = connection
-        self.session = PromptSession()
+        self.session: PromptSession = PromptSession()
         self.style = Style.from_dict({"prompt": prompt_style})
         self.session = PromptSession(
             completer=CommandCompleter(
-                special_commands=[cmd.value for cmd in CommandType]
+                special_commands=[str(cmd.value) for cmd in CommandType]
             ),
             style=self.style,
             complete_in_thread=True,
         )
 
-    def prompt(self) -> str:
+    def prompt(self) -> Any:
         """プロンプトを表示してユーザー入力を取得
 
         Returns:
@@ -54,7 +57,7 @@ class UserInputHandler:
         """
         return self.session.prompt("")
 
-    def send(self, user_input: str):
+    def send(self, user_input: str) -> None:
         """ユーザー入力を送信
 
         Args:
@@ -70,7 +73,10 @@ class UserInputHandler:
         self.connection.flush()
 
     def handle_special_commands(
-        self, user_input: str, file_transfer, stop_event
+        self,
+        user_input: str,
+        file_transfer: "FileTransferManager",
+        stop_event: threading.Event,
     ) -> bool:
         """特殊コマンドを処理
 
@@ -128,14 +134,14 @@ class UserInputHandler:
             style=self.style,
         ).run()
 
-    def _handle_cd(self, user_input: str):
+    def _handle_cd(self, user_input: str) -> None:
         """ディレクトリ変更コマンドを処理
 
         Args:
             user_input: ユーザー入力
         """
         try:
-            path = user_input[len(CommandType.CD.value) :].strip()
+            path = user_input[len(CommandType.CD.value):].strip()
             if not path:
                 print_info(f"現在のディレクトリ: {Path.cwd()}")
                 return

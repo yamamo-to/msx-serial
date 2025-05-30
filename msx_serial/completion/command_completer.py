@@ -4,9 +4,9 @@ MSXシリアルターミナルのコマンド補完機能
 
 import re
 from collections import defaultdict
-from prompt_toolkit.completion import Completer, Completion, PathCompleter
+from prompt_toolkit.completion import Completer, Completion, PathCompleter, CompleteEvent
 from prompt_toolkit.document import Document
-from typing import List, Dict, Set, Iterator, Optional, Union
+from typing import List, Dict, Set, Iterator, Optional
 from .loader_keyword import load_keywords
 from .loader_iot_nodes import IotNodes
 from ..input.commands import CommandType
@@ -50,21 +50,17 @@ class CommandCompleter(Completer):
 
     def _initialize_caches(self) -> None:
         """キーワードキャッシュを初期化"""
-        self.keyword_caches: Dict[
-            str, Dict[str, List[Union[str, tuple[str, str]]]]
-        ] = {}
+        self.keyword_caches: defaultdict[str, dict[str, list[str]]] = defaultdict(dict)
         self.sub_commands: List[str] = []
 
         for key, info in self.msx_keywords.items():
             if info["type"] == "subcommand":
                 self.sub_commands.append(key)
-            self.keyword_caches[key] = self._build_prefix_cache(
-                info["keywords"]
-            )
+            self.keyword_caches[key] = self._build_prefix_cache(info["keywords"])
 
     def _build_prefix_cache(
-        self, keywords: List[Union[str, tuple[str, str]]]
-    ) -> Dict[str, List[Union[str, tuple[str, str]]]]:
+        self, keywords: List[List[str]]
+    ) -> defaultdict[str, list[str]]:
         """プレフィックスキャッシュを構築
 
         Args:
@@ -82,7 +78,7 @@ class CommandCompleter(Completer):
         return cache
 
     def get_completions(
-        self, document, complete_event
+        self, document: Document, complete_event: CompleteEvent
     ) -> Iterator[Completion]:
         """補完候補を取得
 
@@ -94,22 +90,17 @@ class CommandCompleter(Completer):
             補完候補
         """
         context = CompletionContext(
-            document.text_before_cursor,
-            document.get_word_before_cursor()
+            document.text_before_cursor, document.get_word_before_cursor()
         )
 
         if not self._analyze_context(context):
             return
 
         if context.text.startswith("@cd "):
-            path_part = context.text[len("@cd"):].lstrip()
-            path_document = Document(
-                text=path_part,
-                cursor_position=len(path_part)
-            )
+            path_part = context.text[len("@cd") :].lstrip()
+            path_document = Document(text=path_part, cursor_position=len(path_part))
             yield from self.path_completer.get_completions(
-                path_document,
-                complete_event
+                path_document, complete_event
             )
         elif context.is_special_command:
             yield from self._complete_special_commands(context)
@@ -195,20 +186,17 @@ class CommandCompleter(Completer):
         # その他の特殊コマンドの補完
         for command in self.special_commands:
             if command.startswith(word):
-                completion_text = (
-                    command[1:] if command.startswith("@") else command
-                )
+                completion_text = command[1:] if command.startswith("@") else command
                 cmd = CommandType.from_input("@" + completion_text)
-                yield Completion(
-                    completion_text,
-                    start_position=-len(context.word),
-                    display=command,
-                    display_meta=cmd.description,
-                )
+                if cmd:
+                    yield Completion(
+                        completion_text,
+                        start_position=-len(context.word),
+                        display=command,
+                        display_meta=cmd.description,
+                    )
 
-    def _complete_iot_devices(
-        self, context: CompletionContext
-    ) -> Iterator[Completion]:
+    def _complete_iot_devices(self, context: CompletionContext) -> Iterator[Completion]:
         """IOTデバイスの補完候補を生成
 
         Args:
@@ -250,19 +238,14 @@ class CommandCompleter(Completer):
             # CALLコマンドの省略形の場合
             prefix = context.text[1:].upper()
         else:
-            prefix = context.text[
-                len(context.current_command) + 1:
-            ].upper()
+            prefix = context.text[len(context.current_command) + 1 :].upper()
 
         for keyword in command_info["keywords"]:
             name = keyword[0]
             meta = keyword[1]
 
             if name.startswith(prefix):
-                if (
-                    context.current_command == "CALL"
-                    and context.text.startswith("_")
-                ):
+                if context.current_command == "CALL" and context.text.startswith("_"):
                     # 省略形の場合は_を付けて表示
                     display_name = f"_{name}"
                 else:
@@ -295,8 +278,5 @@ class CommandCompleter(Completer):
                     name = keyword
                     meta = self.msx_keywords[key]["description"]
                 yield Completion(
-                    name,
-                    start_position=-len(word),
-                    display=name,
-                    display_meta=meta
+                    name, start_position=-len(word), display=name, display_meta=meta
                 )

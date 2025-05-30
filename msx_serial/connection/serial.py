@@ -1,16 +1,17 @@
 import serial
 from dataclasses import dataclass
-from .base import Connection
+from typing import Optional
+from .base import Connection, ConnectionConfig
 
 
 @dataclass
-class SerialConfig:
+class SerialConfig(ConnectionConfig):
     port: str = ""
     baudrate: int = 115200
     bytesize: int = 8
     parity: str = "N"
     stopbits: int = 1
-    timeout: float = None
+    timeout: Optional[float] = None
     xonxoff: bool = False
     rtscts: bool = False
     dsrdtr: bool = False
@@ -20,7 +21,17 @@ class SerialConnection(Connection):
     """シリアル接続クラス"""
 
     def __init__(self, config: SerialConfig):
-        self.connection = serial.Serial(**config.__dict__)
+        self.connection = serial.Serial(
+            port=config.port,
+            baudrate=config.baudrate,
+            bytesize=config.bytesize,
+            parity=config.parity,
+            stopbits=config.stopbits,
+            timeout=config.timeout,
+            xonxoff=config.xonxoff,
+            rtscts=config.rtscts,
+            dsrdtr=config.dsrdtr,
+        )
 
     def write(self, data: bytes) -> None:
         self.connection.write(data)

@@ -1,8 +1,9 @@
 from importlib import resources
 from jinja2 import Environment, FunctionLoader
+from typing import Optional
 
 
-def load_template(name):
+def load_template(name: str) -> Optional[str]:
     try:
         tpl = resources.files('msx_serial.transfer').joinpath(name)
         return tpl.read_text(encoding='utf-8')
@@ -10,7 +11,7 @@ def load_template(name):
         return None
 
 
-def send_basic_program(program: str, variables: dict) -> str:
+def send_basic_program(program: str, variables: dict[str, str]) -> str:
     env = Environment(loader=FunctionLoader(load_template))
     template = env.get_template(program)
     rendered = template.render(variables)

@@ -13,10 +13,10 @@ class TestMSXTerminalWithDummy(unittest.TestCase):
         config = DummyConfig()
         self.conn = DummyConnection(config)
         self.terminal = MSXTerminal(
-            config=config, encoding="utf-8", prompt_style="#00ff00 bold"
+            config=config, encoding="msx-jp", prompt_style="#00ff00 bold"
         )
-        self.user_input = UserInputHandler("#00ff00 bold", "utf-8", self.conn)
-        self.file_transfer = FileTransferManager(self.conn, "utf-8")
+        self.user_input = UserInputHandler("#00ff00 bold", "msx-jp", self.conn)
+        self.file_transfer = FileTransferManager(self.conn, "msx-jp")
         self.file_transfer.set_terminal(self.terminal)
 
         self.terminal.user_input = self.user_input

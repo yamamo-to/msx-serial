@@ -2,7 +2,13 @@
 MSXシリアルターミナルの接続基底クラス
 """
 
+from dataclasses import dataclass
 from typing import Protocol
+
+
+@dataclass
+class ConnectionConfig:
+    dummy: str = ""
 
 
 class Connection(Protocol):
