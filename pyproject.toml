@@ -33,6 +33,16 @@ dependencies = [
     "standard-telnetlib",
 ]
 
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "flake8>=6.0",
+    "mypy>=1.0",
+    "build>=1.0",
+    "twine>=4.0",
+]
+
 [project.scripts]
 msx-serial = "msx_serial:main"
 
@@ -48,3 +58,15 @@ fallback_version = "0.0.0"
 [project.urls]
 Repository = "https://github.com/yamamo-to/msx-serial"
 Issue = "https://github.com/yamamo-to/msx-serial/issues"
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "--cov=msx_serial --cov-report=term-missing"

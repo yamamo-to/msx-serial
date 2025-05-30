@@ -1,5 +1,8 @@
 # MSXシリアルターミナル
 
+[![CI](https://github.com/yamamo-to/msx-serial/actions/workflows/ci.yml/badge.svg)](https://github.com/yamamo-to/msx-serial/actions/workflows/ci.yml)
+[![PyPI version](https://badge.fury.io/py/msx-serial.svg)](https://badge.fury.io/py/msx-serial)
+
 MSXとのシリアル通信またはtelnet接続を行うターミナルプログラム
 
 ## 機能
