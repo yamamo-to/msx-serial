@@ -9,14 +9,15 @@ class TestMSXTerminalWithDummy(unittest.TestCase):
     def setUp(self):
         config = DummyConfig()
         self.conn = DummyConnection(config)
-        self.user_input = UserInputHandler("#00ff00 bold", "utf-8", self.conn)
-        self.file_transfer = FileTransferManager(self.conn, "utf-8")
-
         self.terminal = MSXTerminal(
             config=config,
             encoding="utf-8",
             prompt_style="#00ff00 bold"
         )
+        self.user_input = UserInputHandler("#00ff00 bold", "utf-8", self.conn)
+        self.file_transfer = FileTransferManager(self.conn, "utf-8")
+        self.file_transfer.set_terminal(self.terminal)
+
         self.terminal.user_input = self.user_input
         self.terminal.file_transfer = self.file_transfer
 
