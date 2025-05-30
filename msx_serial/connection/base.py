@@ -2,68 +2,26 @@
 MSXシリアルターミナルの接続基底クラス
 """
 
-from abc import ABC, abstractmethod
-from typing import Optional, Union, BinaryIO
-from ..input.commands import CommandType
+from typing import Protocol
 
 
-class BaseConnection(ABC):
-    """接続基底クラス"""
+class Connection(Protocol):
+    """接続インターフェース"""
 
-    @abstractmethod
-    def connect(self) -> None:
-        """接続を開始する"""
-        pass
+    def write(self, data: bytes) -> None:
+        ...
 
-    @abstractmethod
-    def disconnect(self) -> None:
-        """接続を切断する"""
-        pass
+    def flush(self) -> None:
+        ...
 
-    @abstractmethod
-    def send(self, data: Union[str, bytes]) -> None:
-        """データを送信する
+    def read(self, size: int) -> bytes:
+        ...
 
-        Args:
-            data: 送信するデータ
-        """
-        pass
+    def in_waiting(self) -> int:
+        ...
 
-    @abstractmethod
-    def receive(self, size: Optional[int] = None) -> bytes:
-        """データを受信する
+    def close(self) -> None:
+        ...
 
-        Args:
-            size: 受信するデータサイズ
-
-        Returns:
-            受信したデータ
-        """
-        pass
-
-    @abstractmethod
-    def send_file(self, file: BinaryIO) -> None:
-        """ファイルを送信する
-
-        Args:
-            file: 送信するファイル
-        """
-        pass
-
-    @abstractmethod
-    def receive_file(self, file: BinaryIO) -> None:
-        """ファイルを受信する
-
-        Args:
-            file: 受信するファイル
-        """
-        pass
-
-    @abstractmethod
-    def execute_command(self, command: CommandType) -> None:
-        """コマンドを実行する
-
-        Args:
-            command: 実行するコマンド
-        """
-        pass
+    def is_open(self) -> bool:
+        ...

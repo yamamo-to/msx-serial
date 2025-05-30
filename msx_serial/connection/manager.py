@@ -2,7 +2,7 @@ from typing import Union
 from .serial import SerialConfig, SerialConnection
 from .telnet import TelnetConfig, TelnetConnection
 from .dummy import DummyConfig, DummyConnection
-from .base import BaseConnection
+from .base import Connection
 
 
 class ConnectionManager:
@@ -11,9 +11,9 @@ class ConnectionManager:
         config: Union[SerialConfig, TelnetConfig, DummyConnection],
     ):
         self.config = config
-        self.connection: BaseConnection = self._create_connection()
+        self.connection: Connection = self._create_connection()
 
-    def _create_connection(self) -> BaseConnection:
+    def _create_connection(self) -> Connection:
         if isinstance(self.config, SerialConfig):
             return SerialConnection(self.config)
         elif isinstance(self.config, TelnetConfig):
