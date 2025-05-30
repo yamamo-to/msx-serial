@@ -1,0 +1,22 @@
+.TH "CALL SJIS" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+CALL SJIS \- 全角 1 文字のシフト JIS コードを得ます。
+
+.SH SYNOPSIS
+.B CALL SJIS(<文字変数>,<文字列>)
+
+.SH DESCRIPTION
+.PP
+全角 1 文字のシフト JIS コードを得ます。
+
+.SH EXAMPLES
+.PP
+CALL SJIS(KA$,"漢字書けな～い！"):PRINT KA$
+ [表示] 8ABF
+
+.SH NOTES
+.PP
+.PP
+<文字列> の最初の全角 1 文字(2 バイト)が有効です。
+.PP
+結果は <文字変数> に入ります。

@@ -1,0 +1,22 @@
+.TH "CALL KANJI" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+CALL KANJI \- 漢字モードにします。
+
+.SH SYNOPSIS
+.B CALL KANJI[<モード>]
+
+.SH DESCRIPTION
+.PP
+漢字モードにします。
+
+.SH EXAMPLES
+.PP
+<モード> は以下の通りです。省略時は 0 です。
+
+      サイズ 画面  インターレース
+    0 16x16  32x13 ノンインターレース
+    1 12x16  40x13 ノンインターレース
+    2 16x16  32x24 インターレース
+    3 12x16  40x24 インターレース
+
+画面の横幅は全角での文字数です。

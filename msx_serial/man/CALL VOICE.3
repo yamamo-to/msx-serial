@@ -1,0 +1,218 @@
+.TH "CALL VOICE" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+CALL VOICE \- MSX-MUSIC の演奏時に用いる音色を設定する
+
+.SH SYNOPSIS
+.B CALL VOICE (<チャンネル1の音色><,チャンネル2の音色> ...]
+
+.SH DESCRIPTION
+.PP
+MSX-MUSIC の演奏時に用いる音色を設定する
+
+.SH EXAMPLES
+.PP
+CALL VOICE (@0,@4,@4)
+
+.SH NOTES
+.PP
+.PP
+<音色> の値は以下の通りです。
+.PP
+「内蔵」と記載されていない音色を
+.PP
+複数音再生する事はできません。@<数式> と指定します。
+.PP
+     0 内蔵 Piano 1 ピアノ１
+.PP
+     1      Piano 2 ピアノ２
+.PP
+     2 内蔵 Violin バイオリン
+.PP
+     3 内蔵 Flute 1 フルート１
+.PP
+     4 内蔵 Clarinet クラリネット
+.PP
+     5 内蔵 Oboe オーボエ
+.PP
+     6 内蔵 Trumpet トランペット
+.PP
+     7      Pipe Organ パイプオルガン
+.PP
+     8      Xyophone シロフォン
+.PP
+     9 内蔵 Organ オルガン
+.PP
+    10 内蔵 Guitar ギター
+.PP
+    11      Santool 1 サンツール１
+.PP
+    12 内蔵 Eletric Piano 1 エレキベース
+.PP
+    13      Clavicode 1	クラビコード１
+.PP
+    14 内蔵 Harpsicode 1 ハープシコード１
+.PP
+    15      Harpsicode 2 ハープシコード２
+.PP
+    16 内蔵 Vibraphone 1 ビブラフォン
+.PP
+    17      Koto 1 琴１
+.PP
+    18      Taiko 太鼓
+.PP
+    19      Enging 1 エンジン１
+.PP
+    20      UFO ＵＦＯ
+.PP
+    21      Synthesizer Bell シンセサイザーベル
+.PP
+    22      Chime チャイム
+.PP
+    23 内蔵 Synthesizer Bass シンセベース
+.PP
+    24 内蔵 Synthesizer	シンセサイザー
+.PP
+    25      Synthesizer Percussion シンセドラム
+.PP
+    26      Synthesizer Rhythm シンセリズム
+.PP
+    27      Harm Drum ハーモドラム
+.PP
+    28      Cawbell カウベル
+.PP
+    29      Close Hi-hat ハイハット
+.PP
+    30      Synre Drum スネアドラム
+.PP
+    31      Bass Drum バスドラム
+.PP
+    32      Piano 3 ピアノ３
+.PP
+    33 内蔵 Eletric Piano 2 ウッドベース
+.PP
+    34      Santool 2 サンツール２
+.PP
+    35      Brass ブラス
+.PP
+    36      Flute 2 フルート２
+.PP
+    37      Clavicode 2 クラビコード２
+.PP
+    38      Clavicode 3	クラビコード３
+.PP
+    39      Koto 2 琴２
+.PP
+    40      Pipr Organ 2 パイプオルガン２
+.PP
+    41      PohdsPLA ＰｏｈｄｓＰＬＡ
+.PP
+    42      PohdsPRA ＰｏｈｄｓＰＲＡ
+.PP
+    43      Orch L チャーチオルガンＬ
+.PP
+    44      Orch R チャーチオルガンＲ
+.PP
+    45      Synthesizer Violin シンセバイオリン
+.PP
+    46      Synthesizer Organ シンセオルガン
+.PP
+    47      Synthesizer Brass シンセブラス
+.PP
+    48 内蔵 Tube ホルン
+.PP
+    49      Shamisen 三味線
+.PP
+    50      Magical マジカル
+.PP
+    51      Huwawa フワワ
+.PP
+    52      Wander Flat ワンダーフラット
+.PP
+    53      Hardrock ハードロック
+.PP
+    54      Machine マシーン
+.PP
+    55      Machine V マシーンＶ
+.PP
+    56      Comic コミック
+.nf
+    57      SE-Comic ＳＥ－コミック
+    58      SE-Laser ＳＥ－レーザー
+    59      SE-Noise ＳＥ－ノイズ
+    60      SE-Star 1 ＳＥ－星１
+    61      SE-Star 2 ＳＥ－星２
+.fi
+.PP
+    62      Engine 2 エンジン２
+.PP
+    63      Silence 無音
+.PP
+また、音色を作成する事もできます。
+.PP
+32バイトの内容で、以下のフォーマットで作成します。
+.PP
+    ヘッダ部 
+.PP
+    0～7   音色名
+.PP
+    8～9   ボイス移調
+.PP
+    10     bit1～3: フィートバック
+.PP
+    11～15 予約
+.PP
+    オペレータ0
+.PP
+    16     bit0～3: MULT
+.PP
+           bit4:    KSR
+.PP
+           bit5:    EG
+.PP
+           bit6:    PM
+.PP
+           bit7:    AM
+.PP
+    17     bit0～5: トータルレベル
+.PP
+           bit6～7: レベルキースケール
+.PP
+    18     bit0～3: ディケイレイト
+.PP
+           bit4～7: アタックレイト
+.PP
+    19     bit0～3: リリースレイト
+.PP
+           bit4～7: サスティンレベル
+.PP
+    20～23 予約
+.PP
+    オペレータ1
+.PP
+    24	   bit0～3: MULT
+.PP
+           bit4:    KSR
+.PP
+           bit5:    EG
+.PP
+           bit6:    PM
+.PP
+           bit7:    AM
+.PP
+    25     bit0～5: トータルレベル
+.PP
+           bit6～7: レベルキースケール
+.PP
+    26     bit0～3: ディケイレイト
+.PP
+           bit4～7: アタックレイト
+.PP
+    27     bit0～3: リリースレイト
+.PP
+           bit4～7: サスティンレベル
+.PP
+    28～31 予約
+.PP
+この作成された音色も「内蔵」と記載されていない音色同様、
+.PP
+複数音で再生する事はできません。

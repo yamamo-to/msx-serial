@@ -1,0 +1,241 @@
+.TH "ERR" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+ERR \- エラーコードを得ます。
+
+.SH SYNOPSIS
+.B ERR
+
+.SH DESCRIPTION
+.PP
+エラーコードを得ます。
+
+.SH EXAMPLES
+.PP
+IF ERR=53 THEN RESUME NEXT
+
+.SH NOTES
+.PP
+.PP
+得られるエラーコードは以下の通りです。
+.PP
+     1      NEXT without FOR
+.PP
+            NEXT には FOR が必要
+.PP
+            FOR が実行されていない状態で NEXT がある
+.PP
+     2      Syntax error
+.PP
+            文法エラー
+.PP
+     3      RETURN without GOSUB
+.PP
+            RETURN には GOSUB が必要
+.PP
+     4      Out of DATA
+.PP
+            DATA が抜けている。READ で読み込む DATA がない
+.PP
+     5      Illegal function call
+.PP
+            ステートメント・関数の利用方法に誤りがある
+.PP
+     6      Overflow
+.PP
+            演算結果が変数の型範囲を超えている
+.PP
+     7      Out of memory
+.PP
+            メモリが足りない。プログラムが長すぎる等
+.PP
+     8      Undefined line number
+.PP
+            指定した行番号が存在しない
+.PP
+     9      Subscript out of range
+.PP
+            配列変数の添え字が DIM 指定の最大値より大きい
+.PP
+    10      Redimensioned array
+.PP
+            配列変数が既に定義されている
+.PP
+    11      Division by zero
+.PP
+            0 による割り算はできない
+.PP
+    12      Illegal direct
+.PP
+            ダイレクトモードでは実行できない
+.PP
+    13      Type mismatch
+.PP
+            データの型が合わない。変数の型があっていない
+.PP
+    14      Out of string space
+.PP
+            文字列を終了する領域が足りない
+.PP
+    15      String too long
+.PP
+            文字列が長すぎる
+.PP
+    16      String formula too complex
+.PP
+            指定した文字列が複雑すぎる
+.PP
+    17      Can't continue
+.PP
+            CONT 不可
+.PP
+            中断後にプログラム変更・CLEAR の実行等を行なっている
+.PP
+    18      Undefined user function
+.PP
+            指定した DEF FN が存在しない。
+.PP
+    19      Device I/O error
+.PP
+            デバイスの入出力に関連したエラー
+.PP
+    20      Verify error
+.PP
+            検査エラー。パソコンとファイルのプログラムが一致しない
+.PP
+    21      No RESUME
+.PP
+            RESUME がない
+.PP
+    22      RESUME without error
+.PP
+            RESUME がエラー発生時しか実行できない
+.PP
+    23      Unprineale error
+.PP
+            非定義エラー
+.PP
+    24      Missing opreand
+.PP
+            必須の記載が省略されている
+.PP
+    25      Line buffer overflow
+.PP
+            バッファの容量を越えた
+.PP
+    26～49  Unprineale error
+.PP
+            非定義エラー
+.PP
+    50      Field overflow
+.PP
+            Disk FIELD によるフィールトサイズが
+.PP
+            OPEN によるレコード長を超えている
+.PP
+    51      Internal error
+.PP
+            BASIC 内部によるエラー
+.PP
+    52      Bad file number
+.PP
+            MAXFILES で指定した値外のファイル番号を用いている
+.PP
+    53      File not found
+.PP
+            指定のファイルは存在しない
+.PP
+    54      File already open
+.PP
+            ファイルは既に開かれている
+.PP
+    55      Input past end
+.PP
+            入力は終了している。終了しているのに更に読み込もうとした
+.PP
+    56      Bad file name
+.PP
+            ファイル名が不適当
+.PP
+    57      Direct statement in file
+.PP
+            読み込もうとしたファイルにプログラム以外ものが含まれている
+.PP
+    58      Sequential I/O only
+.PP
+            シーケンシャルファイルのみ。ランダムアクセスを行なおうとした
+.PP
+    59      File not OPEN
+.PP
+            ファイルは開けない。ファイル番号にファイルが割り当てていない
+.PP
+    60      Bad FAT
+.PP
+       Disk ディスク管理領域の異常。ディスク破損の可能性あり
+.PP
+    61      Bad file mode
+.PP
+       Disk OPEN で指定しているモードと用いている文が異なる
+.PP
+    62      Bad drive name
+.PP
+       Disk ドライブ名指定の誤り
+.PP
+    63      Bad sector number
+.PP
+       Disk セクタ番号が異常。ディスク破損の可能性あり
+.PP
+    64      File still open
+.PP
+       Disk ファイルは開かれている。開いているファイルの削除等を行なった
+.PP
+    65      File already exists
+.PP
+       Disk 既にファイル名が存在している
+.PP
+    66      Disk full
+.PP
+       Disk ディスクがいっぱい。空き容量がない
+.PP
+    67      Too meny files
+.PP
+       Disk 生成できるファイル数が限界に達している
+.PP
+    68      Disk write protexted
+.PP
+       Disk ディスクが書き込み禁止になっている
+.PP
+    69      Disk I/O error
+.PP
+       Disk ディスクの入出力に関連したエラー
+.PP
+    70      Disk offline
+.PP
+       Disk ディスクドライブにディスクが入っていない
+.PP
+    71      Rename across disk
+.PP
+       Disk 異なるディスク間でファイル名の変更を行なおうとした
+.PP
+    72      File write protected
+.PP
+     Disk 2 ファイルが書き込み禁止になっている
+.PP
+    73      Directory already exists
+.PP
+     Disk 2 既にディレクトリが存在している
+.PP
+    74      Directory not found
+.PP
+     Disk 2 指定のディレクトリは存在しない
+.PP
+    75      RAM disk already exists
+.PP
+     Disk 2 既にRAMディスクが存在している
+.PP
+    76～255 Unprineale error
+.PP
+            非定義エラー
+.PP
+MSX MAGAZINE 永久保存版にて
+.PP
+RESUME without error が 33 となっていますが、22 が正しいです。

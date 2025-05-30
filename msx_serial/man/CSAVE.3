@@ -1,0 +1,29 @@
+.TH "CSAVE" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+CSAVE \- プログラムをカセットテープに保存します。
+
+.SH SYNOPSIS
+.B CSAVE <ファイル名>[,<ポーレート>]
+
+.SH DESCRIPTION
+.PP
+プログラムをカセットテープに保存します。
+
+.SH EXAMPLES
+.PP
+SAVE "TEST"
+
+.SH NOTES
+.PP
+.PP
+<ポーレート> は保存時の速さと指定します。
+.PP
+    1 1200 ボー
+.PP
+    2 2400 ボー
+.PP
+省略時は 1 です。2 にすると 1 の2倍で保存できますが、
+.PP
+カセットレコーダーの性能により
+.PP
+上手く保存できない場合があります。

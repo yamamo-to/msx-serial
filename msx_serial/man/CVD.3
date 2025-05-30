@@ -1,0 +1,25 @@
+.TH "CVD" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+CVD \- MKD$ による文字型の値を倍精度実数型型に戻します。
+
+.SH SYNOPSIS
+.B CVD(<文字式>)
+
+.SH DESCRIPTION
+.PP
+MKD$ による文字型の値を倍精度実数型型に戻します。
+
+.SH EXAMPLES
+.PP
+SS#=CVD(SS$)
+
+.SH NOTES
+.PP
+.PP
+ランダムアクセスファイルは文字型しか扱えないため、
+.PP
+変数の型を変換するために用意されています。
+.PP
+MKD$ により倍精度整数型は 8 バイトの文字型に変化します。
+.PP
+CVD はそれを元の倍精度整数型に戻す機能です。

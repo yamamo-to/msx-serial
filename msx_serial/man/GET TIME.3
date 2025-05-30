@@ -1,0 +1,29 @@
+.TH "GET TIME" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+GET TIME \- 現在の時間を変数に入れます。
+
+.SH SYNOPSIS
+.B GET TIME <変数名>[.A]
+
+.SH DESCRIPTION
+.PP
+現在の時間を変数に入れます。
+
+.SH EXAMPLES
+.PP
+GET TIME T$
+
+.SH NOTES
+.PP
+.PP
+<変数名> は文字型です。
+.PP
+得られる値は <時>:<分>:<秒> でそれぞれ2桁になります。
+.PP
+(9以下は 0 が頭に付加されます。）
+.PP
+<時> は24時間表記です。
+.PP
+,A をつけた場合は設定されているアラームの時間を取得します。
+.PP
+MSX PLAYer では Windows での現在時間が取得されます。

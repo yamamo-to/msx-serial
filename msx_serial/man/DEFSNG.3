@@ -1,0 +1,27 @@
+.TH "DEFSNG" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+DEFSNG \- 指定された変数を単精度実数型に定義します。
+
+.SH SYNOPSIS
+.B DEFSNG <範囲>[,<範囲>...]
+
+.SH DESCRIPTION
+.PP
+指定された変数を単精度実数型に定義します。
+
+.SH EXAMPLES
+.PP
+DEFDNG A-I,S
+
+.SH NOTES
+.PP
+.PP
+<範囲> は英文 1 文字ですか - で定義範囲を指定します。
+.PP
+DEFSNG よりは型定義による変数が優先されます。
+.PP
+定義されていない型定義を行なっていない変数は
+.PP
+倍精度実数型扱いとなります。
+.PP
+CLEAR によって定義は解除されます。

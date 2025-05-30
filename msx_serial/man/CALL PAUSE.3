@@ -1,0 +1,23 @@
+.TH "CALL PAUSE" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+CALL PAUSE \- 指定時間、実行を停止します。
+
+.SH SYNOPSIS
+.B CALL PAUSE(<時間>)
+
+.SH DESCRIPTION
+.PP
+指定時間、実行を停止します。
+
+.SH EXAMPLES
+.PP
+CALL PAUSE(1000)
+
+.SH NOTES
+.PP
+.PP
+<時間> の単位はミリ秒です。
+.PP
+停止中も割り込みは許可され、
+.PP
+{CTRL]+[STOP] による中断も行なえます。

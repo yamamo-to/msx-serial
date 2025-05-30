@@ -1,0 +1,33 @@
+.TH "IF THEN ELSE" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+IF THEN ELSE \- 条件判断に応じて処理を行ないます。
+
+.SH SYNOPSIS
+.B IF <条件式> THEN {<行番号>|<文>} [ELSE {<行番号>|<文>}]
+
+.SH DESCRIPTION
+.PP
+条件判断に応じて処理を行ないます。
+
+.SH EXAMPLES
+.PP
+IF I>0 THEN 30 ELSE I=I-1:GOTO 100
+
+.SH NOTES
+.PP
+.PP
+<条件式> を判断し、正しい場合(0以外の場合)は
+.PP
+THEN 以降の <文> を、
+.PP
+異なっている場合(0の場合)は ELSE 以降の <文> を実行します。
+.PP
+行番号へ飛ばす場合は GOTO を抜いて <行番号> のみにできます。
+.PP
+また THEN の後が <行番号> である場合は
+.PP
+THEN を GOTO に変更する事もできます。
+.PP
+THEN の後 に記載がない場合や ELSE が省略されている場合は、
+.PP
+次の文に制御が移ります。

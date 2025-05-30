@@ -1,0 +1,22 @@
+.TH "CHR$" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+CHR$ \- 指定したキャラクタコードに対応する文字を得ます。
+
+.SH SYNOPSIS
+.B CHR$(<数式>)
+
+.SH DESCRIPTION
+.PP
+指定したキャラクタコードに対応する文字を得ます。
+
+.SH EXAMPLES
+.PP
+PRINT CHR$(&H41)
+ [結果] A
+
+.SH NOTES
+.PP
+.PP
+<数式> の値は 0～255 です。
+.PP
+グラフィックコードを出力する場合は CHR$(1) を前に付加します。

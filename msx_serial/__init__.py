@@ -3,7 +3,8 @@ MSXシリアルターミナル
 MSXとのシリアル通信を行うターミナルプログラム
 """
 
-from .msx_serial import MSXSerialTerminal, main
+from .terminal import MSXTerminal
 from ._version import __version__
+from .__main__ import main
 
-__all__ = ["MSXSerialTerminal", "main", "__version__"]
+__all__ = ["MSXTerminal", "__version__", "main"]

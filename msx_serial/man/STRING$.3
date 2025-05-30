@@ -1,0 +1,28 @@
+.TH "STRING$" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+STRING$ \- 指定した数の文字を得ます。
+
+.SH SYNOPSIS
+.B STRING$(<文字数>,{文字式|数式})
+
+.SH DESCRIPTION
+.PP
+指定した数の文字を得ます。
+
+.SH EXAMPLES
+.PP
+PRINT STRING$(3,"M")
+ [結果] MMM
+
+.SH NOTES
+.PP
+.PP
+<文字式> で複数の文字による文字列となっている場合は
+.PP
+頭の文字が有効となります。
+.PP
+グラフィック文字の場合は CHR$(1) となります。
+.PP
+<数式> の場合は 0～255 が有効です。
+.PP
+そのキャラクターコードによる文字となります。

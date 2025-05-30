@@ -1,0 +1,25 @@
+.TH "CVS" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+CVS \- MKS$ による文字型の値を単精度実数型に戻します。
+
+.SH SYNOPSIS
+.B CVS(<文字式>)
+
+.SH DESCRIPTION
+.PP
+MKS$ による文字型の値を単精度実数型に戻します。
+
+.SH EXAMPLES
+.PP
+SS!=CVI(SS$)
+
+.SH NOTES
+.PP
+.PP
+ランダムアクセスファイルは文字型しか扱えないため、
+.PP
+変数の型を変換するために用意されています。
+.PP
+MKS$ により単精度実数型は 4 バイトの文字型に変化します。
+.PP
+CVS はそれを元の単精度実数型に戻す機能です。

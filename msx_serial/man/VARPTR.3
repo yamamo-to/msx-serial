@@ -1,0 +1,14 @@
+.TH "VARPTR" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+VARPTR \- 変数やファイルが割り当てられている領域の開始番地を得ます。
+
+.SH SYNOPSIS
+.B VARPTR({<変数名>|#<ファイル番号>})
+
+.SH DESCRIPTION
+.PP
+変数やファイルが割り当てられている領域の開始番地を得ます。
+
+.SH EXAMPLES
+.PP
+PRINT HEX$(VARPTR(I))

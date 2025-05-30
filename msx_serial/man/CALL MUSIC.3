@@ -1,0 +1,32 @@
+.TH "CALL MUSIC" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+CALL MUSIC \- MSX-MUSIC を初期化します。
+
+.SH SYNOPSIS
+.B CALL MUSIC[<モード>][,[0]][,PLAY#文字式1チャンネル数]
+[,PLAY#文字式2チャンネル数][...]
+
+.SH DESCRIPTION
+.PP
+MSX-MUSIC を初期化します。
+
+.SH EXAMPLES
+.PP
+CALL MUSIC(0,,1,1,1,1,1,1,1,1,1)
+
+.SH NOTES
+.PP
+.PP
+<モード> は以下の通りです。
+.PP
+    0 FM9チャンネル
+.PP
+    1 FM6チャンネル+リズム音
+.PP
+[0] の部分は MSX-AUDIO で用いられているもので、
+.PP
+MSX-MUSIC では 0 とします。
+.PP
+全パラメータを省略した場合は
+.PP
+CALL MUSIC(1,0,1,1,1) と同じになります。

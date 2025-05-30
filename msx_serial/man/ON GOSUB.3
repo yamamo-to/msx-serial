@@ -1,0 +1,25 @@
+.TH "ON GOSUB" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+ON GOSUB \- 値に応じて指定のサブルーチンへ制御を移します。
+
+.SH SYNOPSIS
+.B ON <数式> GOSUB <行番号>[,<行番号>]
+
+.SH DESCRIPTION
+.PP
+値に応じて指定のサブルーチンへ制御を移します。
+
+.SH EXAMPLES
+.PP
+ON SW GOSUB 110,120,130
+
+.SH NOTES
+.PP
+.PP
+<数式> に応じて指定されたサブルーチン <行番号> へ
+.PP
+制御を移します。
+.PP
+<数式> が 0 または <行番号> の数より多い場合は、
+.PP
+ON GOSUB の次の文へ移ります。

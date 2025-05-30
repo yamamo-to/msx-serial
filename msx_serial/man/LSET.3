@@ -1,0 +1,31 @@
+.TH "LSET" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+LSET \- ランダムアクセスのバッファに左詰めでデータを転送します。
+
+.SH SYNOPSIS
+.B LSET <変数>=<文字式>
+
+.SH DESCRIPTION
+.PP
+ランダムアクセスのバッファに左詰めでデータを転送します。
+
+.SH EXAMPLES
+.PP
+LSET DA$="TATOEBA"
+
+.SH NOTES
+.PP
+.PP
+FIELD で定義されたランダムアクセスの
+.PP
+バッファ <変数> に <文字式> を入れます。
+.PP
+文字数が定義された文字数より少ない場合は左詰めで入り、
+.PP
+空いた部分は空白が入ります。
+.PP
+また文字数より多い場合は右側が切り捨てられます。
+.PP
+ランダムアクセスは文字型しか扱えないため、
+.PP
+数値型は MKI$・MKS$・MKD$ による変換が必要です。

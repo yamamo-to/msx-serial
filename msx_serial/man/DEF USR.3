@@ -1,0 +1,24 @@
+.TH "DEF USR" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+DEF USR \- マシン語プログラムの実行開始番地を指定します。
+
+.SH SYNOPSIS
+.B DEF USR[<番号>]=<開始番地>
+
+.SH DESCRIPTION
+.PP
+マシン語プログラムの実行開始番地を指定します。
+
+.SH EXAMPLES
+.PP
+DEF USR=&HE000
+DEF USR1=&H9000
+
+.SH NOTES
+.PP
+.PP
+<番号> は 0～9 で、USR と共通しています。
+.PP
+省略した場合は 0 になります。
+.PP
+<開始番地> は 0～&HFFFF(65535) です。

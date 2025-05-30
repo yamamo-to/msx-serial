@@ -1,0 +1,25 @@
+.TH "MAXFILES" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+MAXFILES \- 使用する最大のファイル数を設定します。
+
+.SH SYNOPSIS
+.B MAXFILES=<ファイル数>
+
+.SH DESCRIPTION
+.PP
+使用する最大のファイル数を設定します。
+
+.SH EXAMPLES
+.PP
+MAXFILES=2
+
+.SH NOTES
+.PP
+.PP
+OPEN で同時にオープンできるファイル数を設定します。
+.PP
+<ファイル数> の値は 0～15 です。
+.PP
+MAXFILES を実行すると、変数は初期化され、
+.PP
+開いているファイルは全て閉じられます。

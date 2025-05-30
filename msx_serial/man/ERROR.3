@@ -1,0 +1,25 @@
+.TH "ERROR" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+ERROR \- エラーを発生させます。
+
+.SH SYNOPSIS
+.B ERROR <エラーコード>
+
+.SH DESCRIPTION
+.PP
+エラーを発生させます。
+
+.SH EXAMPLES
+.PP
+ERROR 255
+
+.SH NOTES
+.PP
+.PP
+故意にエラーを発生させる事ができます。
+.PP
+エラーコードで未定義な部分を用いて独自のエラーを生じさせ、
+.PP
+ON ERROR GOTO でエラー処理ルーチンに飛ばして
+.PP
+処理する手段があります。

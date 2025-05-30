@@ -1,0 +1,33 @@
+.TH "DEFINT" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+DEFINT \- 指定された変数を整数型に定義します。
+
+.SH SYNOPSIS
+.B DEFINT <範囲>[,<範囲>...]
+
+.SH DESCRIPTION
+.PP
+指定された変数を整数型に定義します。
+
+.SH EXAMPLES
+.PP
+DEFINT A-I,N
+
+.SH NOTES
+.PP
+.PP
+<範囲> は英文 1 文字ですか - で定義範囲を指定します。
+.PP
+DEFINT よりは型定義による変数が優先されます。
+.PP
+定義されていない型定義を行なっていない変数は
+.PP
+倍精度実数型扱いとなります。
+.PP
+CLEAR によって定義は解除されます。
+.PP
+DEFINT を実行する事で、
+.PP
+変数のメモリ管理が少なくなり処理が高速になる事から、
+.PP
+初期設定として DEFINT A-Z とする手段が有効です。

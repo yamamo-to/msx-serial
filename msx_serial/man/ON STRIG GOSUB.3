@@ -1,0 +1,33 @@
+.TH "ON STRIG GOSUB" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+ON STRIG GOSUB \- スペースキー・ジョイスティックボタンが押された時の
+行番号を指定します。
+
+.SH SYNOPSIS
+.B ON STRIG GOSUB [<行番号>][,<行番号> ...]
+
+.SH DESCRIPTION
+.PP
+スペースキー・ジョイスティックボタンが押された時の
+行番号を指定します。
+
+.SH EXAMPLES
+.PP
+ON STRIG GOSUB 10000,10000,10000
+
+.SH NOTES
+.PP
+.PP
+<行番号> は最大5個指定可能で、
+.PP
+左からスペースキー・ポート1/Aボタン・ポート2/Aボタン・
+.PP
+ポート1/Bボタン・ポート2/Bボタンとなっています。
+.PP
+サブルーチンが実行されている間は
+.PP
+自動的に STRIG STOP の状態となり、
+.PP
+RETURN で戻った場合は STRIG ON となります。
+.PP
+これはサブルーチン実行中に割り込みが発生するのを防ぐためです。

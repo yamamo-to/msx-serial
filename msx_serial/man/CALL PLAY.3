@@ -1,0 +1,27 @@
+.TH "CALL PLAY" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+CALL PLAY \- MSX-MUSIC の演奏状態を得ます。
+
+.SH SYNOPSIS
+.B CALL MUSIC(<文字式番号>,<変数名>)
+
+.SH DESCRIPTION
+.PP
+MSX-MUSIC の演奏状態を得ます。
+
+.SH EXAMPLES
+.PP
+CALL MUSIC(1,A)
+
+.SH NOTES
+.PP
+.PP
+<変数名> に <文字式番号> の状態を返します。
+.PP
+演奏中の場合は -1、演奏が停止している場合は 0 を返します。
+.PP
+<文字式番号> が 0 の場合は全文字式が対象となり、
+.PP
+一つでも演奏中の場合は -1、
+.PP
+全ての演奏が停止している場合は 0 を返します。

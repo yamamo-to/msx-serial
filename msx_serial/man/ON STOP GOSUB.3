@@ -1,0 +1,25 @@
+.TH "ON STOP GOSUB" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+ON STOP GOSUB \- [CTRL]+[STOP] を押した場合に実行する行番号を指定します。
+
+.SH SYNOPSIS
+.B ON STOP GOSUB <行番号>
+
+.SH DESCRIPTION
+.PP
+[CTRL]+[STOP] を押した場合に実行する行番号を指定します。
+
+.SH EXAMPLES
+.PP
+ON STOP GOSUB 10000
+
+.SH NOTES
+.PP
+.PP
+サブルーチンが実行されている間は
+.PP
+自動的に STOP STOP の状態となり、
+.PP
+RETURN で戻った場合は STOP ON となります。
+.PP
+これはサブルーチン実行中に割り込みが発生するのを防ぐためです。

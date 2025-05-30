@@ -1,0 +1,27 @@
+.TH "DEFSTR" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+DEFSTR \- 指定された変数を文字型に定義します。
+
+.SH SYNOPSIS
+.B DEFSTR <範囲>[,<範囲>...]
+
+.SH DESCRIPTION
+.PP
+指定された変数を文字型に定義します。
+
+.SH EXAMPLES
+.PP
+DEFSTR A-I,S
+
+.SH NOTES
+.PP
+.PP
+<範囲> は英文 1 文字ですか - で定義範囲を指定します。
+.PP
+DEFSTR よりは型定義による変数が優先されます。
+.PP
+定義されていない型定義を行なっていない変数は
+.PP
+倍精度実数型扱いとなります。
+.PP
+CLEAR によって定義は解除されます。

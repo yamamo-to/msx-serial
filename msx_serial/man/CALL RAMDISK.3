@@ -1,0 +1,35 @@
+.TH "CALL RAMDISK" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+CALL RAMDISK \- RAMディスクの作成・設定・削除を行ないます。
+
+.SH SYNOPSIS
+.B CALL RAMDISK(<容量><,変数>)
+
+.SH DESCRIPTION
+.PP
+RAMディスクの作成・設定・削除を行ないます。
+
+.SH EXAMPLES
+.PP
+CALL RMDIR(4064,D)
+
+.SH NOTES
+.PP
+.PP
+RAMディスクはメモリ上に作成されるディスクです。
+.PP
+メモリディスク（MEM:）と仕組み上は同じですが、
+.PP
+異なる扱いです。
+.PP
+他のディスク同様に H: で扱えるのが特徴です。
+.PP
+<容量> はKバイト単位で 0～4064 です。
+.PP
+16K バイト単位で値が半端である場合は切り上げられます。
+.PP
+0 を指定した場合は削除となります。
+.PP
+<変数> を指定すると
+.PP
+作成された RAM ディスクの容量が変数に返ってきます。

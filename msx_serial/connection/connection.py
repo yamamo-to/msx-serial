@@ -2,6 +2,7 @@ from typing import Union
 from urllib.parse import urlparse, parse_qs
 from .serial import SerialConfig
 from .telnet import TelnetConfig
+from .dummy import DummyConfig
 
 
 def detect_connection_type(uri: str) -> Union[TelnetConfig, SerialConfig]:
@@ -46,6 +47,8 @@ def detect_connection_type(uri: str) -> Union[TelnetConfig, SerialConfig]:
                 rtscts=bool(query.get("rtscts", False)[0]),
                 dsrdtr=bool(query.get("dsrdtr", False)[0]),
             )
+        elif scheme == "dummy":
+            return DummyConfig()
         else:
             raise ValueError(f"未対応のスキーム: {scheme}")
     except Exception as e:

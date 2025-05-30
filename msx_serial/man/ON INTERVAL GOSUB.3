@@ -1,0 +1,29 @@
+.TH "ON INTERVAL GOSUB" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+ON INTERVAL GOSUB \- 一定時間毎に実行する行番号を指定します。
+
+.SH SYNOPSIS
+.B ON INTERVAL=<時間> GOSUB <行番号>
+
+.SH DESCRIPTION
+.PP
+一定時間毎に実行する行番号を指定します。
+
+.SH EXAMPLES
+.PP
+ON INTERVAL=60 GOSUB 10000
+
+.SH NOTES
+.PP
+.PP
+<時間> は 1/60 秒で 1～65535 です。
+.PP
+サブルーチンが実行されている間は
+.PP
+自動的に INTERVAL STOP の状態となり、
+.PP
+RETURN で戻った場合は INTERVAL ON となります。
+.PP
+これはサブルーチン実行中に
+.PP
+割り込みが発生するのを防ぐためです。

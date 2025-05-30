@@ -1,0 +1,21 @@
+.TH "POKE" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+POKE \- メモリに値を書き込みます。
+
+.SH SYNOPSIS
+.B POKE <番地>,<値>
+
+.SH DESCRIPTION
+.PP
+メモリに値を書き込みます。
+
+.SH EXAMPLES
+.PP
+PSET &HA000,&H80
+
+.SH NOTES
+.PP
+.PP
+<番地> の値は &H0000～&HFFFF(0～65535) です。
+.PP
+<値> は &H00～&HFF(0～255) です。

@@ -1,0 +1,27 @@
+.TH "LOAD" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+LOAD \- ファイルに保存されたプログラムを読み込みます。
+
+.SH SYNOPSIS
+.B LOAD <ファイル名>[,R]
+
+.SH DESCRIPTION
+.PP
+ファイルに保存されたプログラムを読み込みます。
+
+.SH EXAMPLES
+.PP
+LOAD "LOAD.BAS",R
+
+.SH NOTES
+.PP
+.PP
+読み込まれると、存在していたファイルは削除されます。
+.PP
+また、全ファイルが閉じられ、変数は初期化されます。
+.PP
+<ファイル名> はドライブ名、
+.PP
+Disk BASIC 2 以降ではディレクトリ名を含むことができます。
+.PP
+,R が付いている場合は読み込んだプログラムを実行します。

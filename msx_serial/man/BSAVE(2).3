@@ -1,0 +1,27 @@
+.TH "BSAVE(2)" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+BSAVE(2) \- VRAM にあるデータをファイルに保存します。
+
+.SH SYNOPSIS
+.B BSAVE <ファイルスペック>,<開始番地>,<終了番地>,S
+
+.SH DESCRIPTION
+.PP
+VRAM にあるデータをファイルに保存します。
+
+.SH EXAMPLES
+.PP
+BSAVE "DATA1.SC7",&H0000,&HFA9F,S
+
+.SH NOTES
+.PP
+.PP
+<開始番地> から <終了番地> までの
+.PP
+VRAM 上のデータをファイルに保存します。
+.PP
+<開始番地> <終了番地> の値は
+.PP
+アクティブページの先頭からのオフセットとなり、
+.PP
+0～65535 の整数を指定します。

@@ -1,0 +1,26 @@
+.TH "FIX" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+FIX \- 小数点以下を取り去った値を得ます。
+
+.SH SYNOPSIS
+.B FIX(<数式>)
+
+.SH DESCRIPTION
+.PP
+小数点以下を取り去った値を得ます。
+
+.SH EXAMPLES
+.PP
+PRINT FIX(-2.3)
+ [表示] -2
+
+.SH NOTES
+.PP
+.PP
+<数式> に正の値である場合は INT と同じ値を得られますが、
+.PP
+負の値の場合は異なります。
+.PP
+    INT(-2.3) → -3
+.PP
+    FIX(-2.3) → -2

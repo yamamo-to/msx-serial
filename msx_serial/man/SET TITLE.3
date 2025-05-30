@@ -1,0 +1,41 @@
+.TH "SET TITLE" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+SET TITLE \- 初期画面のタイトル・色を指定します。
+
+.SH SYNOPSIS
+.B SET TITLE<タイトル>[,<色番号>]
+
+.SH DESCRIPTION
+.PP
+初期画面のタイトル・色を指定します。
+
+.SH EXAMPLES
+.PP
+SET TITLE "MSX?"
+
+.SH NOTES
+.PP
+.PP
+<タイトル> は6文字以内です。
+.PP
+6 文字の場合はタイトル表示で何かキーを押すまで停止します。
+.PP
+<色番号> は 1～4 で、以下の色を持ちます。
+.PP
+    1 青
+.PP
+    2 緑
+.PP
+    3 赤
+.PP
+    4 オレンジ
+.PP
+初期値は 1 です。
+.PP
+この設定は MSX 本体では SRAM に記録されます。
+.PP
+SET PASSWORD・SET PROMPT と共有しているため、
+.PP
+これらと含めて最後に設定されたものが有効となります。
+.PP
+初期状態は SET TITLE "" として下さい。

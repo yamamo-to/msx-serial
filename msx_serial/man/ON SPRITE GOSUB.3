@@ -1,0 +1,25 @@
+.TH "ON SPRITE GOSUB" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+ON SPRITE GOSUB \- スプライトが重なった場合に実行する行番号を指定します。
+
+.SH SYNOPSIS
+.B ON SPRITE GOSUB <行番号>
+
+.SH DESCRIPTION
+.PP
+スプライトが重なった場合に実行する行番号を指定します。
+
+.SH EXAMPLES
+.PP
+ON SPRITE GOSUB 10000
+
+.SH NOTES
+.PP
+.PP
+サブルーチンが実行されている間は
+.PP
+自動的に SPRITE STOP の状態となり、
+.PP
+RETURN で戻った場合は SPRITE ON となります。
+.PP
+これはサブルーチン実行中に割り込みが発生するのを防ぐためです。

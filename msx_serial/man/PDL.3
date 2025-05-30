@@ -1,0 +1,25 @@
+.TH "PDL" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+PDL \- パドルの状態を得ます。
+
+.SH SYNOPSIS
+.B PDL(<番号>)
+
+.SH DESCRIPTION
+.PP
+パドルの状態を得ます。
+
+.SH EXAMPLES
+.PP
+X=PDL(1)
+
+.SH NOTES
+.PP
+.PP
+<番号> は 1～12 で、
+.PP
+奇数の場合はポート 1、
+.PP
+偶数の場合はポート 2 からパドルの値を得ます。
+.PP
+回転状態によって 0～255 の値が返ります。

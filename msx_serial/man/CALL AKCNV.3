@@ -1,0 +1,24 @@
+.TH "CALL AKCNV" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+CALL AKCNV \- 文字列を全角に変換します。
+
+.SH SYNOPSIS
+.B CALL AKCNV(<文字変数>,<文字列>)
+
+.SH DESCRIPTION
+.PP
+文字列を全角に変換します。
+
+.SH EXAMPLES
+.PP
+CALL AKCNV(KA$,"MSXの馬"):PRINT KA$
+ [表示] ＭＳＸの馬
+
+.SH NOTES
+.PP
+.PP
+<文字列> にある文字の内、
+.PP
+半角文字を全角文字に変換して <文字変数> に入れます。
+.PP
+元々全角文字であるものはそのまま入ります。

@@ -1,0 +1,25 @@
+.TH "VPOKE" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+VPOKE \- VRAM 上の指定した番地にデータを書き込みます。
+
+.SH SYNOPSIS
+.B VPOKE <番地>,<データ>
+
+.SH DESCRIPTION
+.PP
+VRAM 上の指定した番地にデータを書き込みます。
+
+.SH EXAMPLES
+.PP
+VPOKE 0,65
+
+.SH NOTES
+.PP
+.PP
+番地の値は 0～&HFFFF(65535)、
+.PP
+書き込みデータは 0～255 です。
+.PP
+MSX2 以降の場合は
+.PP
+SET PAGE 命令で指定したページからのオフセットとなります。

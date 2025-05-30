@@ -1,0 +1,37 @@
+.TH "LIST" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+LIST \- プログラムを表示します。
+
+.SH SYNOPSIS
+.B LIST<行番号範囲>
+
+.SH DESCRIPTION
+.PP
+プログラムを表示します。
+
+.SH EXAMPLES
+.PP
+LIST 100-1000
+
+.SH NOTES
+.PP
+.PP
+<行番号範囲> は以下の通りです。
+.PP
+    省略          先頭から最後まで
+.PP
+    <行番号>      <行番号> のみ
+.PP
+    -<終了>       先頭から<終了>まで
+.PP
+    <開始>-       <開始>から最後まで
+.PP
+    <開始>-<終了> <開始>から<終了>まで
+.PP
+また . を用いるとエラー行等を対象にできます。
+.PP
+表示の一時停止は [STOP] で行なえます。
+.PP
+もう一度 [STOP] で開催できます。
+.PP
+終了したい場合は [CTRL]+[STOP] とします。

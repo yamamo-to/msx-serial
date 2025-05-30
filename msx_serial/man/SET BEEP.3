@@ -1,0 +1,33 @@
+.TH "SET BEEP" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+SET BEEP \- BEEP の音色・大きさを設定します。
+
+.SH SYNOPSIS
+.B SET BEEP [<音色>][,<音量>]
+
+.SH DESCRIPTION
+.PP
+BEEP の音色・大きさを設定します。
+
+.SH EXAMPLES
+.PP
+SET BEEP 2,2
+
+.SH NOTES
+.PP
+.PP
+この設定は MSX 本体で SRAM に記録されます。
+.PP
+<音色> <音量> は共に 1～4 です。
+.PP
+<音色> は以下の意味となります。
+.PP
+   1 ピッ (初期)
+.PP
+   2 ポーン
+.PP
+   3 ピーンポーン
+.PP
+   4 ポピプッ
+.PP
+<音量> は 1 が最小、4 が最大となります。

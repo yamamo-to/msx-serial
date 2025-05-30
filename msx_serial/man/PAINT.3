@@ -1,0 +1,27 @@
+.TH "PAINT" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+PAINT \- 塗りつぶします。
+
+.SH SYNOPSIS
+.B PAINT [STEP](<横座標>,<縦座標>)[,<線画色>][,<境界色>]
+
+.SH DESCRIPTION
+.PP
+塗りつぶします。
+
+.SH EXAMPLES
+.PP
+PAINT (100,100),10
+
+.SH NOTES
+.PP
+.PP
+クラフィックモード（SCREEN 2～8・10～12）で有効です。
+.PP
+SCREEN 2～4 では <境界色> が無視され、
+.PP
+<線画色> が境界色扱いとなります。
+.PP
+PSET の他 PRESET や DRAW で指定した座標からの
+.PP
+相対にしたい場合は STEP を付加します。

@@ -1,0 +1,27 @@
+.TH "DEFDBL" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+DEFDBL \- 指定された変数を倍精度実数型に定義します。
+
+.SH SYNOPSIS
+.B DEFDBL <範囲>[,<範囲>...]
+
+.SH DESCRIPTION
+.PP
+指定された変数を倍精度実数型に定義します。
+
+.SH EXAMPLES
+.PP
+DEFDBL A-I,N
+
+.SH NOTES
+.PP
+.PP
+<範囲> は英文 1 文字ですか - で定義範囲を指定します。
+.PP
+DEFDBL よりは型定義による変数が優先されます。
+.PP
+定義されていない型定義を行なっていない変数は
+.PP
+倍精度実数型扱いとなります。
+.PP
+CLEAR によって定義は解除されます。

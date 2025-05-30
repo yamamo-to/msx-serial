@@ -1,0 +1,31 @@
+.TH "INKEY$" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+INKEY$ \- 入力されているキーを得ます。
+
+.SH SYNOPSIS
+.B INKEY$
+
+.SH DESCRIPTION
+.PP
+入力されているキーを得ます。
+
+.SH EXAMPLES
+.PP
+I$=INKEY$
+
+.SH NOTES
+.PP
+.PP
+キーが押されている場合、
+.PP
+キーバッファに入っている先頭の文字を取り出します。
+.PP
+返される値は [CTRL]+[STOP] 以外が対象です。
+.PP
+押されていない場合はヌル・ストリングが返ります。
+.PP
+INPUT や INPUT$ は入力がない場合に
+.PP
+キーの入力待ちを行ないますが、
+.PP
+INKEY$ は入力待ちを行ないません。

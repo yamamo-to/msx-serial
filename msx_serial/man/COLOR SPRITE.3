@@ -1,0 +1,57 @@
+.TH "COLOR SPRITE" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+COLOR SPRITE \- スプライト面の色を指定します。
+
+.SH SYNOPSIS
+.B COLOR SPRITE(<スプライト面番号>=<カラーコード>
+
+.SH DESCRIPTION
+.PP
+スプライト面の色を指定します。
+
+.SH EXAMPLES
+.PP
+COLOR SPRITE(0)=15
+
+.SH NOTES
+.PP
+.PP
+SCREEN 4 以上で使用できます。
+.PP
+スプライト一つの色が指定された<カラーコード>となります。
+.PP
+<カラーコード> は SCREEN 8 の場合、以下の固定色となります。
+.PP
+                赤(R) 緑(G) 青(B)
+.PP
+     0 黒       0     0     0
+.PP
+     1 暗い青   0     0     2
+.PP
+     2 暗い赤   3     0     0
+.PP
+     3 暗い紫   3     0     2
+.PP
+     4 暗い緑   0     3     0
+.PP
+     5 暗い水色 0     3     2
+.PP
+     6 暗い黄色 3     3     0
+.PP
+     7 灰色     3     3     2
+.PP
+     8 肌色     7     4     2
+.PP
+     9 青       0     0     7
+.PP
+    10 赤       7     0     0
+.PP
+    11 紫       7     0     7
+.PP
+    12 緑       0     7     0
+.PP
+    13 水色     0     7     7
+.PP
+    14 黄色     7     7     0
+.PP
+    15 白       7     7     7

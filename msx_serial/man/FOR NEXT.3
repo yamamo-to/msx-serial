@@ -1,0 +1,50 @@
+.TH "FOR NEXT" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+FOR NEXT \- FOR から NEXT で囲んだ文章を指定回数分繰り返します。
+
+.SH SYNOPSIS
+.B FOR <変数名>=<開始値> TO <終了値> [STEP <増分>]
+ ：
+NEXT [<変数名>[,<変数名> ...]]
+
+.SH DESCRIPTION
+.PP
+FOR から NEXT で囲んだ文章を指定回数分繰り返します。
+
+.SH EXAMPLES
+.PP
+FOR I=1 TO 10:PRINT"UMA ";:NEXT I:PRINT"UMAAAA"
+ [結果] UMA UMA UMA UMA UMA UMA UMA UMA UMA UMA UMAAAA
+
+.SH NOTES
+.PP
+.PP
+<変数名> はカウンターの役割を持ち、
+.PP
+初期値を <開始値> として
+.PP
+FOR 以降の文を NEXT まで実行した後
+.PP
+<増分> を値を増やして、
+.PP
+<終了値> 以上になるまで繰り返します。
+.PP
+STEP <増分> を省略した場合、増分は 1 となります。
+.PP
+FOR NEXT は複数実行が可能です。
+.PP
+その際 <変数名> は
+.PP
+別の変数にしなければいけません。
+.PP
+また、NEXT は複数の変数名を , 区切りにして
+.PP
+複数記載できます。
+.PP
+ただし順番は一番最後に実行された
+.PP
+FOR の変数名を先に NEXT で記載しなければいけません。
+.PP
+NEXT で<変数名> を省略した場合は
+.PP
+一番最後に実行されている FOR 文と判断されます。

@@ -1,0 +1,25 @@
+.TH "ON ERROR GOTO" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+ON ERROR GOTO \- エラー発生時の行番号を定義します。
+
+.SH SYNOPSIS
+.B ON ERROR GOTO <行番号>
+
+.SH DESCRIPTION
+.PP
+エラー発生時の行番号を定義します。
+
+.SH EXAMPLES
+.PP
+ON ERROR GOTO 10000
+
+.SH NOTES
+.PP
+.PP
+通常エラーが発生した場合は
+.PP
+エラーメッセージを表示して処理を中断しますが、
+.PP
+それをプログラム内部で処理するために用意されています。
+.PP
+<行番号> を 0 にした場合は通常のエラー処理となります。
