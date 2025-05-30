@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   test:
@@ -12,44 +12,43 @@ jobs:
     timeout-minutes: 10
     strategy:
       matrix:
-        python-version: [3.9, '3.10', '3.11']
+        python-version: [3.9, "3.10", "3.11"]
 
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-        cache: 'pip'
-        
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install --no-cache-dir -e ".[dev]"
-        
-    - name: Run tests
-      run: |
-        pytest tests/ --cov=msx_serial --cov-report=xml -v
-        
-    - name: Run linting
-      run: |
-        flake8 msx_serial tests
-        mypy msx_serial tests
-        
-    - name: Build package
-      run: |
-        python -m pip install --no-cache-dir build
-        python -m build
-        
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: dist-${{ matrix.python-version }}
-        path: dist/
-        
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v4
-      with:
-        file: ./coverage.xml
-        fail_ci_if_error: false 
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install --no-cache-dir -e ".[dev]"
+
+      - name: Run tests
+        run: |
+          pytest tests/ --cov=msx_serial --cov-report=xml -v
+
+      - name: Run linting
+        run: |
+          mypy msx_serial tests
+
+      - name: Build package
+        run: |
+          python -m pip install --no-cache-dir build
+          python -m build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ matrix.python-version }}
+          path: dist/
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: false
