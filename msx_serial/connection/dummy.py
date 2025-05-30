@@ -1,7 +1,7 @@
 # connection/dummy.py
 import queue
 from dataclasses import dataclass
-from .base import Connection
+from .base import BaseConnection
 
 
 @dataclass
@@ -9,7 +9,7 @@ class DummyConfig:
     dummy: str = ""
 
 
-class DummyConnection(Connection):
+class DummyConnection(BaseConnection):
     """実際の接続なしで動作するダミー接続クラス"""
 
     def __init__(self, config):

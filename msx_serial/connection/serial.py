@@ -1,6 +1,6 @@
 import serial
 from dataclasses import dataclass
-from .base import Connection
+from .base import BaseConnection
 
 
 @dataclass
@@ -16,8 +16,9 @@ class SerialConfig:
     dsrdtr: bool = False
 
 
-class SerialConnection(Connection):
+class SerialConnection(BaseConnection):
     """シリアル接続クラス"""
+
     def __init__(self, config: SerialConfig):
         self.connection = serial.Serial(**config.__dict__)
 

@@ -1,6 +1,6 @@
 import telnetlib
 from dataclasses import dataclass
-from .base import Connection
+from .base import BaseConnection
 from ..ui.color_output import print_exception
 
 
@@ -10,8 +10,9 @@ class TelnetConfig:
     port: int
 
 
-class TelnetConnection(Connection):
+class TelnetConnection(BaseConnection):
     """Telnet接続クラス"""
+
     def __init__(self, config: TelnetConfig):
         self.connection = telnetlib.Telnet(**config.__dict__)
         self._buffer = bytearray()
