@@ -6,7 +6,8 @@ from .base import Connection, ConnectionConfig
 
 @dataclass
 class DummyConfig(ConnectionConfig):
-    dummy: str = ""
+    """ダミー接続設定"""
+    pass
 
 
 class DummyConnection(Connection):
