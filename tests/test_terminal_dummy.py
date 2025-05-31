@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 from msx_serial.terminal import MSXTerminal
 from msx_serial.connection.dummy import DummyConfig, DummyConnection
 from msx_serial.input.user_input import UserInputHandler
@@ -8,7 +8,7 @@ from msx_serial.transfer.file_transfer import FileTransferManager
 
 class TestMSXTerminalWithDummy(unittest.TestCase):
     @patch("msx_serial.completion.command_completer.IotNodes")
-    def setUp(self, mock_iot_nodes) -> None:
+    def setUp(self, mock_iot_nodes: MagicMock) -> None:
         mock_iot_nodes.return_value.get_node_names.return_value = []
         config = DummyConfig()
         self.conn = DummyConnection(config)
