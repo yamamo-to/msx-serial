@@ -66,13 +66,16 @@ class UserInputHandler:
         Args:
             user_input: ユーザー入力
         """
-        for line in user_input.splitlines():
+        lines = user_input.splitlines()
+        for line in lines:
             if line.strip() == "^C":
                 self.connection.write(b"\x03")
             elif line.strip() == "^[":
                 self.connection.write(b"\x1b")
             else:
                 self.connection.write((line + "\r\n").encode(self.encoding))
+        if len(lines) == 0:
+            self.connection.write(("\r\n").encode(self.encoding))
         self.connection.flush()
 
     def handle_special_commands(
