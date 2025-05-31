@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, Dict, List
 from urllib.parse import urlparse, parse_qs
 from .serial import SerialConfig
 from .telnet import TelnetConfig
@@ -32,7 +32,7 @@ def detect_connection_type(uri: str) -> Union[
     try:
         parsed = urlparse(uri)
         scheme = parsed.scheme.lower()
-        query = parse_qs(parsed.query)
+        query: Dict[str, List[str]] = parse_qs(parsed.query)
 
         if scheme == "telnet":
             return TelnetConfig(
