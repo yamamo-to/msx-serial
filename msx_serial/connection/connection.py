@@ -45,7 +45,7 @@ def detect_connection_type(uri: str) -> Union[
             return TelnetConfig(host=host, port=port)
         elif scheme == "serial":
             return SerialConfig(
-                port=parsed.netloc,
+                port=parsed.path,
                 baudrate=int(query.get("baudrate", ["115200"])[0]),
                 bytesize=int(query.get("bytesize", ["8"])[0]),
                 parity=query.get("parity", ["N"])[0],

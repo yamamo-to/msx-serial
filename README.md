@@ -19,8 +19,8 @@ pip install msx-serial
 # シリアル接続
 msx-serial COM1
 msx-serial /dev/ttyUSB0
-msx-serial serial:///COM1?baudrate=9600
-msx-serial serial:///dev/ttyUSB0?baudrate=115200
+msx-serial /dev/tty.usbserial-12345678901
+msx-serial 'serial:///dev/tty.usbserial-12345678901?baudrate=115200'
 
 # Telnet接続
 msx-serial 192.168.86.30:2223
@@ -30,7 +30,7 @@ msx-serial telnet://192.168.86.30:2223
 ### コマンドラインオプション
 
 ```
-usage: msx-serial [-h] [--baudrate BAUDRATE] [--encoding ENCODING] connection
+usage: msx-serial [-h] [--encoding ENCODING] connection
 
 MSXシリアルターミナル
 
@@ -39,7 +39,6 @@ positional arguments:
 
 options:
   -h, --help           ヘルプメッセージを表示して終了
-  --baudrate BAUDRATE  シリアル接続時のボーレート (URI形式で指定する場合は不要)
   --encoding ENCODING  エンコーディング (デフォルト: msx-jp)
 ```
 

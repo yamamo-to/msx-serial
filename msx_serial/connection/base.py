@@ -10,6 +10,7 @@ from typing import Protocol
 class ConnectionConfig:
     pass
 
+
 class Connection(Protocol):
     """接続インターフェース"""
 

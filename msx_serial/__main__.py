@@ -19,12 +19,6 @@ def main() -> int:
         help="接続先 (例: COM4, /dev/ttyUSB0, 192.168.1.100:2223)",
     )
     parser.add_argument(
-        "--baudrate",
-        type=int,
-        default=115200,
-        help="シリアル接続時のボーレート",
-    )
-    parser.add_argument(
         "--encoding", type=str, default="msx-jp", help="エンコーディング"
     )
     args = parser.parse_args()
