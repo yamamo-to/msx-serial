@@ -37,11 +37,12 @@ def detect_connection_type(uri: str) -> Union[
         if scheme == "telnet":
             value = parsed.netloc.split(":")
             if len(value) == 2:
-                host, port = value
+                host = value[0]
+                port = int(value[1])
             else:
                 host = value[0]
                 port = 23
-            return TelnetConfig(host=host, port=int(port))
+            return TelnetConfig(host=host, port=port)
         elif scheme == "serial":
             return SerialConfig(
                 port=parsed.netloc,
