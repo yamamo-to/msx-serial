@@ -1,6 +1,6 @@
 import serial
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, cast
 from .base import Connection, ConnectionConfig
 
 
@@ -40,13 +40,13 @@ class SerialConnection(Connection):
         self.connection.flush()
 
     def read(self, size: int) -> bytes:
-        return self.connection.read(size)
+        return cast(bytes, self.connection.read(size))
 
     def in_waiting(self) -> int:
-        return self.connection.in_waiting
+        return cast(int, self.connection.in_waiting)
 
     def close(self) -> None:
         self.connection.close()
 
     def is_open(self) -> bool:
-        return self.connection.is_open
+        return cast(bool, self.connection.is_open)
