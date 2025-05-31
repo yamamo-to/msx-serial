@@ -68,8 +68,8 @@ pip install -e . --use-pep517
 
 ```bash
 # シリアル接続
-msx-serial serial:///COM1?baud=9600
-msx-serial serial:///dev/ttyUSB0?baud=115200
+msx-serial serial:///COM1?baudrate=9600
+msx-serial serial:///dev/ttyUSB0?baudrate=115200
 msx-serial COM1 --baudrate 9600
 msx-serial /dev/ttyUSB0 --baudrate 115200
 
