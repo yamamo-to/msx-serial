@@ -3,18 +3,17 @@
 import unittest
 from prompt_toolkit.document import Document
 from prompt_toolkit.completion import CompleteEvent
-
 from msx_serial.completion.completers.command_completer import CommandCompleter
 
 
 class TestCommandCompleter(unittest.TestCase):
     """CommandCompleterのテスト"""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """テストの前準備"""
         self.completer = CommandCompleter(special_commands=["help", "cd", "encode"])
 
-    def test_call_subcommand_completion(self):
+    def test_call_subcommand_completion(self) -> None:
         """CALLコマンドのサブコマンド補完テスト"""
         # CALL + スペースの後の補完
         document = Document("CALL ")
@@ -27,7 +26,7 @@ class TestCommandCompleter(unittest.TestCase):
         for completion in completions:
             self.assertIn(completion.text, call_keywords)
 
-    def test_underscore_completion(self):
+    def test_underscore_completion(self) -> None:
         """アンダースコアで始まる場合の全サブコマンド補完テスト"""
         # _で始まる場合の補完
         document = Document("_")
@@ -43,7 +42,7 @@ class TestCommandCompleter(unittest.TestCase):
         for completion in completions:
             self.assertIn(completion.text, all_subcommands)
 
-    def test_basic_keyword_completion(self):
+    def test_basic_keyword_completion(self) -> None:
         """BASICキーワードの補完テスト"""
         # 通常のBASICキーワード補完
         document = Document("PR")
@@ -56,7 +55,7 @@ class TestCommandCompleter(unittest.TestCase):
         for completion in completions:
             self.assertIn(completion.text, basic_keywords)
 
-    def test_help_command_completion(self):
+    def test_help_command_completion(self) -> None:
         """@helpコマンドの補完テスト"""
         # @helpの補完
         document = Document("@help")
@@ -65,7 +64,7 @@ class TestCommandCompleter(unittest.TestCase):
         # @helpの補完候補が返されることを確認
         self.assertTrue(len(completions) > 0)
 
-    def test_special_command_completion(self):
+    def test_special_command_completion(self) -> None:
         """特殊コマンドの補完テスト"""
         # @で始まる特殊コマンドの補完
         document = Document("@")
