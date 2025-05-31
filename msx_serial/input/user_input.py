@@ -242,7 +242,7 @@ class UserInputHandler:
                 # プラットフォームに応じてページャーを選択
                 if sys.platform == "win32":
                     # Windowsの場合、moreコマンドを使用
-                    subprocess.run(["more", temp_path])
+                    subprocess.run(["notepad", temp_path])
                 else:
                     # Unix系の場合、lessコマンドを使用
                     subprocess.run(["less", temp_path])
