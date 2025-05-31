@@ -3,7 +3,8 @@
 """
 
 from typing import Iterator
-from prompt_toolkit.completion import Completion
+from prompt_toolkit.completion import Completion, CompleteEvent
+from prompt_toolkit.document import Document
 
 from .base import BaseCompleter, CompletionContext
 
@@ -12,16 +13,13 @@ class HelpCompleter(BaseCompleter):
     """@helpコマンドの補完を提供するクラス"""
 
     def get_completions(
-        self, context: CompletionContext
+        self, document: Document, complete_event: CompleteEvent
     ) -> Iterator[Completion]:
-        """@helpコマンドの補完候補を生成
+        context = CompletionContext(
+            document.text_before_cursor,
+            document.get_word_before_cursor(),
+        )
 
-        Args:
-            context: 補完コンテキスト
-
-        Yields:
-            補完候補
-        """
         help_args = context.text[6:].strip().split()
         if not help_args:
             # 引数がない場合は、すべてのコマンドを候補として表示
@@ -81,4 +79,4 @@ class HelpCompleter(BaseCompleter):
                     start_position=-len(prefix),
                     display=key,
                     display_meta=info,
-                ) 
+                )

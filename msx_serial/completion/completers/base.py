@@ -33,21 +33,15 @@ class BaseCompleter:
 
     def _initialize_caches(self) -> None:
         """キーワードキャッシュを初期化"""
-        self.keyword_caches: Dict[str, Dict[str, List[str]]] = (
-            defaultdict(dict)
-        )
+        self.keyword_caches: Dict[str, Dict[str, List[str]]] = defaultdict(dict)
         self.sub_commands: List[str] = []
 
         for key, info in self.msx_keywords.items():
             if info["type"] == "subcommand":
                 self.sub_commands.append(key)
-            self.keyword_caches[key] = (
-                self._build_prefix_cache(info["keywords"])
-            )
+            self.keyword_caches[key] = self._build_prefix_cache(info["keywords"])
 
-    def _build_prefix_cache(
-        self, keywords: List[List[str]]
-    ) -> Dict[str, List[str]]:
+    def _build_prefix_cache(self, keywords: List[List[str]]) -> Dict[str, List[str]]:
         """プレフィックスキャッシュを構築
 
         Args:
@@ -76,4 +70,4 @@ class BaseCompleter:
         """
         if isinstance(keyword, list):
             return keyword[0], keyword[1]
-        return keyword, self.msx_keywords[key]["description"] 
+        return keyword, self.msx_keywords[key]["description"]

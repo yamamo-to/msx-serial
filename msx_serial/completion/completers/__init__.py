@@ -4,4 +4,4 @@
 
 from .command_completer import CommandCompleter
 
-__all__ = ["CommandCompleter"] 
+__all__ = ["CommandCompleter"]

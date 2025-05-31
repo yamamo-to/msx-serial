@@ -3,7 +3,8 @@
 """
 
 from typing import Iterator, List
-from prompt_toolkit.completion import Completion
+from prompt_toolkit.completion import Completion, CompleteEvent
+from prompt_toolkit.document import Document
 
 from .base import BaseCompleter, CompletionContext
 from .help_completer import HelpCompleter
@@ -21,14 +22,19 @@ class CommandCompleter(BaseCompleter):
         self.iot_completer = IoTCompleter()
 
     def get_completions(
-        self, context: CompletionContext
+        self, document: Document, complete_event: CompleteEvent
     ) -> Iterator[Completion]:
+        context = CompletionContext(
+            document.text_before_cursor,
+            document.get_word_before_cursor(),
+        )
+
         if context.text.startswith("@help"):
-            yield from self.help_completer.get_completions(context)
+            yield from self.help_completer.get_completions(document, complete_event)
             return
 
         if context.text.startswith("@"):
-            yield from self.special_completer.get_completions(context)
+            yield from self.special_completer.get_completions(document, complete_event)
             return
 
         if context.text.startswith("_"):
@@ -48,9 +54,7 @@ class CommandCompleter(BaseCompleter):
             name = command[0]
             meta = command[1]
             if name.startswith(word):
-                completion_text = (
-                    name[1:] if name.startswith("_") else name
-                )
+                completion_text = name[1:] if name.startswith("_") else name
                 yield Completion(
                     completion_text,
                     start_position=-len(context.word),
@@ -62,7 +66,7 @@ class CommandCompleter(BaseCompleter):
         self, context: CompletionContext
     ) -> Iterator[Completion]:
         word = context.word
-        for command in self.msx_keywords["GENERAL"]["keywords"]:
+        for command in self.msx_keywords["BASIC"]["keywords"]:
             name = command[0]
             meta = command[1]
             if name.startswith(word):
@@ -71,4 +75,4 @@ class CommandCompleter(BaseCompleter):
                     start_position=-len(context.word),
                     display=name,
                     display_meta=meta,
-                ) 
+                )
