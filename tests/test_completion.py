@@ -66,9 +66,7 @@ class TestCommandCompleter(unittest.TestCase):
         """IOTGETコマンドの補完テスト"""
         # CALL IOTGET("の後の補完
         document = Document('CALL IOTGET("')
-        completions = list(
-            self.completer.get_completions(document, CompleteEvent())
-        )
+        completions = list(self.completer.get_completions(document, CompleteEvent()))
 
         # IOTノードの補完候補が返されることを確認
         iot_nodes = self.completer.device_list

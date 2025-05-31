@@ -1,4 +1,4 @@
-import msx_charset    # noqa: F401  # type: ignore
+import msx_charset  # noqa: F401  # type: ignore
 import threading
 from typing import Union
 from .connection.manager import ConnectionManager

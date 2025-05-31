@@ -80,11 +80,9 @@ class FileTransferManager:
 
             with open(file_path, "rb") as f:
                 encoded = base64.b64encode(f.read()).decode("ascii")
-                with tqdm(
-                    total=len(encoded), desc="アップロード中", unit="B"
-                ) as pbar:
+                with tqdm(total=len(encoded), desc="アップロード中", unit="B") as pbar:
                     for i in range(0, len(encoded), 76):
-                        chunk = encoded[i:i + 76]
+                        chunk = encoded[i : i + 76]
                         self.connection.write((chunk + "\r\n").encode("ascii"))
                         self.connection.flush()
                         pbar.update(len(chunk))

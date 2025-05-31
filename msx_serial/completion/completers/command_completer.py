@@ -30,7 +30,8 @@ class CommandCompleter(BaseCompleter):
         )
 
         # IOTコマンドの後にコンマがある場合は補完をスキップ
-        if any(cmd in context.text for cmd in ("IOTGET", "IOTSET", "IOTFIND")):
+        iot_commands = ("IOTGET", "IOTSET", "IOTFIND")
+        if any(cmd in context.text for cmd in iot_commands):
             if "," in context.text:
                 return
             yield from self.iot_completer.get_completions(document, complete_event)

@@ -124,9 +124,7 @@ class UserInputHandler:
             選択されたファイルのパス
         """
         current_dir = Path.cwd()
-        files = [
-            (str(f), f.name) for f in current_dir.glob("*") if f.is_file()
-        ]
+        files = [(str(f), f.name) for f in current_dir.glob("*") if f.is_file()]
 
         if not files:
             print_warn("ファイルが見つかりません。")
@@ -146,7 +144,7 @@ class UserInputHandler:
             user_input: ユーザー入力
         """
         try:
-            path = user_input[len(CommandType.CD.value):].strip()
+            path = user_input[len(CommandType.CD.value) :].strip()
             if not path:
                 print_info(f"現在のディレクトリ: {Path.cwd()}")
                 return
@@ -165,7 +163,7 @@ class UserInputHandler:
         Args:
             user_input: ユーザー入力
         """
-        command = user_input[len(CommandType.HELP.value):].strip()
+        command = user_input[len(CommandType.HELP.value) :].strip()
         # _で始まる場合はCALLコマンドとして扱う
         if command.startswith("_"):
             command = f"CALL {command[1:]}"
@@ -236,10 +234,7 @@ class UserInputHandler:
             try:
                 # 一時ファイルに内容を書き込む
                 with tempfile.NamedTemporaryFile(
-                    mode="w",
-                    encoding="utf-8",
-                    suffix=".txt",
-                    delete=False
+                    mode="w", encoding="utf-8", suffix=".txt", delete=False
                 ) as f:
                     f.write(content)
                     temp_path = f.name
@@ -268,7 +263,7 @@ class UserInputHandler:
         Args:
             user_input: ユーザー入力
         """
-        encoding = user_input[len(CommandType.ENCODE.value):].strip()
+        encoding = user_input[len(CommandType.ENCODE.value) :].strip()
         if not encoding:
             print_info(f"現在のエンコーディング: {self.encoding}")
             print_info("利用可能なエンコーディング:")

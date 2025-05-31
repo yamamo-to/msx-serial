@@ -5,8 +5,8 @@ from typing import Optional
 
 def load_template(name: str) -> Optional[str]:
     try:
-        tpl = resources.files('msx_serial.transfer').joinpath(name)
-        return tpl.read_text(encoding='utf-8')
+        tpl = resources.files("msx_serial.transfer").joinpath(name)
+        return tpl.read_text(encoding="utf-8")
     except FileNotFoundError:
         return None
 

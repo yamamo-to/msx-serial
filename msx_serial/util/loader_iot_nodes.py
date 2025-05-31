@@ -14,8 +14,8 @@ class IotNodes:
             .open("r", encoding="utf-8") as f
         ):
             data = yaml.safe_load(f)
-            if data and 'nodes' in data:
-                self.nodes = [node['name'] for node in data['nodes']]
+            if data and "nodes" in data:
+                self.nodes = [node["name"] for node in data["nodes"]]
 
     def get_node_names(self) -> list[str]:
         return self.nodes

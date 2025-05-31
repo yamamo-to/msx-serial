@@ -11,6 +11,7 @@ from msx_serial.ui.color_output import print_exception
 def main() -> int:
     """メイン関数"""
     import argparse
+
     parser = argparse.ArgumentParser(description="MSXシリアルターミナル")
     parser.add_argument(
         "connection",

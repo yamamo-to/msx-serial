@@ -7,6 +7,7 @@ from .base import Connection, ConnectionConfig
 @dataclass
 class DummyConfig(ConnectionConfig):
     """ダミー接続設定"""
+
     pass
 
 
