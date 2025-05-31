@@ -71,7 +71,7 @@ class TestCommandCompleter(unittest.TestCase):
         completions = list(self.completer.get_completions(document, CompleteEvent()))
 
         # 特殊コマンドが補完候補として返されることを確認
-        special_commands = ["help", "cd", "encode"]
+        special_commands = ["help", "cd", "encode", "exit", "paste", "upload"]
         for completion in completions:
             self.assertIn(completion.text, special_commands)
 
