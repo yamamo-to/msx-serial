@@ -3,7 +3,10 @@ MSXシリアルターミナルのユーザー入力処理
 """
 
 import os
+import sys
 import threading
+import subprocess
+import tempfile
 from pathlib import Path
 from typing import Optional, Any, TYPE_CHECKING
 from prompt_toolkit import PromptSession
@@ -11,7 +14,7 @@ from prompt_toolkit.styles import Style
 from prompt_toolkit.shortcuts import radiolist_dialog
 
 from .commands import CommandType
-from ..ui.color_output import print_info, print_warn, print_exception, print_help
+from ..ui.color_output import print_info, print_warn, print_exception
 from ..connection.base import Connection
 from ..completion.completers.command_completer import CommandCompleter
 
@@ -121,7 +124,9 @@ class UserInputHandler:
             選択されたファイルのパス
         """
         current_dir = Path.cwd()
-        files = [(str(f), f.name) for f in current_dir.glob("*") if f.is_file()]
+        files = [
+            (str(f), f.name) for f in current_dir.glob("*") if f.is_file()
+        ]
 
         if not files:
             print_warn("ファイルが見つかりません。")
@@ -160,7 +165,7 @@ class UserInputHandler:
         Args:
             user_input: ユーザー入力
         """
-        command = user_input[len(CommandType.HELP.value) :].strip()
+        command = user_input[len(CommandType.HELP.value):].strip()
         # _で始まる場合はCALLコマンドとして扱う
         if command.startswith("_"):
             command = f"CALL {command[1:]}"
@@ -226,8 +231,33 @@ class UserInputHandler:
                 if not in_ascii_art:
                     lines.append(line)
 
-            # 結果を表示
-            print_help("\n".join(lines) + "\n")
+            # 結果をページャーで表示
+            content = "\n".join(lines)
+            try:
+                # 一時ファイルに内容を書き込む
+                with tempfile.NamedTemporaryFile(
+                    mode="w",
+                    encoding="utf-8",
+                    suffix=".txt",
+                    delete=False
+                ) as f:
+                    f.write(content)
+                    temp_path = f.name
+
+                # プラットフォームに応じてページャーを選択
+                if sys.platform == "win32":
+                    # Windowsの場合、moreコマンドを使用
+                    subprocess.run(["more", temp_path])
+                else:
+                    # Unix系の場合、lessコマンドを使用
+                    subprocess.run(["less", temp_path])
+
+            finally:
+                # 一時ファイルを削除
+                try:
+                    os.remove(temp_path)
+                except OSError:
+                    pass
 
         except Exception as e:
             print_exception("マニュアル表示エラー", e)
@@ -238,7 +268,7 @@ class UserInputHandler:
         Args:
             user_input: ユーザー入力
         """
-        encoding = user_input[len(CommandType.ENCODE.value) :].strip()
+        encoding = user_input[len(CommandType.ENCODE.value):].strip()
         if not encoding:
             print_info(f"現在のエンコーディング: {self.encoding}")
             print_info("利用可能なエンコーディング:")
