@@ -4,9 +4,10 @@
 
 from collections import defaultdict
 from typing import Dict, List, Optional, Set
+from prompt_toolkit.completion import Completer
 
-from ..loader_keyword import load_keywords
-from ..loader_iot_nodes import IotNodes
+from ...util.loader_keyword import load_keywords
+from ...util.loader_iot_nodes import IotNodes
 
 
 class CompletionContext:
@@ -21,7 +22,7 @@ class CompletionContext:
         self.current_command: Optional[str] = None
 
 
-class BaseCompleter:
+class BaseCompleter(Completer):
     """補完機能の基本クラス"""
 
     def __init__(self) -> None:

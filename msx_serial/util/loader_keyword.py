@@ -25,7 +25,7 @@ def load_keywords() -> Dict[str, KeywordInfo]:
         package = importlib.resources.files("msx_serial.data")
         if package is None:
             raise ImportError("msx_serial.dataパッケージが見つかりません")
-        
+
         with package.joinpath("msx_keywords.yml").open("r", encoding="utf-8") as f:
             return cast(Dict[str, KeywordInfo], yaml.safe_load(f))
     except (AttributeError, FileNotFoundError, ImportError) as e:
@@ -35,7 +35,7 @@ def load_keywords() -> Dict[str, KeywordInfo]:
             raise FileNotFoundError(
                 f"キーワードファイルが見つかりません: {data_path}"
             ) from e
-        
+
         with data_path.open("r", encoding="utf-8") as f:
             return cast(Dict[str, KeywordInfo], yaml.safe_load(f))
     except Exception as e:

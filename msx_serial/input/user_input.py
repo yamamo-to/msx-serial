@@ -13,7 +13,7 @@ from prompt_toolkit.shortcuts import radiolist_dialog
 from .commands import CommandType
 from ..ui.color_output import print_info, print_warn, print_exception, print_help
 from ..connection.base import Connection
-from ..completion.command_completer import CommandCompleter
+from ..completion.completers.command_completer import CommandCompleter
 
 
 if TYPE_CHECKING:

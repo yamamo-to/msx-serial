@@ -7,7 +7,7 @@ from msx_serial.transfer.file_transfer import FileTransferManager
 
 
 class TestMSXTerminalWithDummy(unittest.TestCase):
-    @patch("msx_serial.completion.command_completer.IotNodes")
+    @patch("msx_serial.util.loader_iot_nodes.IotNodes")
     def setUp(self, mock_iot_nodes: MagicMock) -> None:
         mock_iot_nodes.return_value.get_node_names.return_value = []
         config = DummyConfig()
