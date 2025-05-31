@@ -103,32 +103,16 @@ class CommandCompleter(Completer):
 
         if context.text.startswith("@cd "):
             yield from self._complete_cd_command(context, complete_event)
+        elif context.text.startswith("@help "):
+            yield from self._complete_help_command(context)
         elif context.is_special_command:
             yield from self._complete_special_commands(context)
         elif context.is_iot_command:
             yield from self._complete_iot_devices(context)
-        elif context.text.startswith("@help "):
-            yield from self._complete_help_command(context)
         elif context.current_command:
             yield from self._complete_command_keywords(context)
         else:
             yield from self._complete_general_keywords(context)
-
-    def _complete_cd_command(
-        self, context: CompletionContext, complete_event: CompleteEvent
-    ) -> Iterator[Completion]:
-        """@cdコマンドの補完候補を生成
-
-        Args:
-            context: 補完コンテキスト
-            complete_event: 補完イベント
-
-        Yields:
-            補完候補
-        """
-        path_part = context.text[len("@cd"):].lstrip()
-        path_document = Document(text=path_part, cursor_position=len(path_part))
-        yield from self.path_completer.get_completions(path_document, complete_event)
 
     def _analyze_context(self, context: CompletionContext) -> bool:
         """コンテキストを解析
@@ -171,6 +155,22 @@ class CommandCompleter(Completer):
                 return True
 
         return True
+
+    def _complete_cd_command(
+        self, context: CompletionContext, complete_event: CompleteEvent
+    ) -> Iterator[Completion]:
+        """@cdコマンドの補完候補を生成
+
+        Args:
+            context: 補完コンテキスト
+            complete_event: 補完イベント
+
+        Yields:
+            補完候補
+        """
+        path_part = context.text[len("@cd"):].lstrip()
+        path_document = Document(text=path_part, cursor_position=len(path_part))
+        yield from self.path_completer.get_completions(path_document, complete_event)
 
     def _complete_special_commands(
         self, context: CompletionContext
@@ -376,7 +376,14 @@ class CommandCompleter(Completer):
         """
         help_args = context.text[6:].strip().split()
         if not help_args:
-            yield from self._complete_all_commands()
+            # 引数がない場合は、すべてのコマンドを候補として表示
+            for key, info in self.msx_keywords["BASIC"]["keywords"]:
+                yield Completion(
+                    key,
+                    start_position=0,
+                    display=key,
+                    display_meta=info,
+                )
             return
 
         first_arg = help_args[0].upper()
@@ -388,76 +395,42 @@ class CommandCompleter(Completer):
                 help_args = [first_arg] + help_args[1:]
 
         if first_arg in self.sub_commands:
-            yield from self._complete_subcommand_help(first_arg, help_args)
-            return
-
-        yield from self._complete_command_help(help_args[-1].upper())
-
-    def _complete_all_commands(self) -> Iterator[Completion]:
-        """すべてのコマンドの補完候補を生成
-
-        Yields:
-            補完候補
-        """
-        for key in self.msx_keywords.keys():
-            yield Completion(
-                key,
-                start_position=0,
-                display=key,
-                display_meta=self.msx_keywords[key]["description"],
-            )
-
-    def _complete_subcommand_help(
-        self, command: str, help_args: List[str]
-    ) -> Iterator[Completion]:
-        """サブコマンドのヘルプ補完候補を生成
-
-        Args:
-            command: コマンド名
-            help_args: ヘルプ引数
-
-        Yields:
-            補完候補
-        """
-        if len(help_args) > 1:
-            prefix = help_args[-1].upper()
-            command_info = self.msx_keywords[command]
-            for keyword in command_info["keywords"]:
-                name = keyword[0]
-                meta = keyword[1]
-                if name.startswith(prefix):
+            # サブコマンドを持つコマンドの場合
+            if len(help_args) > 1:
+                # 2つ目の引数がある場合は、そのサブコマンドのキーワードを補完
+                prefix = help_args[-1].upper()
+                command_info = self.msx_keywords[first_arg]
+                for keyword in command_info["keywords"]:
+                    name = keyword[0]
+                    meta = keyword[1]
+                    if name.startswith(prefix):
+                        yield Completion(
+                            name,
+                            start_position=-len(prefix),
+                            display=name,
+                            display_meta=meta,
+                        )
+            else:
+                # 2つ目の引数がない場合は、そのコマンドのサブコマンドを補完
+                command_info = self.msx_keywords[first_arg]
+                for keyword in command_info["keywords"]:
+                    name = keyword[0]
+                    meta = keyword[1]
                     yield Completion(
                         name,
-                        start_position=-len(prefix),
+                        start_position=0,
                         display=name,
                         display_meta=meta,
                     )
-        else:
-            command_info = self.msx_keywords[command]
-            for keyword in command_info["keywords"]:
-                name = keyword[0]
-                meta = keyword[1]
-                yield Completion(
-                    name,
-                    start_position=0,
-                    display=name,
-                    display_meta=meta,
-                )
+            return
 
-    def _complete_command_help(self, prefix: str) -> Iterator[Completion]:
-        """コマンドのヘルプ補完候補を生成
-
-        Args:
-            prefix: プレフィックス
-
-        Yields:
-            補完候補
-        """
-        for key, info in self.msx_keywords.items():
+        # 通常のコマンド補完
+        prefix = help_args[-1].upper()
+        for key, info in self.msx_keywords["BASIC"]["keywords"]:
             if key.upper().startswith(prefix):
                 yield Completion(
                     key,
                     start_position=-len(prefix),
                     display=key,
-                    display_meta=info["description"],
+                    display_meta=info,
                 )
