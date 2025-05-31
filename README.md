@@ -86,7 +86,7 @@ usage: msx-serial [-h] [--baudrate BAUDRATE] [--encoding ENCODING] connection
 MSXシリアルターミナル
 
 positional arguments:
-  connection           接続先 (例: COM1, /dev/ttyUSB0, 192.168.1.100:2223, telnet://192.168.1.100:2223, serial:///COM1?baud=9600)
+  connection           接続先 (例: COM1, /dev/ttyUSB0, 192.168.1.100:2223, telnet://192.168.1.100:2223, serial:///COM1?baudrate=9600)
 
 options:
   -h, --help           ヘルプメッセージを表示して終了
@@ -97,7 +97,7 @@ options:
 ### 接続先の指定方法
 
 1. URI形式
-   - シリアル接続: `serial:///COM1?baud=9600`
+   - シリアル接続: `serial:///COM1?baudrate=9600`
    - Telnet接続: `telnet://192.168.1.100:2223`
 
 2. 従来の形式
