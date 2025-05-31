@@ -4,7 +4,12 @@ MSXシリアルターミナルのコマンド補完機能
 
 import re
 from collections import defaultdict
-from prompt_toolkit.completion import Completer, Completion, PathCompleter, CompleteEvent
+from prompt_toolkit.completion import (
+    Completer,
+    Completion,
+    PathCompleter,
+    CompleteEvent,
+)
 from prompt_toolkit.document import Document
 from typing import List, Set, Iterator, Optional
 from .loader_keyword import load_keywords
@@ -107,7 +112,7 @@ class CommandCompleter(Completer):
         elif context.is_iot_command:
             yield from self._complete_iot_devices(context)
         elif context.text.startswith("@help "):
-            yield from self._complete_general_keywords(context)
+            yield from self._complete_help_command(context)
         elif context.current_command:
             yield from self._complete_command_keywords(context)
         else:
@@ -142,14 +147,16 @@ class CommandCompleter(Completer):
         )
 
         # CALLコマンドの省略形を検出
-        if context.text.startswith("_") and not context.text.startswith("__"):
+        if context.text.startswith("_"):
             context.current_command = "CALL"
             return True
 
+        # サブコマンドを持つコマンドを検出
+        text_upper = context.text.upper()
         for command in self.sub_commands:
-            if context.text.upper().startswith(command + " "):
+            if text_upper.startswith(command + " "):
                 context.current_command = command
-                break
+                return True
 
         return True
 
@@ -238,7 +245,9 @@ class CommandCompleter(Completer):
             # CALLコマンドの省略形の場合
             prefix = context.text[1:].upper()
         else:
-            prefix = context.text[len(context.current_command) + 1 :].upper()
+            # コマンド名の後の部分を取得
+            command_len = len(context.current_command)
+            prefix = context.text[command_len:].lstrip().upper()
 
         for keyword in command_info["keywords"]:
             name = keyword[0]
@@ -269,6 +278,12 @@ class CommandCompleter(Completer):
             補完候補
         """
         word = context.word.upper()
+        if context.text.startswith("@help "):
+            # @helpコマンドの場合は、コマンド名の後に続く部分を補完
+            help_args = context.text[6:].strip().split()
+            if len(help_args) > 1:
+                word = help_args[-1].upper()
+
         for key, cache in self.keyword_caches.items():
             candidates = cache.get(word, [])
             for keyword in candidates:
@@ -278,5 +293,81 @@ class CommandCompleter(Completer):
                     name = keyword
                     meta = self.msx_keywords[key]["description"]
                 yield Completion(
-                    name, start_position=-len(word), display=name, display_meta=meta
+                    name,
+                    start_position=-len(word),
+                    display=name,
+                    display_meta=meta,
+                )
+
+    def _complete_help_command(self, context: CompletionContext) -> Iterator[Completion]:
+        """@helpコマンドの補完候補を生成
+
+        Args:
+            context: 補完コンテキスト
+
+        Yields:
+            補完候補
+        """
+        # @helpコマンドの引数を取得
+        help_args = context.text[6:].strip().split()
+        if not help_args:
+            # 引数がない場合は、すべてのコマンドを候補として表示
+            for key in self.msx_keywords.keys():
+                yield Completion(
+                    key,
+                    start_position=0,
+                    display=key,
+                    display_meta=self.msx_keywords[key]["description"],
+                )
+            return
+
+        # 最初の引数がサブコマンドを持つコマンドの場合
+        first_arg = help_args[0].upper()
+        # _で始まる場合はCALLコマンドとして扱う
+        if first_arg.startswith("_"):
+            first_arg = "CALL"
+            # _を除去して2つ目の引数として扱う
+            if len(help_args) == 1:
+                help_args = [first_arg, help_args[0][1:]]
+            else:
+                help_args = [first_arg] + help_args[1:]
+
+        if first_arg in self.sub_commands:
+            # 2つ目の引数がある場合は、そのサブコマンドのキーワードを補完
+            if len(help_args) > 1:
+                prefix = help_args[-1].upper()
+                command_info = self.msx_keywords[first_arg]
+                for keyword in command_info["keywords"]:
+                    name = keyword[0]
+                    meta = keyword[1]
+                    if name.startswith(prefix):
+                        yield Completion(
+                            name,
+                            start_position=-len(prefix),
+                            display=name,
+                            display_meta=meta,
+                        )
+            else:
+                # 2つ目の引数がない場合は、そのコマンドのサブコマンドを補完
+                command_info = self.msx_keywords[first_arg]
+                for keyword in command_info["keywords"]:
+                    name = keyword[0]
+                    meta = keyword[1]
+                    yield Completion(
+                        name,
+                        start_position=0,
+                        display=name,
+                        display_meta=meta,
+                    )
+            return
+
+        # 通常のコマンド補完
+        prefix = help_args[-1].upper()
+        for key, info in self.msx_keywords.items():
+            if key.upper().startswith(prefix):
+                yield Completion(
+                    key,
+                    start_position=-len(prefix),
+                    display=key,
+                    display_meta=info["description"],
                 )

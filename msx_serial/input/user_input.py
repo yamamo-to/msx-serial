@@ -161,6 +161,10 @@ class UserInputHandler:
             user_input: ユーザー入力
         """
         command = user_input[len(CommandType.HELP.value) :].strip()
+        # _で始まる場合はCALLコマンドとして扱う
+        if command.startswith("_"):
+            command = f"CALL {command[1:]}"
+
         # パッケージのインストールディレクトリを取得
         package_dir = Path(__file__).parent.parent
         man_dir = package_dir / "man"
