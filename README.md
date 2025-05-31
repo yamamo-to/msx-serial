@@ -137,6 +137,9 @@ options:
 BASE64によるアップロードは下記の記事を参考にさせていただきました。
 https://qiita.com/enu7/items/23cab122141fb8d07c6d
 
+MSX-BASICのコマンドリファレンスは下記のリポジトリをAIによりman形式に変換させていただきました。
+https://github.com/fu-sen/MSX-BASIC
+
 ## ライセンス
 
 MIT License
