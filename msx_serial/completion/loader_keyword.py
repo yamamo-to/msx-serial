@@ -1,7 +1,7 @@
 import importlib
 import yaml
 from pathlib import Path
-from typing import List, TypedDict, Any, Dict
+from typing import List, TypedDict, Dict
 
 
 class KeywordInfo(TypedDict):
@@ -20,19 +20,23 @@ def load_keywords() -> Dict[str, KeywordInfo]:
         FileNotFoundError: キーワードファイルが見つからない場合
         yaml.YAMLError: YAMLファイルの解析に失敗した場合
     """
+    # まずimportlib.resourcesを使用して読み込みを試みる
     try:
-        # まずimportlib.resourcesを使用して読み込みを試みる
-        try:
-            with (
-                importlib.resources.files("msx_serial.data")
-                .joinpath("msx_keywords.yml")
-                .open("r", encoding="utf-8") as f
-            ):
-                return yaml.safe_load(f)
-        except (AttributeError, FileNotFoundError):
-            # importlib.resourcesが失敗した場合、直接ファイルパスを使用
-            data_path = Path(__file__).parent.parent / "data" / "msx_keywords.yml"
-            with data_path.open("r", encoding="utf-8") as f:
-                return yaml.safe_load(f)
+        package = importlib.resources.files("msx_serial.data")
+        if package is None:
+            raise ImportError("msx_serial.dataパッケージが見つかりません")
+
+        with package.joinpath("msx_keywords.yml").open("r", encoding="utf-8") as f:
+            return yaml.safe_load(f)
+    except (AttributeError, FileNotFoundError, ImportError) as e:
+        # importlib.resourcesが失敗した場合、直接ファイルパスを使用
+        data_path = Path(__file__).parent.parent / "data" / "msx_keywords.yml"
+        if not data_path.exists():
+            raise FileNotFoundError(
+                f"キーワードファイルが見つかりません: {data_path}"
+            ) from e
+
+        with data_path.open("r", encoding="utf-8") as f:
+            return yaml.safe_load(f)
     except Exception as e:
-        raise RuntimeError(f"キーワードファイルの読み込みに失敗: {str(e)}")
+        raise RuntimeError(f"キーワードファイルの読み込みに失敗: {str(e)}") from e
