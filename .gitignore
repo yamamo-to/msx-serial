@@ -34,3 +34,5 @@ env/
 # OS
 .DS_Store
 Thumbs.db 
+
+msx_serial/_version.py
