@@ -2,11 +2,12 @@
 IoTコマンドの補完機能
 """
 
+import re
 from typing import Iterator
 from prompt_toolkit.completion import Completion, CompleteEvent
 from prompt_toolkit.document import Document
-
 from .base import BaseCompleter, CompletionContext
+from ...util.loader_iot_nodes import IotNodes
 
 
 class IoTCompleter(BaseCompleter):
@@ -15,6 +16,12 @@ class IoTCompleter(BaseCompleter):
     def __init__(self) -> None:
         """初期化"""
         super().__init__()
+        self.iot_pattern = re.compile(
+            r"(?:CALL\s+IOT(?:GET|SET|FIND)|"
+            r'_IOT(?:GET|SET|FIND))\(\s*"([\w/,\s]*)$',
+            re.VERBOSE,
+        )
+        self.device_list = IotNodes().get_node_names()
 
     def get_completions(
         self, document: Document, complete_event: CompleteEvent
@@ -33,18 +40,16 @@ class IoTCompleter(BaseCompleter):
             document.get_word_before_cursor(),
         )
 
-        word = context.word
-        if not word.startswith("@"):
-            word = "@" + word
+        match = self.iot_pattern.search(context.text)
+        if not match or "," in context.text:
+            return
 
-        for command in self.msx_keywords["IOT"]["keywords"]:
-            name = command[0]
-            meta = command[1]
-            if name.startswith(word):
-                completion_text = name[1:] if name.startswith("@") else name
+        prefix = match.group(1)
+        for device in self.device_list:
+            if device.startswith(prefix):
                 yield Completion(
-                    completion_text,
-                    start_position=-len(context.word),
-                    display=name,
-                    display_meta=meta,
+                    device,
+                    start_position=-len(prefix),
+                    display=device,
+                    display_meta="IOT device",
                 )

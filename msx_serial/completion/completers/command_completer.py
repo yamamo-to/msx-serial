@@ -29,6 +29,12 @@ class CommandCompleter(BaseCompleter):
             document.get_word_before_cursor(),
         )
 
+        # IOTコマンドの後にコンマがある場合は補完をスキップ
+        if any(cmd in context.text for cmd in ("IOTGET", "IOTSET", "IOTFIND")):
+            if "," in context.text:
+                return
+            yield from self.iot_completer.get_completions(document, complete_event)
+
         if context.text.startswith("@help"):
             yield from self.help_completer.get_completions(document, complete_event)
             return
@@ -42,9 +48,9 @@ class CommandCompleter(BaseCompleter):
             yield from self._complete_call_subcommands(context)
             return
 
-        # _で始まる場合は全サブコマンド
+        # _で始まる場合はCALLサブコマンドと同じ補完
         if context.text.startswith("_"):
-            yield from self._complete_all_subcommands(context)
+            yield from self._complete_call_subcommands(context)
             return
 
         # それ以外はBASICキーワード
@@ -54,6 +60,8 @@ class CommandCompleter(BaseCompleter):
         self, context: CompletionContext
     ) -> Iterator[Completion]:
         word = context.word
+        if word.startswith("_"):
+            word = word[1:]
         for command in self.msx_keywords["CALL"]["keywords"]:
             name = command[0]
             meta = command[1]
@@ -76,9 +84,7 @@ class CommandCompleter(BaseCompleter):
                 name = command[0]
                 meta = command[1]
                 if name.startswith(word):
-                    completion_text = (
-                        name[1:] if name.startswith("_") else name
-                    )
+                    completion_text = name[1:] if name.startswith("_") else name
                     yield Completion(
                         completion_text,
                         start_position=-len(context.word),
@@ -115,7 +121,7 @@ class CommandCompleter(BaseCompleter):
             if name.startswith(word):
                 yield Completion(
                     name,
-                    start_position=-len(context.word),
+                    start_position=-len(word),
                     display=name,
                     display_meta=meta,
                 )

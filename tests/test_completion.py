@@ -42,6 +42,39 @@ class TestCommandCompleter(unittest.TestCase):
         for completion in completions:
             self.assertIn(completion.text, all_subcommands)
 
+    def test_underscore_matches_call_completion(self) -> None:
+        """アンダースコアで始まる場合の補完がCALLと同じであることを確認"""
+        # _で始まる場合の補完
+        underscore_doc = Document("_")
+        underscore_completions = list(
+            self.completer.get_completions(underscore_doc, CompleteEvent())
+        )
+
+        # CALL + スペースの後の補完
+        call_doc = Document("CALL ")
+        call_completions = list(
+            self.completer.get_completions(call_doc, CompleteEvent())
+        )
+
+        # 補完候補のテキストを比較
+        underscore_texts = {c.text for c in underscore_completions}
+        call_texts = {c.text for c in call_completions}
+
+        self.assertEqual(underscore_texts, call_texts)
+
+    def test_iotget_completion(self) -> None:
+        """IOTGETコマンドの補完テスト"""
+        # CALL IOTGET("の後の補完
+        document = Document('CALL IOTGET("')
+        completions = list(
+            self.completer.get_completions(document, CompleteEvent())
+        )
+
+        # IOTノードの補完候補が返されることを確認
+        iot_nodes = self.completer.device_list
+        for completion in completions:
+            self.assertIn(completion.text, iot_nodes)
+
     def test_basic_keyword_completion(self) -> None:
         """BASICキーワードの補完テスト"""
         # 通常のBASICキーワード補完
