@@ -8,8 +8,7 @@ from typing import Protocol
 
 @dataclass
 class ConnectionConfig:
-    dummy: str = ""
-
+    pass
 
 class Connection(Protocol):
     """接続インターフェース"""

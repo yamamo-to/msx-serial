@@ -35,9 +35,13 @@ def detect_connection_type(uri: str) -> Union[
         query: Dict[str, List[str]] = parse_qs(parsed.query)
 
         if scheme == "telnet":
-            return TelnetConfig(
-                host=parsed.hostname or "localhost", port=parsed.port or 23
-            )
+            value = parsed.netloc.split(":")
+            if len(value) == 2:
+                host, port = value
+            else:
+                host = value[0]
+                port = 23
+            return TelnetConfig(host=host, port=int(port))
         elif scheme == "serial":
             return SerialConfig(
                 port=parsed.netloc,
