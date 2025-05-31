@@ -43,7 +43,8 @@ class FileTransferManager:
 
         with open(file_path, "r", encoding=enc) as f:
             for line in f:
-                self.connection.write((line.rstrip() + "\r\n").encode(self.encoding))
+                encoded_line = line.rstrip().encode(self.encoding)
+                self.connection.write(encoded_line)
                 self.connection.flush()
 
     def _check_ok(self) -> bool:

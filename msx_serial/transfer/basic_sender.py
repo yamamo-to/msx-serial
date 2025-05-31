@@ -18,6 +18,6 @@ def send_basic_program(program: str, variables: dict[str, str]) -> str:
 
     # 各行の末尾の空白を削除し、指定の改行コードで結合
     lines = (line.rstrip() for line in rendered.splitlines())
-    new_line = b"\x0d\x0a\x0a".decode("utf-8")
+    new_line = "\r\n"
     output = new_line.join(lines) + new_line
     return output

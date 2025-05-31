@@ -6,7 +6,7 @@ import re
 from collections import defaultdict
 from prompt_toolkit.completion import Completer, Completion, PathCompleter, CompleteEvent
 from prompt_toolkit.document import Document
-from typing import List, Dict, Set, Iterator, Optional
+from typing import List, Set, Iterator, Optional
 from .loader_keyword import load_keywords
 from .loader_iot_nodes import IotNodes
 from ..input.commands import CommandType
