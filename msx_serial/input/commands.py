@@ -9,6 +9,7 @@ class CommandType(Enum):
     ENCODE = ("@encode", "送受信時の文字コードを指定します")
     EXIT = ("@exit", "プログラムを終了します")
     HELP = ("@help", "コマンドのヘルプを表示します")
+    MODE = ("@mode", "MSXモードを表示または強制変更します")
     PASTE = ("@paste", "ファイルを読み込んで送信します")
     UPLOAD = ("@upload", "ファイルをアップロードします")
 

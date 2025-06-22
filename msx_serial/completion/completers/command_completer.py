@@ -10,16 +10,27 @@ from .base import BaseCompleter, CompletionContext
 from .help_completer import HelpCompleter
 from .special_completer import SpecialCompleter
 from .iot_completer import IoTCompleter
+from .dos_completer import DOSCompleter
 
 
 class CommandCompleter(BaseCompleter):
     """コマンド補完を提供するクラス"""
 
-    def __init__(self, special_commands: List[str]) -> None:
+    def __init__(self, special_commands: List[str], current_mode: str = "unknown") -> None:
         super().__init__()
         self.help_completer = HelpCompleter()
         self.special_completer = SpecialCompleter(special_commands)
         self.iot_completer = IoTCompleter()
+        self.dos_completer = DOSCompleter()
+        self.current_mode = current_mode
+
+    def set_mode(self, mode: str) -> None:
+        """現在のモードを設定
+
+        Args:
+            mode: モード（basic, dos, unknown）
+        """
+        self.current_mode = mode
 
     def get_completions(
         self, document: Document, complete_event: CompleteEvent
@@ -37,25 +48,51 @@ class CommandCompleter(BaseCompleter):
             yield from self.iot_completer.get_completions(document, complete_event)
 
         if context.text.startswith("@help"):
-            yield from self.help_completer.get_completions(document, complete_event)
+            # @helpコマンドはBASICモードでのみ表示
+            if self.current_mode == "basic":
+                yield from self.help_completer.get_completions(document, complete_event)
             return
 
         if context.text.startswith("@"):
-            yield from self.special_completer.get_completions(document, complete_event)
+            # @modeコマンドは全モードで利用可能
+            # context.wordには@が含まれていない場合があるので、context.textから判定
+            if "@mode".startswith(context.text) or (context.word and "mode".startswith(context.word)):
+                yield Completion(
+                    "mode",
+                    start_position=-len(context.word),
+                    display="@mode",
+                    display_meta="MSXモードを表示・変更",
+                )
+            
+            # その他の特殊コマンドはBASICモードでのみ表示（@modeは除外）
+            if self.current_mode == "basic":
+                # @modeコマンドと重複しないようにフィルタリング
+                for completion in self.special_completer.get_completions(document, complete_event):
+                    if completion.text != "mode":
+                        yield completion
             return
 
-        # CALL + スペースの直後はCALLサブコマンドのみ
-        if context.text.upper().startswith("CALL "):
+        # CALL + スペースの直後はCALLサブコマンドのみ（BASICモードのみ）
+        if context.text.upper().startswith("CALL ") and self.current_mode == "basic":
             yield from self._complete_call_subcommands(context)
             return
 
-        # _で始まる場合はCALLサブコマンドと同じ補完
-        if context.text.startswith("_"):
+        # _で始まる場合はCALLサブコマンドと同じ補完（BASICモードのみ）
+        if context.text.startswith("_") and self.current_mode == "basic":
             yield from self._complete_call_subcommands(context)
             return
 
-        # それ以外はBASICキーワード
-        yield from self._complete_general_keywords(context)
+        # モードに応じた補完
+        if self.current_mode == "basic":
+            # BASICモード: BASICキーワードと特殊コマンド
+            yield from self._complete_general_keywords(context)
+        elif self.current_mode == "dos":
+            # DOSモード: DOSコマンド
+            yield from self.dos_completer.get_completions(document, complete_event)
+        else:
+            # 不明モード: すべてのコマンド
+            yield from self._complete_general_keywords(context)
+            yield from self.dos_completer.get_completions(document, complete_event)
 
     def _complete_call_subcommands(
         self, context: CompletionContext

@@ -23,6 +23,8 @@ from ..completion.completers.command_completer import CommandCompleter
 if TYPE_CHECKING:
     from ..transfer.file_transfer import FileTransferManager
 
+from ..modes import MSXMode
+
 
 class UserInputHandler:
     """ユーザー入力処理を管理するクラス"""
@@ -43,17 +45,60 @@ class UserInputHandler:
         self.prompt_style = prompt_style
         self.encoding = encoding
         self.connection = connection
-        self.session: PromptSession = PromptSession()
-        self.style = Style.from_dict({"prompt": prompt_style})
-        self.session = PromptSession(
-            completer=CommandCompleter(
-                special_commands=[str(cmd.value) for cmd in CommandType]
-            ),
-            style=self.style,
-            complete_in_thread=True,
-        )
         # MSXプロンプトパターン（A>, B>, C>などに対応）
         self.prompt_pattern = re.compile(r'[A-Z]>\s*$')
+        self.prompt_detected = False  # プロンプト検出フラグ
+        self.current_mode = "unknown"  # 現在のMSXモード（文字列）
+        self.terminal = None  # MSXTerminalへの参照
+        
+        self.session: PromptSession = PromptSession()
+        self.style = Style.from_dict({"prompt": prompt_style})
+        self.completer = CommandCompleter(
+            special_commands=[str(cmd.value) for cmd in CommandType],
+            current_mode=self.current_mode
+        )
+        self.session = PromptSession(
+            completer=self.completer,
+            style=self.style,
+            complete_in_thread=True,
+            mouse_support=False,
+        )
+
+    def _is_command_available(self, command: CommandType) -> bool:
+        """コマンドが現在のモードで利用可能かチェック
+
+        Args:
+            command: コマンドタイプ
+
+        Returns:
+            利用可能な場合はTrue
+        """
+        # BASICモードでのみ有効なコマンド
+        basic_only_commands = {CommandType.UPLOAD, CommandType.PASTE}
+        
+        # 全モードで有効なコマンド
+        all_mode_commands = {CommandType.MODE}
+        
+        if command in basic_only_commands:
+            return self.current_mode == "basic"
+        
+        if command in all_mode_commands:
+            return True
+        
+        # その他のコマンドは常に有効
+        return True
+
+    def _get_available_commands(self) -> list[str]:
+        """現在のモードで利用可能なコマンドのリストを取得
+
+        Returns:
+            利用可能なコマンドのリスト
+        """
+        available_commands = []
+        for cmd in CommandType:
+            if self._is_command_available(cmd):
+                available_commands.append(str(cmd.value))
+        return available_commands
 
     def prompt(self) -> Any:
         """プロンプトを表示してユーザー入力を取得
@@ -61,6 +106,19 @@ class UserInputHandler:
         Returns:
             ユーザー入力
         """
+        # 補完機能のモードを更新（新しいコンプリータは作成しない）
+        if hasattr(self, 'completer') and self.completer:
+            self.completer.set_mode(self.current_mode)
+        else:
+            # 初回のみ新しいコンプリータを作成
+            available_commands = self._get_available_commands()
+            self.completer = CommandCompleter(available_commands, self.current_mode)
+            self.session.completer = self.completer
+        
+        # プロンプト検出フラグをリセット
+        if self.prompt_detected:
+            self.prompt_detected = False
+        
         return self.session.prompt("")
 
     def send(self, user_input: str) -> None:
@@ -98,6 +156,15 @@ class UserInputHandler:
             特殊コマンドが処理されたかどうか
         """
         cmd = CommandType.from_input(user_input)
+        if cmd is None:
+            return False
+            
+        # コマンドが現在のモードで利用可能かチェック
+        if not self._is_command_available(cmd):
+            mode_name = "BASIC" if self.current_mode == "basic" else "MSX-DOS"
+            print_warn(f"コマンド '{cmd.value}' は{mode_name}モードでは利用できません。")
+            return True
+            
         if cmd == CommandType.EXIT:
             print_info("終了します。")
             stop_event.set()
@@ -120,6 +187,9 @@ class UserInputHandler:
             return True
         elif cmd == CommandType.ENCODE:
             self._handle_encode(user_input)
+            return True
+        elif cmd == CommandType.MODE:
+            self._handle_mode(user_input)
             return True
         return False
 
@@ -170,6 +240,15 @@ class UserInputHandler:
             user_input: ユーザー入力
         """
         command = user_input[len(CommandType.HELP.value):].strip()
+        
+        # 引数がない場合は利用可能なコマンド一覧を表示
+        if not command:
+            print_info("利用可能なコマンド:")
+            for cmd in CommandType:
+                if self._is_command_available(cmd):
+                    print_info(f"  {cmd.value} - {cmd.description}")
+            return
+            
         # _で始まる場合はCALLコマンドとして扱う
         if command.startswith("_"):
             command = f"CALL {command[1:]}"
@@ -285,3 +364,83 @@ class UserInputHandler:
 
         self.encoding = encoding
         print_info(f"エンコーディングを {encoding} に変更しました。")
+
+    def _handle_mode(self, user_input: str) -> None:
+        """モードコマンドを処理
+
+        Args:
+            user_input: ユーザー入力
+        """
+        mode_arg = user_input[len(CommandType.MODE.value):].strip()
+        
+        if not mode_arg:
+            # 引数がない場合は現在のモードを表示
+            mode_name = self._get_mode_display_name(self.current_mode)
+            print_info(f"現在のMSXモード: {mode_name}")
+            return
+            
+        # 引数がある場合はモードを強制変更
+        new_mode = self._parse_mode_argument(mode_arg)
+        if new_mode is not None:
+            self.current_mode = new_mode
+            mode_name = self._get_mode_display_name(new_mode)
+            print_info(f"MSXモードを {mode_name} に強制変更しました。")
+            # 補完機能を更新
+            self._update_completer_mode()
+            if self.terminal:
+                # 文字列からMSXModeに変換
+                if new_mode == "basic":
+                    self.terminal.set_mode(MSXMode.BASIC)
+                elif new_mode == "dos":
+                    self.terminal.set_mode(MSXMode.DOS)
+                else:
+                    self.terminal.set_mode(MSXMode.UNKNOWN)
+        else:
+            print_warn(f"不明なモード: {mode_arg}")
+            print_info("利用可能なモード: basic, dos, unknown")
+
+    def _get_mode_display_name(self, mode: str) -> str:
+        """モードの表示名を取得
+
+        Args:
+            mode: モード
+
+        Returns:
+            表示名
+        """
+        # 文字列ベースのモード管理
+        if mode == "basic":
+            return "BASIC"
+        elif mode == "dos":
+            return "MSX-DOS"
+        elif mode == "unknown":
+            return "不明"
+        else:
+            return "不明"
+
+    def _parse_mode_argument(self, mode_arg: str) -> Optional[str]:
+        """モード引数を解析
+
+        Args:
+            mode_arg: モード引数
+
+        Returns:
+            解析されたモード、不明な場合はNone
+        """
+        mode_arg_lower = mode_arg.lower()
+        if mode_arg_lower in ["basic", "b"]:
+            return "basic"
+        elif mode_arg_lower in ["dos", "d", "msx-dos"]:
+            return "dos"
+        elif mode_arg_lower in ["unknown", "u", "unk"]:
+            return "unknown"
+        else:
+            return None
+
+    def _update_completer_mode(self) -> None:
+        """補完機能に現在のモードを通知"""
+        if hasattr(self, 'completer') and self.completer:
+            self.completer.set_mode(self.current_mode)
+            # セッションのコンプリータを確実に設定
+            if hasattr(self, 'session'):
+                self.session.completer = self.completer
