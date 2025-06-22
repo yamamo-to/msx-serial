@@ -144,3 +144,21 @@ def print_input(message: str) -> None:
 
 def print_receive(message: str, end: str = "\n") -> None:
     print(f"{COLOR_CONFIG['receive']}{message}{Style.RESET_ALL}", end=end)
+
+
+def print_prompt_receive(message: str) -> None:
+    """プロンプト受信メッセージを表示（改行付き）
+
+    Args:
+        message: 表示するメッセージ
+    """
+    print(f"{COLOR_CONFIG['receive']}{message}{Style.RESET_ALL}")
+
+
+def print_receive_no_newline(message: str) -> None:
+    """受信メッセージを改行なしで表示
+
+    Args:
+        message: 表示するメッセージ
+    """
+    print(f"{COLOR_CONFIG['receive']}{message}{Style.RESET_ALL}", end="")

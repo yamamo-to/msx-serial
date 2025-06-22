@@ -1,10 +1,16 @@
 import msx_charset  # noqa: F401  # type: ignore
 import threading
-from typing import Union
+import re
 from .connection.manager import ConnectionManager
 from .input.user_input import UserInputHandler
 from .transfer.file_transfer import FileTransferManager
-from .ui.color_output import print_info, print_exception, print_receive
+from .ui.color_output import (
+    print_info,
+    print_exception,
+    print_receive,
+    print_prompt_receive,
+    print_receive_no_newline,
+)
 from .connection.base import ConnectionConfig
 
 
@@ -19,6 +25,9 @@ class MSXTerminal:
         self.prompt_style = prompt_style
         self.stop_event = threading.Event()
         self.suppress_output = False  # 出力抑制フラグ
+        self.prompt_detected = False  # プロンプト検出フラグ
+        # MSXプロンプトパターン（A>, B>, C>などに対応）
+        self.prompt_pattern = re.compile(r"[A-Z]>\s*$")
 
         # コンポーネントの初期化
         self.connection_manager = ConnectionManager(config)
@@ -50,6 +59,7 @@ class MSXTerminal:
 
     def _read_loop(self) -> None:
         """受信データを非同期に表示"""
+        buffer = ""
         while not self.stop_event.is_set():
             try:
                 if self.connection_manager.connection.in_waiting():
@@ -57,8 +67,28 @@ class MSXTerminal:
                         self.connection_manager.connection.in_waiting()
                     )
                     decoded = data.decode(self.encoding)
+                    buffer += decoded
+
                     if not self.suppress_output:
-                        print_receive(decoded, end="")
+                        # プロンプトを検出
+                        if self.prompt_pattern.search(buffer):
+                            # プロンプトが見つかった場合、改行を追加して表示
+                            lines = buffer.split("\n")
+                            for i, line in enumerate(lines[:-1]):
+                                print_receive(line)
+
+                            # 最後の行（プロンプト）を改行付きで表示
+                            last_line = lines[-1]
+                            if self.prompt_pattern.search(last_line):
+                                print_prompt_receive(last_line)
+                                self.prompt_detected = True
+                            else:
+                                print_receive_no_newline(last_line)
+                            buffer = ""
+                        else:
+                            # 通常の出力
+                            print_receive_no_newline(decoded)
+
             except Exception as e:
                 print_exception("受信エラー", e)
                 break
@@ -67,6 +97,13 @@ class MSXTerminal:
         """ユーザー入力ループ"""
         while not self.stop_event.is_set():
             try:
+                # プロンプトが検出された場合、少し待機してから入力を開始
+                if self.prompt_detected:
+                    import time
+
+                    time.sleep(0.1)  # 100ms待機
+                    self.prompt_detected = False
+
                 user_input = self.user_input.prompt()
                 if self.user_input.handle_special_commands(
                     user_input, self.file_transfer, self.stop_event

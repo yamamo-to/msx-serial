@@ -7,6 +7,7 @@ import sys
 import threading
 import subprocess
 import tempfile
+import re
 from pathlib import Path
 from typing import Optional, Any, TYPE_CHECKING
 from prompt_toolkit import PromptSession
@@ -51,6 +52,8 @@ class UserInputHandler:
             style=self.style,
             complete_in_thread=True,
         )
+        # MSXプロンプトパターン（A>, B>, C>などに対応）
+        self.prompt_pattern = re.compile(r'[A-Z]>\s*$')
 
     def prompt(self) -> Any:
         """プロンプトを表示してユーザー入力を取得
@@ -147,7 +150,7 @@ class UserInputHandler:
             user_input: ユーザー入力
         """
         try:
-            path = user_input[len(CommandType.CD.value) :].strip()
+            path = user_input[len(CommandType.CD.value):].strip()
             if not path:
                 print_info(f"現在のディレクトリ: {Path.cwd()}")
                 return
@@ -166,7 +169,7 @@ class UserInputHandler:
         Args:
             user_input: ユーザー入力
         """
-        command = user_input[len(CommandType.HELP.value) :].strip()
+        command = user_input[len(CommandType.HELP.value):].strip()
         # _で始まる場合はCALLコマンドとして扱う
         if command.startswith("_"):
             command = f"CALL {command[1:]}"
@@ -266,7 +269,7 @@ class UserInputHandler:
         Args:
             user_input: ユーザー入力
         """
-        encoding = user_input[len(CommandType.ENCODE.value) :].strip()
+        encoding = user_input[len(CommandType.ENCODE.value):].strip()
         if not encoding:
             print_info(f"現在のエンコーディング: {self.encoding}")
             print_info("利用可能なエンコーディング:")
