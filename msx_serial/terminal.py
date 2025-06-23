@@ -11,9 +11,6 @@ from .transfer.file_transfer import FileTransferManager
 from .ui.color_output import (
     print_info,
     print_exception,
-    print_receive,
-    print_prompt_receive,
-    print_receive_no_newline,
 )
 from .connection.base import ConnectionConfig
 from .modes import MSXMode
@@ -73,11 +70,11 @@ class MSXTerminal:
         """受信データを非同期に表示"""
         buffer = ""
         import time
-        
+
         while not self.stop_event.is_set():
             try:
                 current_time = time.time()
-                
+
                 if self.connection_manager.connection.in_waiting():
                     data = self.connection_manager.connection.read(
                         self.connection_manager.connection.in_waiting()
@@ -97,7 +94,7 @@ class MSXTerminal:
                             lines = buffer.split("\n")
                             for i, line in enumerate(lines[:-1]):
                                 if line.strip():  # 空行でない場合のみ表示
-                                    print_receive(line)
+                                    self.user_input.print_receive(line)
 
                             # 最後の行（プロンプト）を改行付きで表示
                             last_line = lines[-1]
@@ -106,7 +103,7 @@ class MSXTerminal:
                                 or self.basic_prompt_pattern.search(last_line)
                                 or self.dos_prompt_pattern.search(last_line)
                             ):
-                                print_prompt_receive(last_line)
+                                self.user_input.print_receive(last_line, is_prompt=True)
                                 # プロンプト表示後は改行を出力しない（ユーザー入力が上書きしないように）
                                 # プロンプト表示の完了を確実にするため、少し待機
                                 time.sleep(0.01)  # 10ms待機
@@ -116,7 +113,7 @@ class MSXTerminal:
                                 # 強制モード更新を実行
                                 self._force_mode_update(last_line)
                             else:
-                                print_receive_no_newline(last_line)
+                                self.user_input.print_receive(last_line)
                             buffer = ""
                         else:
                             # プロンプトが検出されない場合、改行文字で分割して処理
@@ -125,7 +122,7 @@ class MSXTerminal:
                                 # 最後の行以外を表示（最後の行は不完全な可能性があるため）
                                 for i, line in enumerate(lines[:-1]):
                                     if line.strip():  # 空行でない場合のみ表示
-                                        print_receive(line)
+                                        self.user_input.print_receive(line)
                                 # 最後の行をバッファに残す
                                 buffer = lines[-1]
                             # 改行がない場合は何もしない（バッファに蓄積）
@@ -133,7 +130,7 @@ class MSXTerminal:
                             elif self._is_prompt_candidate(buffer):
                                 # プロンプト候補の場合は短いタイムアウト（20ms）でチェック
                                 pass
-                
+
                 # バッファにデータがあり、一定時間（100ms）データが来ていない場合は表示
                 elif buffer and (current_time - self.last_data_time) > 0.1:
                     if not self.suppress_output:
@@ -144,17 +141,21 @@ class MSXTerminal:
                                 or self.basic_prompt_pattern.search(buffer)
                                 or self.dos_prompt_pattern.search(buffer)
                             ):
-                                print_prompt_receive(buffer)
+                                self.user_input.print_receive(buffer, is_prompt=True)
                                 self.prompt_detected = True
                                 # UserInputHandlerにもプロンプト検出を通知
                                 self.user_input.prompt_detected = True
                                 # 強制モード更新を実行
                                 self._force_mode_update(buffer)
                             else:
-                                print_receive(buffer)
+                                self.user_input.print_receive(buffer)
                     buffer = ""
                 # プロンプト候補の場合、短いタイムアウト（20ms）でチェック
-                elif buffer and self._is_prompt_candidate(buffer) and (current_time - self.last_data_time) > 0.02:
+                elif (
+                    buffer
+                    and self._is_prompt_candidate(buffer)
+                    and (current_time - self.last_data_time) > 0.02
+                ):
                     if not self.suppress_output:
                         if buffer.strip():  # 空でない場合のみ表示
                             # プロンプトパターンが含まれているかチェック
@@ -163,7 +164,7 @@ class MSXTerminal:
                                 or self.basic_prompt_pattern.search(buffer)
                                 or self.dos_prompt_pattern.search(buffer)
                             ):
-                                print_prompt_receive(buffer)
+                                self.user_input.print_receive(buffer, is_prompt=True)
                                 self.prompt_detected = True
                                 # UserInputHandlerにもプロンプト検出を通知
                                 self.user_input.prompt_detected = True
@@ -171,7 +172,7 @@ class MSXTerminal:
                                 self._force_mode_update(buffer)
                             else:
                                 # プロンプト候補だが完全なプロンプトでない場合は表示
-                                print_receive_no_newline(buffer)
+                                self.user_input.print_receive(buffer)
                     buffer = ""
 
             except Exception as e:
@@ -231,7 +232,7 @@ class MSXTerminal:
         # モードが変更された場合のみ更新（UNKNOWNから他のモードへの変更も許可）
         if new_mode.value != self.current_mode:
             self.current_mode = new_mode.value
-            
+
             # UserInputHandlerにもモード変更を通知
             self.user_input.current_mode = new_mode.value
             # 補完機能も更新
@@ -247,7 +248,7 @@ class MSXTerminal:
         if detected_mode != MSXMode.UNKNOWN:
             # 強制的にモードを更新（前回のモードに関係なく）
             self.current_mode = detected_mode.value
-            
+
             # UserInputHandlerにもモード変更を通知
             self.user_input.current_mode = detected_mode.value
             # 補完機能も更新

@@ -16,7 +16,9 @@ from .dos_completer import DOSCompleter
 class CommandCompleter(BaseCompleter):
     """コマンド補完を提供するクラス"""
 
-    def __init__(self, special_commands: List[str], current_mode: str = "unknown") -> None:
+    def __init__(
+        self, special_commands: List[str], current_mode: str = "unknown"
+    ) -> None:
         super().__init__()
         self.help_completer = HelpCompleter()
         self.special_completer = SpecialCompleter(special_commands)
@@ -56,18 +58,22 @@ class CommandCompleter(BaseCompleter):
         if context.text.startswith("@"):
             # @modeコマンドは全モードで利用可能
             # context.wordには@が含まれていない場合があるので、context.textから判定
-            if "@mode".startswith(context.text) or (context.word and "mode".startswith(context.word)):
+            if "@mode".startswith(context.text) or (
+                context.word and "mode".startswith(context.word)
+            ):
                 yield Completion(
                     "mode",
                     start_position=-len(context.word),
                     display="@mode",
                     display_meta="MSXモードを表示・変更",
                 )
-            
+
             # その他の特殊コマンドはBASICモードでのみ表示（@modeは除外）
             if self.current_mode == "basic":
                 # @modeコマンドと重複しないようにフィルタリング
-                for completion in self.special_completer.get_completions(document, complete_event):
+                for completion in self.special_completer.get_completions(
+                    document, complete_event
+                ):
                     if completion.text != "mode":
                         yield completion
             return

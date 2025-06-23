@@ -10,9 +10,10 @@ import tempfile
 import re
 from pathlib import Path
 from typing import Optional, Any, TYPE_CHECKING
-from prompt_toolkit import PromptSession
+from prompt_toolkit import PromptSession, print_formatted_text
 from prompt_toolkit.styles import Style
 from prompt_toolkit.shortcuts import radiolist_dialog
+from prompt_toolkit.formatted_text import FormattedText
 
 from .commands import CommandType
 from ..ui.color_output import print_info, print_warn, print_exception
@@ -46,23 +47,76 @@ class UserInputHandler:
         self.encoding = encoding
         self.connection = connection
         # MSXプロンプトパターン（A>, B>, C>などに対応）
-        self.prompt_pattern = re.compile(r'[A-Z]>\s*$')
+        self.prompt_pattern = re.compile(r"[A-Z]>\s*$")
         self.prompt_detected = False  # プロンプト検出フラグ
         self.current_mode = "unknown"  # 現在のMSXモード（文字列）
         self.terminal = None  # MSXTerminalへの参照
-        
+
         self.session: PromptSession = PromptSession()
         self.style = Style.from_dict({"prompt": prompt_style})
         self.completer = CommandCompleter(
             special_commands=[str(cmd.value) for cmd in CommandType],
-            current_mode=self.current_mode
+            current_mode=self.current_mode,
         )
         self.session = PromptSession(
             completer=self.completer,
             style=self.style,
             complete_in_thread=True,
             mouse_support=False,
+            wrap_lines=True,
+            enable_history_search=True,
+            multiline=False,
+            auto_suggest=None,
         )
+
+    def clear_screen(self) -> None:
+        """画面をクリア"""
+        os.system("cls" if os.name == "nt" else "clear")
+
+    def print_receive(self, text: str, is_prompt: bool = False) -> None:
+        """受信データをprompt toolkitのprint_formatted_textで表示
+
+        Args:
+            text: 表示するテキスト
+            is_prompt: プロンプト行かどうか
+        """
+        # ターミナルサイズを考慮して表示
+        try:
+            # ターミナルサイズを取得
+            terminal_size = os.get_terminal_size()
+            terminal_width = terminal_size.columns
+
+            # テキストを適切に折り返し
+            if len(text) > terminal_width:
+                # 長い行は適切に折り返す
+                lines = []
+                for i in range(0, len(text), terminal_width):
+                    lines.append(text[i : i + terminal_width])
+                text_to_display = "\n".join(lines)
+            else:
+                text_to_display = text
+
+        except OSError:
+            # ターミナルサイズが取得できない場合はそのまま表示
+            text_to_display = text
+
+        if is_prompt:
+            # プロンプトの場合は改行を追加してカーソル位置を次の行に移動
+            print_formatted_text(
+                FormattedText(
+                    [
+                        ("#00ff00 bold", text_to_display),
+                    ]
+                )
+            )
+        else:
+            print_formatted_text(
+                FormattedText(
+                    [
+                        ("#00ff00", text_to_display),
+                    ]
+                )
+            )
 
     def _is_command_available(self, command: CommandType) -> bool:
         """コマンドが現在のモードで利用可能かチェック
@@ -75,16 +129,16 @@ class UserInputHandler:
         """
         # BASICモードでのみ有効なコマンド
         basic_only_commands = {CommandType.UPLOAD, CommandType.PASTE}
-        
+
         # 全モードで有効なコマンド
         all_mode_commands = {CommandType.MODE}
-        
+
         if command in basic_only_commands:
             return self.current_mode == "basic"
-        
+
         if command in all_mode_commands:
             return True
-        
+
         # その他のコマンドは常に有効
         return True
 
@@ -107,18 +161,18 @@ class UserInputHandler:
             ユーザー入力
         """
         # 補完機能のモードを更新（新しいコンプリータは作成しない）
-        if hasattr(self, 'completer') and self.completer:
+        if hasattr(self, "completer") and self.completer:
             self.completer.set_mode(self.current_mode)
         else:
             # 初回のみ新しいコンプリータを作成
             available_commands = self._get_available_commands()
             self.completer = CommandCompleter(available_commands, self.current_mode)
             self.session.completer = self.completer
-        
+
         # プロンプト検出フラグをリセット
         if self.prompt_detected:
             self.prompt_detected = False
-        
+
         return self.session.prompt("")
 
     def send(self, user_input: str) -> None:
@@ -158,13 +212,15 @@ class UserInputHandler:
         cmd = CommandType.from_input(user_input)
         if cmd is None:
             return False
-            
+
         # コマンドが現在のモードで利用可能かチェック
         if not self._is_command_available(cmd):
             mode_name = "BASIC" if self.current_mode == "basic" else "MSX-DOS"
-            print_warn(f"コマンド '{cmd.value}' は{mode_name}モードでは利用できません。")
+            print_warn(
+                f"コマンド '{cmd.value}' は{mode_name}モードでは利用できません。"
+            )
             return True
-            
+
         if cmd == CommandType.EXIT:
             print_info("終了します。")
             stop_event.set()
@@ -220,7 +276,7 @@ class UserInputHandler:
             user_input: ユーザー入力
         """
         try:
-            path = user_input[len(CommandType.CD.value):].strip()
+            path = user_input[len(CommandType.CD.value) :].strip()
             if not path:
                 print_info(f"現在のディレクトリ: {Path.cwd()}")
                 return
@@ -239,8 +295,8 @@ class UserInputHandler:
         Args:
             user_input: ユーザー入力
         """
-        command = user_input[len(CommandType.HELP.value):].strip()
-        
+        command = user_input[len(CommandType.HELP.value) :].strip()
+
         # 引数がない場合は利用可能なコマンド一覧を表示
         if not command:
             print_info("利用可能なコマンド:")
@@ -248,7 +304,7 @@ class UserInputHandler:
                 if self._is_command_available(cmd):
                     print_info(f"  {cmd.value} - {cmd.description}")
             return
-            
+
         # _で始まる場合はCALLコマンドとして扱う
         if command.startswith("_"):
             command = f"CALL {command[1:]}"
@@ -348,7 +404,7 @@ class UserInputHandler:
         Args:
             user_input: ユーザー入力
         """
-        encoding = user_input[len(CommandType.ENCODE.value):].strip()
+        encoding = user_input[len(CommandType.ENCODE.value) :].strip()
         if not encoding:
             print_info(f"現在のエンコーディング: {self.encoding}")
             print_info("利用可能なエンコーディング:")
@@ -371,14 +427,14 @@ class UserInputHandler:
         Args:
             user_input: ユーザー入力
         """
-        mode_arg = user_input[len(CommandType.MODE.value):].strip()
-        
+        mode_arg = user_input[len(CommandType.MODE.value) :].strip()
+
         if not mode_arg:
             # 引数がない場合は現在のモードを表示
             mode_name = self._get_mode_display_name(self.current_mode)
             print_info(f"現在のMSXモード: {mode_name}")
             return
-            
+
         # 引数がある場合はモードを強制変更
         new_mode = self._parse_mode_argument(mode_arg)
         if new_mode is not None:
@@ -439,8 +495,8 @@ class UserInputHandler:
 
     def _update_completer_mode(self) -> None:
         """補完機能に現在のモードを通知"""
-        if hasattr(self, 'completer') and self.completer:
+        if hasattr(self, "completer") and self.completer:
             self.completer.set_mode(self.current_mode)
             # セッションのコンプリータを確実に設定
-            if hasattr(self, 'session'):
+            if hasattr(self, "session"):
                 self.session.completer = self.completer

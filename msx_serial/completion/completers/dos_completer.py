@@ -28,10 +28,10 @@ class DOSCompleter(BaseCompleter):
             # パッケージのデータディレクトリを取得
             package_dir = Path(__file__).parent.parent.parent
             yaml_path = package_dir / "data" / "dos_commands.yml"
-            
+
             with open(yaml_path, "r", encoding="utf-8") as f:
                 data = yaml.safe_load(f)
-                
+
             return [(cmd["name"], cmd["description"]) for cmd in data["dos_commands"]]
         except Exception as e:
             # ファイル読み込みに失敗した場合は基本的なコマンドのみ
@@ -81,4 +81,4 @@ class DOSCompleter(BaseCompleter):
                     start_position=-len(context.word),
                     display=command,
                     display_meta=description,
-                ) 
+                )

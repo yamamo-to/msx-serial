@@ -1,6 +1,8 @@
 import unittest
 from unittest.mock import patch, MagicMock
-from msx_serial.terminal import MSXTerminal  # msx_charsetを初期化するために最初にインポート
+from msx_serial.terminal import (
+    MSXTerminal,
+)  # msx_charsetを初期化するために最初にインポート
 from msx_serial.connection.dummy import DummyConfig, DummyConnection
 from msx_serial.input.user_input import UserInputHandler
 from msx_serial.transfer.file_transfer import FileTransferManager
