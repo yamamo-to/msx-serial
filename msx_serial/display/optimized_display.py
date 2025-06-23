@@ -75,10 +75,3 @@ class OptimizedTerminalDisplay:
     def set_mode(self, mode: str) -> None:
         """Set mode (always instant)"""
         pass  # No-op since we only support instant mode
-
-
-# Backward compatibility aliases
-FastTerminalDisplay = OptimizedTerminalDisplay
-ResponsiveTerminalDisplay = OptimizedTerminalDisplay
-InstantTerminalDisplay = OptimizedTerminalDisplay
-HybridTerminalDisplay = OptimizedTerminalDisplay

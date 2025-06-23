@@ -8,7 +8,7 @@ import time
 
 from ..connection.manager import ConnectionManager
 from ..core.data_processor import DataProcessor
-from ..display.optimized_display import HybridTerminalDisplay
+from ..display.optimized_display import OptimizedTerminalDisplay
 from ..io.user_interface import UserInterface
 from ..transfer.file_transfer import FileTransferManager
 from ..protocol.msx_detector import MSXProtocolDetector, MSXMode
@@ -51,7 +51,7 @@ class OptimizedMSXTerminalSession:
         self.data_processor = DataProcessor(self.protocol_detector, instant_mode=True)
 
         # Use optimized display (instant mode for MSX communication)
-        self.display = HybridTerminalDisplay()
+        self.display = OptimizedTerminalDisplay()
 
         self.user_interface = UserInterface(
             prompt_style=prompt_style,
