@@ -8,7 +8,6 @@ from .color_output import (
     print_help,
     print_debug,
     print_success,
-    print_failure,
 )
 
 __all__ = [
@@ -19,5 +18,4 @@ __all__ = [
     "print_help",
     "print_debug",
     "print_success",
-    "print_failure",
 ]

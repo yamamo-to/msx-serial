@@ -174,20 +174,22 @@ class OptimizedMSXTerminalSession:
             text, is_prompt = prompt_result
             self._display_output(text, is_prompt)
 
-        # Additional check for potential BASIC prompts that might be missed
+        # Process any remaining buffered content
         if self.data_processor.buffer.has_content():
             buffer_content = self.data_processor.buffer.get_content()
-            # If buffer contains BASIC-related content and ends with "Ok", process it
-            if (
-                "BASIC" in buffer_content.upper()
-                or "Microsoft" in buffer_content
-                or "Copyright" in buffer_content
-            ) and buffer_content.strip().endswith("Ok"):
-                # Force process this as a potential BASIC prompt
+            if self._is_basic_startup(buffer_content):
                 is_prompt = self.protocol_detector.detect_prompt(buffer_content)
                 if is_prompt:
                     self._display_output(buffer_content, True)
                     self.data_processor.buffer.clear()
+
+    def _is_basic_startup(self, content: str) -> bool:
+        """Check if content looks like BASIC startup sequence"""
+        content_upper = content.upper()
+        return (
+            ("BASIC" in content_upper or "Microsoft" in content or "Copyright" in content)
+            and content.strip().endswith("Ok")
+        )
 
     def _display_output(self, text: str, is_prompt: bool) -> None:
         """Display output text
@@ -268,7 +270,3 @@ class OptimizedMSXTerminalSession:
         debug_mode = not getattr(self.protocol_detector, "debug_mode", False)
         self.protocol_detector.debug_mode = debug_mode
         print_info(f"Debug mode {'enabled' if debug_mode else 'disabled'}")
-
-
-# Backward compatibility alias
-FastMSXTerminal = OptimizedMSXTerminalSession

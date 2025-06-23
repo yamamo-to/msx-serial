@@ -103,29 +103,3 @@ def set_color_config(**kwargs: str) -> None:
     for key, color in kwargs.items():
         if key in COLORS:
             COLORS[key] = color
-
-
-# Legacy aliases for backward compatibility
-def print_trace(message: str) -> None:
-    """Print trace message"""
-    print_debug(message)
-
-
-def print_failure(message: str) -> None:
-    """Print failure message"""
-    print_error(message)
-
-
-def print_input(message: str) -> None:
-    """Print input message"""
-    print_success(message)
-
-
-def print_prompt(message: str) -> None:
-    """Print prompt message"""
-    _print_colored(message, "info", end="")
-
-
-def print_receive_no_newline(message: str) -> None:
-    """Print receive message without newline"""
-    _print_colored(message, "receive", end="")

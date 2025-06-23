@@ -4,7 +4,7 @@ Optimized terminal output handler for MSX serial communication
 
 import os
 import sys
-from typing import Optional, Dict, Any
+from typing import Dict, Any
 from threading import RLock
 
 
@@ -13,11 +13,9 @@ class OptimizedTerminalDisplay:
 
     def __init__(
         self,
-        mode: str = "instant",  # Only "instant" mode supported now
         receive_color: str = "\033[92m",  # Green ANSI
     ):
         """Initialize display with instant mode"""
-        self.mode = "instant"  # Fixed to instant mode
         self.receive_color = receive_color
         self.prompt_color = f"{receive_color}\033[1m"  # Bold
         self.reset_color = "\033[0m"
@@ -30,11 +28,6 @@ class OptimizedTerminalDisplay:
 
         # Thread safety
         self._output_lock = RLock()
-
-        # Terminal size cache
-        self._terminal_width: Optional[int] = None
-        self._size_cache_time = 0
-        self._size_cache_ttl = 5.0
 
     def clear_screen(self) -> None:
         """Clear terminal screen"""
@@ -71,7 +64,3 @@ class OptimizedTerminalDisplay:
     def get_performance_stats(self) -> Dict[str, Any]:
         """Get performance statistics"""
         return self.stats.copy()
-
-    def set_mode(self, mode: str) -> None:
-        """Set mode (always instant)"""
-        pass  # No-op since we only support instant mode
