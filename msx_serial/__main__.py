@@ -1,56 +1,46 @@
-"""
-MSXシリアルターミナルのメインエントリーポイント
-"""
+"""Main entry point for MSX Serial Terminal"""
 
+import argparse
 import sys
-from msx_serial.terminal import MSXTerminal
+from msx_serial.core.optimized_session import OptimizedMSXTerminalSession
 from msx_serial.connection.connection import detect_connection_type
-from msx_serial.ui.color_output import print_exception
 
 
-def main() -> int:
-    """メイン関数"""
-    import argparse
-
-    parser = argparse.ArgumentParser(description="MSXシリアルターミナル")
+def main():
+    """Main entry point"""
+    parser = argparse.ArgumentParser(description="MSX Serial Terminal")
     parser.add_argument(
         "connection",
         type=str,
-        help="接続先 (例: COM4, /dev/ttyUSB0, 192.168.1.100:2223)",
+        help="Connection string (e.g. COM4, /dev/ttyUSB0, 192.168.1.100:2223, dummy://)",
     )
-    parser.add_argument(
-        "--encoding", type=str, default="msx-jp", help="エンコーディング"
-    )
-    parser.add_argument(
-        "--debug", action="store_true", help="デバッグモードを有効にする"
-    )
+    parser.add_argument("--encoding", default="msx-jp", help="Text encoding")
+    parser.add_argument("--debug", action="store_true", help="Enable debug mode")
+
     args = parser.parse_args()
 
     try:
-        # 接続タイプを自動判定
+        # Detect connection type from URI
         config = detect_connection_type(args.connection)
 
-        terminal = MSXTerminal(
-            config,
+        # Create and run terminal
+        terminal = OptimizedMSXTerminalSession(
+            config=config,
             encoding=args.encoding,
-            prompt_style="#00ff00 bold",
         )
 
-        # デバッグモードが有効な場合
         if args.debug:
-            if hasattr(terminal, "toggle_debug_mode"):
-                terminal.toggle_debug_mode()
-            elif hasattr(terminal, "debug_mode"):
-                terminal.debug_mode = True
-                if hasattr(terminal, "protocol_detector"):
-                    terminal.protocol_detector.debug_mode = True
+            terminal.toggle_debug_mode()
 
         terminal.run()
-        return 0
-    except ValueError as e:
-        print_exception("エラー", e)
-        return 1
+
+    except KeyboardInterrupt:
+        print("\nExiting...")
+        sys.exit(0)
+    except Exception as e:
+        print(f"Error: {e}")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()

@@ -6,8 +6,8 @@ from collections import defaultdict
 from typing import Dict, List, Optional, Set
 from prompt_toolkit.completion import Completer
 
-from ...util.loader_keyword import load_keywords
-from ...util.loader_iot_nodes import IotNodes
+from ..keyword_loader import load_keywords
+from ..iot_loader import IotNodes
 
 
 class CompletionContext:

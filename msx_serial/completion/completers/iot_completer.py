@@ -7,7 +7,7 @@ from typing import Iterator
 from prompt_toolkit.completion import Completion, CompleteEvent
 from prompt_toolkit.document import Document
 from .base import BaseCompleter, CompletionContext
-from ...util.loader_iot_nodes import IotNodes
+from ..iot_loader import IotNodes
 
 
 class IoTCompleter(BaseCompleter):

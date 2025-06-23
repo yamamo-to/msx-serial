@@ -3,7 +3,7 @@ Tests for protocol module
 """
 
 from msx_serial.protocol.msx_detector import MSXProtocolDetector
-from msx_serial.modes import MSXMode
+from msx_serial.protocol.msx_detector import MSXMode
 
 
 class TestMSXProtocolDetector:

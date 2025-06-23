@@ -8,7 +8,7 @@ from prompt_toolkit.document import Document
 from prompt_toolkit.completion import CompleteEvent
 
 from msx_serial.completion.completers.command_completer import CommandCompleter
-from msx_serial.input.commands import CommandType
+from msx_serial.commands.command_types import CommandType
 
 
 class TestCommandCompleter(unittest.TestCase):

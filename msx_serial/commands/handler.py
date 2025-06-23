@@ -9,8 +9,8 @@ from typing import Optional, TYPE_CHECKING
 from prompt_toolkit.shortcuts import radiolist_dialog
 from prompt_toolkit.styles import Style
 
-from ..input.commands import CommandType
-from ..ui.color_output import print_info, print_warn, print_exception
+from .command_types import CommandType
+from ..common.color_output import print_info, print_warn, print_exception
 from .performance_commands import handle_performance_command
 
 if TYPE_CHECKING:

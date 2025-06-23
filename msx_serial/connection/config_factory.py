@@ -2,7 +2,7 @@
 Configuration factory for connection types
 """
 
-from typing import Union
+from typing import Union, Optional
 from .uri_parser import ParsedUri
 from .serial import SerialConfig
 from .telnet import TelnetConfig
@@ -200,3 +200,40 @@ class ConnectionConfigValidator:
         elif isinstance(config, SerialConfig):
             cls.validate_serial_config(config)
         # DummyConfig needs no validation
+
+
+def create_connection_config(
+    dummy: bool = False,
+    device: Optional[str] = None,
+    baudrate: int = 19200,
+    host: Optional[str] = None,
+    port: Optional[int] = None,
+) -> Union[TelnetConfig, SerialConfig, DummyConfig]:
+    """Create connection configuration from individual parameters
+
+    Args:
+        dummy: Use dummy connection for testing
+        device: Serial device path
+        baudrate: Serial baud rate
+        host: Telnet host
+        port: Telnet port
+
+    Returns:
+        Connection configuration object
+
+    Raises:
+        ValueError: If required parameters are missing
+    """
+    if dummy:
+        return DummyConfig()
+
+    if host is not None:
+        # Telnet connection
+        telnet_port = port if port is not None else 23
+        return TelnetConfig(host=host, port=telnet_port)
+
+    if device is not None:
+        # Serial connection
+        return SerialConfig(port=device, baudrate=baudrate)
+
+    raise ValueError("Either dummy=True, device path, or host must be provided")

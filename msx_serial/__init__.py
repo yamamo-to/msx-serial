@@ -1,10 +1,11 @@
 """
-MSXシリアルターミナル
-MSXとのシリアル通信を行うターミナルプログラム
+MSX Serial Terminal
 """
 
-from .terminal import MSXTerminal
-from ._version import __version__
-from .__main__ import main
+from .core.optimized_session import OptimizedMSXTerminalSession
 
-__all__ = ["MSXTerminal", "__version__", "main"]
+# Use optimized session as main terminal
+MSXTerminal = OptimizedMSXTerminalSession
+
+__version__ = "0.5.0"
+__all__ = ["MSXTerminal", "OptimizedMSXTerminalSession"]

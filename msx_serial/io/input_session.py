@@ -8,7 +8,7 @@ from prompt_toolkit import PromptSession
 from prompt_toolkit.styles import Style
 
 from ..completion.completers.command_completer import CommandCompleter
-from ..input.commands import CommandType
+from ..commands.command_types import CommandType
 
 
 class InputSession:

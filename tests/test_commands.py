@@ -6,7 +6,7 @@ import threading
 from unittest.mock import Mock, patch
 from pathlib import Path
 from msx_serial.commands.handler import CommandHandler
-from msx_serial.input.commands import CommandType
+from msx_serial.commands.command_types import CommandType
 from prompt_toolkit.styles import Style
 
 

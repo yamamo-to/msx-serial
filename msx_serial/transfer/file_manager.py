@@ -7,7 +7,7 @@ import chardet
 from pathlib import Path
 from typing import Optional, Callable, Iterator
 from ..connection.base import Connection
-from ..ui.color_output import print_info, print_exception
+from ..common.color_output import print_info, print_exception
 
 
 class FileReader:

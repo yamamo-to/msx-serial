@@ -8,7 +8,7 @@ from prompt_toolkit.document import Document
 from prompt_toolkit.completion.filesystem import PathCompleter
 
 from .base import BaseCompleter, CompletionContext
-from ...input.commands import CommandType
+from ...commands.command_types import CommandType
 
 
 class SpecialCompleter(BaseCompleter):

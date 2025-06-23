@@ -1,5 +1,8 @@
-"""Core module for MSX terminal"""
+"""Core MSX terminal components"""
 
-from .terminal_session import MSXTerminalSession
+from .optimized_session import OptimizedMSXTerminalSession
 
-__all__ = ["MSXTerminalSession"]
+# Use optimized session as default
+MSXTerminalSession = OptimizedMSXTerminalSession
+
+__all__ = ["OptimizedMSXTerminalSession", "MSXTerminalSession"]

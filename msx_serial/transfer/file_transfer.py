@@ -8,7 +8,7 @@ import chardet
 from pathlib import Path
 from tqdm import tqdm
 from .basic_sender import send_basic_program
-from ..ui.color_output import print_info, print_exception
+from ..common.color_output import print_info, print_exception
 from ..connection.base import Connection
 from typing import TYPE_CHECKING, Optional, Union
 

@@ -1,10 +1,19 @@
 """
-MSX protocol detection and mode management
+MSX Protocol Detection and Mode Management
 """
 
 import re
-from ..modes import MSXMode
-from ..ui.color_output import print_info
+from enum import Enum
+
+from ..common.color_output import print_info
+
+
+class MSXMode(Enum):
+    """MSX operation modes"""
+
+    UNKNOWN = "unknown"
+    BASIC = "basic"
+    DOS = "dos"
 
 
 class MSXProtocolDetector:
@@ -190,9 +199,7 @@ class MSXProtocolDetector:
         if detected_mode != MSXMode.UNKNOWN:
             old_mode = self.current_mode
             self.current_mode = detected_mode.value
-            self._debug_print(
-                f"Force mode update: {old_mode} -> {self.current_mode}"
-            )
+            self._debug_print(f"Force mode update: {old_mode} -> {self.current_mode}")
             return True
         return False
 

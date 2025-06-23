@@ -1,7 +1,7 @@
 import telnetlib
 from dataclasses import dataclass
 from .base import Connection, ConnectionConfig
-from ..ui.color_output import print_exception
+from ..common.color_output import print_exception
 
 
 @dataclass
