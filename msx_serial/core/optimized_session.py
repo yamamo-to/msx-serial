@@ -50,8 +50,8 @@ class OptimizedMSXTerminalSession:
         # Initialize data processor with instant mode
         self.data_processor = DataProcessor(self.protocol_detector, instant_mode=True)
 
-        # Use optimized display
-        self.display = HybridTerminalDisplay(responsive_mode=True, instant_mode=True)
+        # Use optimized display (instant mode for MSX communication)
+        self.display = HybridTerminalDisplay()
 
         self.user_interface = UserInterface(
             prompt_style=prompt_style,

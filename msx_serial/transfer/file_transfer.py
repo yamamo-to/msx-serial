@@ -1,5 +1,5 @@
 """
-MSXシリアルターミナルのファイル転送処理
+MSX Serial Terminal File Transfer Processing
 """
 
 import time
@@ -7,56 +7,74 @@ import base64
 import chardet
 from pathlib import Path
 from tqdm import tqdm
+from typing import TYPE_CHECKING, Optional, Union, BinaryIO, TextIO
+
 from .basic_sender import send_basic_program
 from ..common.color_output import print_info, print_exception
 from ..connection.base import Connection
-from typing import TYPE_CHECKING, Optional, Union
 
 if TYPE_CHECKING:
-    from ..terminal import MSXTerminal
+    from ..core.optimized_session import OptimizedMSXTerminalSession
 
 
 class FileTransferManager:
-    """ファイル転送マネージャー"""
+    """File transfer manager with simplified operations"""
 
     def __init__(self, connection: Connection, encoding: str):
-        """初期化
-
-        Args:
-            connection: 接続オブジェクト
-            encoding: 文字エンコーディング
-        """
+        """Initialize file transfer manager"""
         self.connection = connection
         self.encoding = encoding
         self.chunk_size = 1024
         self.timeout = 10.0
-        self.terminal: Optional["MSXTerminal"] = None  # MSXTerminalインスタンスへの参照
+        self.terminal: Optional["OptimizedMSXTerminalSession"] = None
 
-    def set_terminal(self, terminal: Optional["MSXTerminal"]) -> None:
-        """MSXTerminalインスタンスを設定"""
+    def set_terminal(self, terminal: Optional["OptimizedMSXTerminalSession"]) -> None:
+        """Set terminal instance reference"""
         self.terminal = terminal
 
     def paste_file(self, file_path: Union[Path, str]) -> None:
-        with open(file_path, "rb") as f:
+        """Paste file contents to MSX"""
+        path = Path(file_path)
+        if not path.exists():
+            print_exception("File not found", FileNotFoundError(str(path)))
+            return
+
+        try:
+            encoding = self._detect_encoding(path)
+            self._send_file_lines(path, encoding)
+        except Exception as e:
+            print_exception("Failed to paste file", e)
+
+    def _detect_encoding(self, file_path: Path) -> str:
+        """Detect file encoding"""
+        with file_path.open("rb") as f:
             raw = f.read()
-            enc = chardet.detect(raw)["encoding"]
+            detected = chardet.detect(raw)
+            return detected.get("encoding", "utf-8")
 
-        with open(file_path, "r", encoding=enc) as f:
+    def _send_file_lines(self, file_path: Path, encoding: str) -> None:
+        """Send file line by line"""
+        with file_path.open("r", encoding=encoding) as f:
             for line in f:
-                encoded_line = line.rstrip().encode(self.encoding)
-                self.connection.write(encoded_line)
-                self.connection.flush()
+                self._send_line(line.rstrip())
 
-    def _check_ok(self) -> bool:
-        """受信バッファに:改行OKが含まれているか確認"""
-        if self.connection.in_waiting():
+    def _send_line(self, line: str) -> None:
+        """Send single line to MSX"""
+        encoded_line = line.encode(self.encoding)
+        self.connection.write(encoded_line)
+        self.connection.flush()
+
+    def _check_response(self, expected: str = ":? `") -> bool:
+        """Check for expected response in buffer"""
+        if not self.connection.in_waiting():
+            return False
+
+        try:
             data = self.connection.read(self.connection.in_waiting())
-            try:
-                text = data.decode(self.encoding)
-                return ":? `" in text
-            except UnicodeDecodeError:
-                pass
-        return False
+            text = data.decode(self.encoding)
+            return expected in text
+        except UnicodeDecodeError:
+            return False
 
     def upload_file(self, file_path: str) -> None:
         try:

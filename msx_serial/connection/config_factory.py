@@ -2,11 +2,49 @@
 Configuration factory for connection types
 """
 
-from typing import Union, Optional
+from typing import Union, Optional, Dict, List
 from .uri_parser import ParsedUri
 from .serial import SerialConfig
 from .telnet import TelnetConfig
 from .dummy import DummyConfig
+
+
+class ParameterExtractor:
+    """Helper class for extracting and converting URI parameters"""
+
+    def __init__(self, params: Optional[Dict[str, List[str]]]):
+        self.params = params or {}
+
+    def get_int(self, name: str, default: int) -> int:
+        """Get integer parameter"""
+        if name in self.params and self.params[name]:
+            try:
+                return int(self.params[name][0])
+            except (ValueError, IndexError):
+                return default
+        return default
+
+    def get_str(self, name: str, default: str) -> str:
+        """Get string parameter"""
+        if name in self.params and self.params[name]:
+            return self.params[name][0]
+        return default
+
+    def get_bool(self, name: str, default: bool = False) -> bool:
+        """Get boolean parameter"""
+        if name in self.params and self.params[name]:
+            value = self.params[name][0].lower()
+            return value in ("true", "1", "yes", "on")
+        return default
+
+    def get_timeout(self) -> Optional[int]:
+        """Get timeout parameter with special handling"""
+        if "timeout" in self.params and self.params["timeout"]:
+            try:
+                return int(self.params["timeout"][0])
+            except (ValueError, IndexError):
+                pass
+        return None
 
 
 class ConfigFactory:
@@ -52,50 +90,19 @@ class ConfigFactory:
         if not port:
             raise ValueError("Path or host is required for serial connection")
 
-        # Extract parameters from query if available
-        params = parsed_uri.query_params or {}
-
-        def get_int_param(name: str, default: int) -> int:
-            """Get integer parameter from query"""
-            if name in params and params[name]:
-                try:
-                    return int(params[name][0])
-                except (ValueError, IndexError):
-                    return default
-            return default
-
-        def get_str_param(name: str, default: str) -> str:
-            """Get string parameter from query"""
-            if name in params and params[name]:
-                return params[name][0]
-            return default
-
-        def get_bool_param(name: str, default: bool = False) -> bool:
-            """Get boolean parameter from query"""
-            if name in params and params[name]:
-                value = params[name][0].lower()
-                return value in ("true", "1", "yes", "on")
-            return default
-
-        def get_timeout_param() -> int:
-            """Get timeout parameter with special handling"""
-            if "timeout" in params and params["timeout"]:
-                try:
-                    return int(params["timeout"][0])
-                except (ValueError, IndexError):
-                    pass
-            return None
+        # Extract parameters using helper
+        extractor = ParameterExtractor(parsed_uri.query_params)
 
         return SerialConfig(
             port=port,
-            baudrate=get_int_param("baudrate", 115200),
-            bytesize=get_int_param("bytesize", 8),
-            parity=get_str_param("parity", "N"),
-            stopbits=get_int_param("stopbits", 1),
-            timeout=get_timeout_param(),
-            xonxoff=get_bool_param("xonxoff"),
-            rtscts=get_bool_param("rtscts"),
-            dsrdtr=get_bool_param("dsrdtr"),
+            baudrate=extractor.get_int("baudrate", 115200),
+            bytesize=extractor.get_int("bytesize", 8),
+            parity=extractor.get_str("parity", "N"),
+            stopbits=extractor.get_int("stopbits", 1),
+            timeout=extractor.get_timeout(),
+            xonxoff=extractor.get_bool("xonxoff"),
+            rtscts=extractor.get_bool("rtscts"),
+            dsrdtr=extractor.get_bool("dsrdtr"),
         )
 
     @staticmethod
@@ -127,14 +134,16 @@ class ConfigFactory:
         """
         scheme = parsed_uri.scheme.lower()
 
-        if scheme == "telnet":
-            return cls.create_telnet_config(parsed_uri)
-        elif scheme == "serial":
-            return cls.create_serial_config(parsed_uri)
-        elif scheme == "dummy":
-            return cls.create_dummy_config(parsed_uri)
-        else:
+        config_creators = {
+            "telnet": cls.create_telnet_config,
+            "serial": cls.create_serial_config,
+            "dummy": cls.create_dummy_config,
+        }
+
+        if scheme not in config_creators:
             raise ValueError(f"Unsupported scheme: {scheme}")
+
+        return config_creators[scheme](parsed_uri)
 
 
 class ConnectionConfigValidator:

@@ -1,164 +1,131 @@
+"""Color output utilities for MSX terminal"""
+
 from colorama import Fore, Style, init
+from typing import Dict
 
 init()
 
-
-# 初期のデフォルト色設定
-COLOR_CONFIG = {
+# Color mapping
+COLORS: Dict[str, str] = {
     "info": Fore.CYAN,
     "warn": Fore.YELLOW,
     "error": Fore.RED,
     "exception": Fore.RED,
+    "success": Fore.GREEN,
+    "debug": Fore.MAGENTA,
+    "trace": Fore.WHITE,
+    "help": Fore.GREEN,
     "receive": Fore.GREEN,
-    "help": Fore.LIGHTYELLOW_EX,
 }
 
 
-def set_color_config(**kwargs: str) -> None:
-    """
-    使用する色をユーザーがカスタマイズするための関数。
-    例: set_color_config(info=Fore.BLUE, warn=Fore.MAGENTA)
-    """
-    for key, color in kwargs.items():
-        if key in COLOR_CONFIG:
-            COLOR_CONFIG[key] = color
+def _colorize(message: str, color: str) -> str:
+    """Apply color to message"""
+    return f"{color}{message}{Style.RESET_ALL}"
 
 
-# 文字列生成関数
-def str_info(message: str) -> str:
-    return f"{COLOR_CONFIG['info']}[info]{message}{Style.RESET_ALL}"
+def _print_colored(message: str, color_key: str, **kwargs) -> None:
+    """Print colored message"""
+    color = COLORS.get(color_key, Fore.WHITE)
+    print(_colorize(message, color), **kwargs)
 
 
-def str_warn(message: str) -> str:
-    return f"{COLOR_CONFIG['warn']}[warn] {message}{Style.RESET_ALL}"
-
-
-def str_error(message: str) -> str:
-    return f"{COLOR_CONFIG['error']}[error] {message}{Style.RESET_ALL}"
-
-
-def str_exception(message: str, e: Exception) -> str:
-    return f"{COLOR_CONFIG['exception']}[{message}] {e}{Style.RESET_ALL}"
-
-
-# 出力関数
+# Primary output functions
 def print_info(message: str) -> None:
-    """情報メッセージを表示
-
-    Args:
-        message: 表示するメッセージ
-    """
-    print(f"{Fore.CYAN}{message}{Style.RESET_ALL}")
+    """Print info message"""
+    _print_colored(message, "info")
 
 
 def print_warn(message: str) -> None:
-    """警告メッセージを表示
-
-    Args:
-        message: 表示するメッセージ
-    """
-    print(f"{Fore.YELLOW}{message}{Style.RESET_ALL}")
+    """Print warning message"""
+    _print_colored(message, "warn")
 
 
 def print_error(message: str) -> None:
-    """エラーメッセージを表示
-
-    Args:
-        message: 表示するメッセージ
-    """
-    print(f"{Fore.RED}{message}{Style.RESET_ALL}")
+    """Print error message"""
+    _print_colored(message, "error")
 
 
 def print_exception(title: str, exception: Exception) -> None:
-    """例外メッセージを表示
-
-    Args:
-        title: タイトル
-        exception: 例外オブジェクト
-    """
-    print(f"{Fore.RED}{title}: {str(exception)}{Style.RESET_ALL}")
-
-
-def print_help(message: str) -> None:
-    """ヘルプメッセージを表示
-
-    Args:
-        message: 表示するメッセージ
-    """
-    print(f"{Fore.GREEN}{message}{Style.RESET_ALL}")
-
-
-def print_debug(message: str) -> None:
-    """デバッグメッセージを表示
-
-    Args:
-        message: 表示するメッセージ
-    """
-    print(f"{Fore.MAGENTA}{message}{Style.RESET_ALL}")
-
-
-def print_trace(message: str) -> None:
-    """トレースメッセージを表示
-
-    Args:
-        message: 表示するメッセージ
-    """
-    print(f"{Fore.WHITE}{message}{Style.RESET_ALL}")
+    """Print exception message"""
+    _print_colored(f"{title}: {str(exception)}", "exception")
 
 
 def print_success(message: str) -> None:
-    """成功メッセージを表示
-
-    Args:
-        message: 表示するメッセージ
-    """
-    print(f"{Fore.GREEN}{message}{Style.RESET_ALL}")
+    """Print success message"""
+    _print_colored(message, "success")
 
 
-def print_failure(message: str) -> None:
-    """失敗メッセージを表示
-
-    Args:
-        message: 表示するメッセージ
-    """
-    print(f"{Fore.RED}{message}{Style.RESET_ALL}")
+def print_debug(message: str) -> None:
+    """Print debug message"""
+    _print_colored(message, "debug")
 
 
-def print_prompt(message: str) -> None:
-    """プロンプトメッセージを表示
-
-    Args:
-        message: 表示するメッセージ
-    """
-    print(f"{Fore.CYAN}{message}{Style.RESET_ALL}", end="")
-
-
-def print_input(message: str) -> None:
-    """入力メッセージを表示
-
-    Args:
-        message: 表示するメッセージ
-    """
-    print(f"{Fore.GREEN}{message}{Style.RESET_ALL}")
+def print_help(message: str) -> None:
+    """Print help message"""
+    _print_colored(message, "help")
 
 
 def print_receive(message: str, end: str = "\n") -> None:
-    print(f"{COLOR_CONFIG['receive']}{message}{Style.RESET_ALL}", end=end)
+    """Print received message"""
+    _print_colored(message, "receive", end=end)
 
 
 def print_prompt_receive(message: str) -> None:
-    """プロンプト受信メッセージを表示（改行なし）
+    """Print prompt received message (no newline)"""
+    _print_colored(message, "receive", end="", flush=True)
 
-    Args:
-        message: 表示するメッセージ
-    """
-    print(f"{COLOR_CONFIG['receive']}{message}{Style.RESET_ALL}", end="", flush=True)
+
+# String generation functions
+def str_info(message: str) -> str:
+    """Generate colored info string"""
+    return _colorize(f"[info]{message}", COLORS["info"])
+
+
+def str_warn(message: str) -> str:
+    """Generate colored warning string"""
+    return _colorize(f"[warn] {message}", COLORS["warn"])
+
+
+def str_error(message: str) -> str:
+    """Generate colored error string"""
+    return _colorize(f"[error] {message}", COLORS["error"])
+
+
+def str_exception(message: str, e: Exception) -> str:
+    """Generate colored exception string"""
+    return _colorize(f"[{message}] {e}", COLORS["exception"])
+
+
+# Configuration
+def set_color_config(**kwargs: str) -> None:
+    """Customize colors"""
+    for key, color in kwargs.items():
+        if key in COLORS:
+            COLORS[key] = color
+
+
+# Legacy aliases for backward compatibility
+def print_trace(message: str) -> None:
+    """Print trace message"""
+    print_debug(message)
+
+
+def print_failure(message: str) -> None:
+    """Print failure message"""
+    print_error(message)
+
+
+def print_input(message: str) -> None:
+    """Print input message"""
+    print_success(message)
+
+
+def print_prompt(message: str) -> None:
+    """Print prompt message"""
+    _print_colored(message, "info", end="")
 
 
 def print_receive_no_newline(message: str) -> None:
-    """受信メッセージを改行なしで表示
-
-    Args:
-        message: 表示するメッセージ
-    """
-    print(f"{COLOR_CONFIG['receive']}{message}{Style.RESET_ALL}", end="")
+    """Print receive message without newline"""
+    _print_colored(message, "receive", end="")
