@@ -90,7 +90,7 @@ class UserInterface:
             True if special command was processed
         """
         return self.command_handler.handle_special_commands(
-            user_input, file_transfer, stop_event
+            user_input, file_transfer, stop_event, terminal=self.terminal
         )
 
     def update_mode(self, mode: str) -> None:

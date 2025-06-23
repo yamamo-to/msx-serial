@@ -11,6 +11,7 @@ from prompt_toolkit.styles import Style
 
 from ..input.commands import CommandType
 from ..ui.color_output import print_info, print_warn, print_exception
+from .performance_commands import handle_performance_command
 
 if TYPE_CHECKING:
     from ..transfer.file_transfer import FileTransferManager
@@ -56,6 +57,7 @@ class CommandHandler:
         user_input: str,
         file_transfer: "FileTransferManager",
         stop_event: threading.Event,
+        terminal=None,
     ) -> bool:
         """Process special commands
 
@@ -63,10 +65,19 @@ class CommandHandler:
             user_input: User input
             file_transfer: File transfer manager
             stop_event: Stop event
+            terminal: Terminal instance for performance commands
 
         Returns:
             True if special command was processed
         """
+        # Handle performance commands first
+        if user_input.startswith("@perf"):
+            if terminal:
+                return handle_performance_command(terminal, user_input)
+            else:
+                print_warn("Performance commands require terminal instance")
+                return True
+
         cmd = CommandType.from_input(user_input)
         if cmd is None:
             return False
@@ -161,6 +172,7 @@ Available commands:
   @help     - Show this help
   @encode   - Change encoding
   @mode     - Switch MSX mode
+  @perf     - Performance control (see @perf help)
   
 MSX-specific commands (BASIC mode only):
   @paste    - Paste a file as BASIC program
@@ -180,6 +192,7 @@ Use @help <command> for detailed help on specific commands.
             "mode": "Switch MSX mode. Usage: @mode [basic|dos]",
             "paste": "Paste file as BASIC program (BASIC mode only)",
             "upload": "Upload file to MSX (BASIC mode only)",
+            "perf": "Performance control commands. Usage: @perf help for details",
         }
 
         if command in help_texts:
@@ -209,25 +222,25 @@ Use @help <command> for detailed help on specific commands.
             print_info("Available modes: basic, dos")
             return
 
-        parsed_mode = self._parse_mode_argument(mode_arg)
-        if parsed_mode:
-            self.current_mode = parsed_mode
-            print_info(f"Mode switched to: {self._get_mode_display_name(parsed_mode)}")
+        new_mode = self._parse_mode_argument(mode_arg)
+        if new_mode:
+            print_info(
+                f"Mode change to '{self._get_mode_display_name(new_mode)}' requested"
+            )
         else:
             print_warn(f"Invalid mode: {mode_arg}")
 
     def _get_mode_display_name(self, mode: str) -> str:
         """Get display name for mode"""
-        mode_names = {"basic": "MSX-BASIC", "dos": "MSX-DOS", "unknown": "Unknown"}
-        return mode_names.get(mode, mode)
+        return {"basic": "MSX BASIC", "dos": "MSX-DOS"}.get(mode, mode.upper())
 
     def _parse_mode_argument(self, mode_arg: str) -> Optional[str]:
         """Parse mode argument"""
-        mode_arg = mode_arg.lower()
-
-        if mode_arg in ["basic", "b"]:
-            return "basic"
-        elif mode_arg in ["dos", "d", "msx-dos"]:
-            return "dos"
-
-        return None
+        mode_mapping = {
+            "basic": "basic",
+            "b": "basic",
+            "dos": "dos",
+            "d": "dos",
+            "msx-dos": "dos",
+        }
+        return mode_mapping.get(mode_arg.lower())
