@@ -12,6 +12,7 @@ from ..transfer.file_transfer import FileTransferManager
 from ..protocol.msx_detector import MSXProtocolDetector
 from ..ui.color_output import print_info, print_exception
 from ..connection.base import ConnectionConfig
+from .data_processor import DataProcessor
 
 
 class MSXTerminalSession:
@@ -39,6 +40,7 @@ class MSXTerminalSession:
         # Initialize components
         self.connection_manager = ConnectionManager(config)
         self.protocol_detector = MSXProtocolDetector()
+        self.data_processor = DataProcessor(self.protocol_detector)
 
         self.user_interface = UserInterface(
             prompt_style=prompt_style,
@@ -70,102 +72,63 @@ class MSXTerminalSession:
 
     def _receive_loop(self) -> None:
         """Handle incoming data from MSX"""
-        buffer = ""
-
         while not self.stop_event.is_set():
             try:
-                current_time = time.time()
-
-                if self.connection_manager.connection.in_waiting():
-                    data = self.connection_manager.connection.read(
-                        self.connection_manager.connection.in_waiting()
-                    )
-                    decoded = data.decode(self.encoding)
-                    buffer += decoded
-                    self.last_data_time = current_time
-
-                    if not self.suppress_output:
-                        buffer = self._process_received_data(buffer)
-
-                # Handle timeout scenarios
-                elif buffer and (current_time - self.last_data_time) > 0.1:
-                    if not self.suppress_output and buffer.strip():
-                        buffer = self._handle_timeout_buffer(buffer)
-
-                elif (
-                    buffer
-                    and self.protocol_detector.is_prompt_candidate(buffer)
-                    and (current_time - self.last_data_time) > 0.02
-                ):
-                    if not self.suppress_output and buffer.strip():
-                        buffer = self._handle_prompt_candidate(buffer)
-
+                self._process_incoming_data()
+                self._check_timeouts()
+                time.sleep(0.001)  # Small delay to prevent busy waiting
             except Exception as e:
                 print_exception("Receive error", e)
                 break
 
-    def _process_received_data(self, buffer: str) -> str:
-        """Process received data buffer
+    def _process_incoming_data(self) -> None:
+        """Process any available incoming data"""
+        if not self.connection_manager.connection.in_waiting():
+            return
+
+        try:
+            data = self.connection_manager.connection.read(
+                self.connection_manager.connection.in_waiting()
+            )
+            decoded = data.decode(self.encoding)
+            self.last_data_time = time.time()
+
+            if not self.suppress_output:
+                # Process data through the data processor
+                output_lines = self.data_processor.process_data(decoded)
+                for text, is_prompt in output_lines:
+                    self._display_output(text, is_prompt)
+
+        except UnicodeDecodeError as e:
+            print_exception("Decode error", e)
+
+    def _check_timeouts(self) -> None:
+        """Check for timeout conditions"""
+        if self.suppress_output:
+            return
+
+        # Check for regular timeout
+        timeout_result = self.data_processor.check_timeout(0.1)
+        if timeout_result:
+            text, is_prompt = timeout_result
+            self._display_output(text, is_prompt)
+
+        # Check for prompt candidate timeout
+        prompt_result = self.data_processor.check_prompt_candidate(0.02)
+        if prompt_result:
+            text, is_prompt = prompt_result
+            self._display_output(text, is_prompt)
+
+    def _display_output(self, text: str, is_prompt: bool) -> None:
+        """Display output text
 
         Args:
-            buffer: Data buffer
-
-        Returns:
-            Remaining buffer data
+            text: Text to display
+            is_prompt: Whether this is a prompt
         """
-        if self.protocol_detector.detect_prompt(buffer):
-            return self._handle_prompt_detection(buffer)
-        else:
-            return self._handle_regular_data(buffer)
-
-    def _handle_prompt_detection(self, buffer: str) -> str:
-        """Handle detected prompt in buffer"""
-        lines = buffer.split("\n")
-
-        # Display all lines except the last (prompt line)
-        for line in lines[:-1]:
-            if line.strip():
-                self.user_interface.print_receive(line)
-
-        # Handle the prompt line
-        last_line = lines[-1]
-        if self.protocol_detector.detect_prompt(last_line):
-            self.user_interface.print_receive(last_line, is_prompt=True)
-            time.sleep(0.01)  # Brief wait for display sync
-            self._update_prompt_state(last_line)
-        else:
-            self.user_interface.print_receive(last_line)
-
-        return ""
-
-    def _handle_regular_data(self, buffer: str) -> str:
-        """Handle regular (non-prompt) data"""
-        if "\n" in buffer:
-            lines = buffer.split("\n")
-            for line in lines[:-1]:
-                if line.strip():
-                    self.user_interface.print_receive(line)
-            return lines[-1]  # Keep the last incomplete line
-
-        return buffer
-
-    def _handle_timeout_buffer(self, buffer: str) -> str:
-        """Handle buffer on timeout"""
-        if self.protocol_detector.detect_prompt(buffer):
-            self.user_interface.print_receive(buffer, is_prompt=True)
-            self._update_prompt_state(buffer)
-        else:
-            self.user_interface.print_receive(buffer)
-        return ""
-
-    def _handle_prompt_candidate(self, buffer: str) -> str:
-        """Handle potential prompt candidate"""
-        if self.protocol_detector.detect_prompt(buffer):
-            self.user_interface.print_receive(buffer, is_prompt=True)
-            self._update_prompt_state(buffer)
-        else:
-            self.user_interface.print_receive(buffer)
-        return ""
+        self.user_interface.print_receive(text, is_prompt)
+        if is_prompt:
+            self._update_prompt_state(text)
 
     def _update_prompt_state(self, prompt_text: str) -> None:
         """Update prompt detection state and mode"""
