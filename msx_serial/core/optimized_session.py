@@ -8,7 +8,7 @@ import time
 
 from ..connection.manager import ConnectionManager
 from ..core.data_processor import DataProcessor
-from ..display.fast_output import HybridTerminalDisplay
+from ..display.optimized_display import HybridTerminalDisplay
 from ..io.user_interface import UserInterface
 from ..transfer.file_transfer import FileTransferManager
 from ..protocol.msx_detector import MSXProtocolDetector, MSXMode

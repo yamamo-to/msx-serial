@@ -3,7 +3,7 @@ Tests for display module
 """
 
 from unittest.mock import patch, Mock
-from msx_serial.display.terminal_output import TerminalDisplay
+from msx_serial.display.basic_display import TerminalDisplay
 
 
 class TestTerminalDisplay:
@@ -37,7 +37,7 @@ class TestTerminalDisplay:
             self.display.clear_screen()
             mock_system.assert_called_once_with("cls")
 
-    @patch("msx_serial.display.terminal_output.print_formatted_text")
+    @patch("msx_serial.display.basic_display.print_formatted_text")
     def test_print_receive_regular(self, mock_print):
         """Test printing regular text"""
         self.display.print_receive("test message")
@@ -46,7 +46,7 @@ class TestTerminalDisplay:
         assert args[0][0] == "#00ff00"
         assert args[0][1] == "test message"
 
-    @patch("msx_serial.display.terminal_output.print_formatted_text")
+    @patch("msx_serial.display.basic_display.print_formatted_text")
     def test_print_receive_prompt(self, mock_print):
         """Test printing prompt text"""
         self.display.print_receive("A>", is_prompt=True)
@@ -56,7 +56,7 @@ class TestTerminalDisplay:
         assert args[0][1] == "A>"
 
     @patch("os.get_terminal_size")
-    @patch("msx_serial.display.terminal_output.print_formatted_text")
+    @patch("msx_serial.display.basic_display.print_formatted_text")
     def test_print_receive_long_text(self, mock_print, mock_terminal_size):
         """Test printing text longer than terminal width"""
         mock_terminal_size.return_value = Mock(columns=10)
@@ -75,7 +75,7 @@ class TestTerminalDisplay:
             assert len(line) <= 10
 
     @patch("os.get_terminal_size")
-    @patch("msx_serial.display.terminal_output.print_formatted_text")
+    @patch("msx_serial.display.basic_display.print_formatted_text")
     def test_print_receive_terminal_size_error(self, mock_print, mock_terminal_size):
         """Test printing when terminal size cannot be determined"""
         mock_terminal_size.side_effect = OSError("Cannot get terminal size")

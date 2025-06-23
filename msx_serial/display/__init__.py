@@ -1,5 +1,5 @@
 """Display module for MSX terminal"""
 
-from .terminal_output import TerminalDisplay
+from .basic_display import TerminalDisplay
 
 __all__ = ["TerminalDisplay"]

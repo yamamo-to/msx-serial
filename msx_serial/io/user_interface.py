@@ -6,7 +6,7 @@ import threading
 from typing import Any, TYPE_CHECKING
 
 from ..connection.base import Connection
-from ..display.terminal_output import TerminalDisplay
+from ..display.basic_display import TerminalDisplay
 from ..commands.handler import CommandHandler
 from .input_session import InputSession
 from .data_sender import DataSender
