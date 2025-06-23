@@ -21,6 +21,9 @@ def main() -> int:
     parser.add_argument(
         "--encoding", type=str, default="msx-jp", help="エンコーディング"
     )
+    parser.add_argument(
+        "--debug", action="store_true", help="デバッグモードを有効にする"
+    )
     args = parser.parse_args()
 
     try:
@@ -32,6 +35,16 @@ def main() -> int:
             encoding=args.encoding,
             prompt_style="#00ff00 bold",
         )
+
+        # デバッグモードが有効な場合
+        if args.debug:
+            if hasattr(terminal, "toggle_debug_mode"):
+                terminal.toggle_debug_mode()
+            elif hasattr(terminal, "debug_mode"):
+                terminal.debug_mode = True
+                if hasattr(terminal, "protocol_detector"):
+                    terminal.protocol_detector.debug_mode = True
+
         terminal.run()
         return 0
     except ValueError as e:

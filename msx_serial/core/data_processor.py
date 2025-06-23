@@ -56,7 +56,7 @@ class DataBuffer:
 
 
 class DataProcessor:
-    """Process received data and detect prompts"""
+    """Process incoming data and detect prompts"""
 
     def __init__(
         self, protocol_detector: MSXProtocolDetector, instant_mode: bool = False
@@ -64,6 +64,10 @@ class DataProcessor:
         self.detector = protocol_detector
         self.buffer = DataBuffer()
         self.instant_mode = instant_mode
+        self.last_sent_command: Optional[str] = None
+        self.echo_suppressed = False
+        self.output_buffer = ""
+        self.last_prompt_content = ""  # Store content for mode detection
 
     def set_instant_mode(self, enabled: bool) -> None:
         """Enable or disable instant mode
@@ -72,6 +76,15 @@ class DataProcessor:
             enabled: True to enable instant mode
         """
         self.instant_mode = enabled
+
+    def set_last_command(self, command: str) -> None:
+        """Set the last sent command for echo detection
+
+        Args:
+            command: Last command sent to MSX
+        """
+        self.last_sent_command = command.strip()
+        self.echo_suppressed = False  # Reset echo suppression
 
     def process_data(self, raw_data: str) -> List[Tuple[str, bool]]:
         """Process incoming data and return formatted output
@@ -88,7 +101,7 @@ class DataProcessor:
             return self._process_data_buffered(raw_data)
 
     def _process_data_instant(self, raw_data: str) -> List[Tuple[str, bool]]:
-        """Process data in instant mode - immediate character-by-character output
+        """Process data in instant mode - immediate display + simultaneous buffering
 
         Args:
             raw_data: Raw received data
@@ -98,29 +111,44 @@ class DataProcessor:
         """
         output = []
 
-        # Process each character immediately
-        for char in raw_data:
-            # Add to buffer for prompt detection
-            self.buffer.add_data(char)
+        # Debug: Show what we're actually receiving
+        if hasattr(self.detector, "debug_mode") and self.detector.debug_mode:
+            import sys
 
-            # Check for immediate prompt indicators
-            current_content = self.buffer.get_content()
+            repr_data = repr(raw_data)
+            print(f"[DEBUG] Received: {repr_data}", file=sys.stderr)
 
-            # Special handling for potential prompts
-            if char in [">", ":"] and len(current_content.strip()) > 0:
-                # Check if this looks like a complete prompt
-                if self._is_likely_prompt(current_content):
-                    is_prompt = self.detector.detect_prompt(current_content)
-                    output.append((current_content, is_prompt))
+        # 1. Always display received data immediately (core principle)
+        if self.echo_suppressed or not self.last_sent_command:
+            output.append((raw_data, False))
+
+        # 2. Simultaneously add to buffer for prompt detection
+        self.buffer.add_data(raw_data)
+        current_content = self.buffer.get_content()
+
+        # 3. Handle command echo suppression
+        if self.last_sent_command and not self.echo_suppressed:
+            if self.last_sent_command in current_content:
+                self.echo_suppressed = True
+                # Remove the command echo from future processing
+                command_end = current_content.find(self.last_sent_command) + len(
+                    self.last_sent_command
+                )
+                if command_end < len(current_content):
+                    remaining = current_content[command_end:].lstrip("\r\n ")
                     self.buffer.clear()
-                    continue
+                    if remaining:
+                        self.buffer.add_data(remaining)
+                else:
+                    self.buffer.clear()
 
-            # For all other characters, output immediately without special processing
-            output.append((char, False))
-
-            # Clear buffer after newlines to start fresh for next line
-            if char == "\n":
-                self.buffer.clear()
+        # 4. Check for prompt detection (for mode detection only)
+        if self.detector.detect_prompt(current_content):
+            # Save for mode detection and clear buffer
+            self.last_prompt_content = current_content
+            self.buffer.clear()
+            # Signal that a prompt was detected
+            output.append(("", True))
 
         return output
 
@@ -164,6 +192,14 @@ class DataProcessor:
             "F>",
             "G>",
             "H>",
+            "A:>",
+            "B:>",
+            "C:>",
+            "D:>",
+            "E:>",
+            "F:>",
+            "G:>",
+            "H:>",
             "Ok",
             "Ready",
             "?Redo from start",
@@ -171,6 +207,55 @@ class DataProcessor:
 
         for pattern in prompt_patterns:
             if content.endswith(pattern):
+                return True
+
+        # Also check if content ends with "Ok" after multi-line BASIC message
+        if content.endswith("Ok"):
+            # Look for BASIC-related keywords in the content
+            basic_keywords = ["BASIC", "Microsoft", "Copyright", "Bytes free", "MSX"]
+            content_upper = content.upper()
+            for keyword in basic_keywords:
+                if keyword.upper() in content_upper:
+                    return True
+
+        return False
+
+    def _is_potential_basic_content(self, content: str) -> bool:
+        """Check if content might be part of a BASIC message
+
+        Args:
+            content: Content to check
+
+        Returns:
+            True if this might be BASIC content
+        """
+        content_upper = content.upper()
+        basic_indicators = ["BASIC", "MICROSOFT", "COPYRIGHT", "MSX", "BYTES FREE"]
+
+        for indicator in basic_indicators:
+            if indicator in content_upper:
+                return True
+
+        # Also check if it starts with "BASIC"
+        if content.strip().startswith("BASIC"):
+            return True
+
+        return False
+
+    def _is_potential_dir_content(self, content: str) -> bool:
+        """Check if content might be part of a DIR message
+
+        Args:
+            content: Content to check
+
+        Returns:
+            True if this might be DIR content
+        """
+        content_upper = content.upper()
+        dir_indicators = ["DIR", "VOLUME", "DIRECTORY", "DRIVE"]
+
+        for indicator in dir_indicators:
+            if indicator in content_upper:
                 return True
 
         return False
@@ -185,12 +270,22 @@ class DataProcessor:
             (text, is_prompt) tuple if timeout occurred, None otherwise
         """
         if self.instant_mode:
-            # In instant mode, flush any remaining buffer content
+            # In instant mode, only check for prompt detection to trigger mode changes
             if self.buffer.has_content() and self.buffer.is_timeout(timeout):
                 content = self.buffer.get_content()
                 is_prompt = self.detector.detect_prompt(content)
-                self.buffer.clear()
-                return (content, is_prompt)
+
+                if is_prompt:
+                    # Save prompt content for mode detection and clear buffer
+                    self.last_prompt_content = content
+                    self.buffer.clear()
+                    return (
+                        "",
+                        True,
+                    )  # Empty content to avoid duplication, but signal prompt
+                else:
+                    # Not a prompt - clear buffer (content already shown)
+                    self.buffer.clear()
         else:
             # Original buffered behavior
             if self.buffer.has_content() and self.buffer.is_timeout(timeout):
@@ -199,6 +294,18 @@ class DataProcessor:
                 self.buffer.clear()
                 return (content, is_prompt)
 
+        return None
+
+    def get_last_prompt_for_mode_detection(self) -> Optional[str]:
+        """Get the last detected prompt content for mode detection
+
+        Returns:
+            Last prompt content if available, None otherwise
+        """
+        if self.last_prompt_content:
+            content = self.last_prompt_content
+            self.last_prompt_content = ""  # Clear after use
+            return content
         return None
 
     def check_prompt_candidate(

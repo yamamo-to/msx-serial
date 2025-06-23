@@ -106,3 +106,11 @@ class UserInterface:
     def _update_completer_mode(self) -> None:
         """Update completer mode (for compatibility)"""
         self.update_mode(self.current_mode)
+
+    def set_data_processor(self, processor) -> None:
+        """Set data processor for echo detection
+
+        Args:
+            processor: DataProcessor instance
+        """
+        self.data_sender.set_data_processor(processor)

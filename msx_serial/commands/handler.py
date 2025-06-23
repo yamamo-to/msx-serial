@@ -111,7 +111,7 @@ class CommandHandler:
             self._handle_encode(user_input)
             return True
         elif cmd == CommandType.MODE:
-            self._handle_mode(user_input)
+            self._handle_mode(user_input, terminal)
             return True
 
         return False
@@ -211,14 +211,36 @@ Use @help <command> for detailed help on specific commands.
         # This would need to be implemented in the main terminal class
         print_info(f"Encoding change to '{encoding_arg}' requested")
 
-    def _handle_mode(self, user_input: str) -> None:
+    def _handle_mode(self, user_input: str, terminal=None) -> None:
         """Handle mode switching command"""
         mode_arg = user_input[len(CommandType.MODE.value) :].strip()
 
         if not mode_arg:
-            print_info(
-                f"Current mode: {self._get_mode_display_name(self.current_mode)}"
-            )
+            # Try to detect mode from last prompt
+            detected_mode = self.current_mode
+            if terminal and hasattr(terminal, "data_processor"):
+                last_prompt = (
+                    terminal.data_processor.get_last_prompt_for_mode_detection()
+                )
+                if last_prompt:
+                    detected_mode_enum = terminal.protocol_detector.detect_mode(
+                        last_prompt
+                    )
+                    detected_mode = detected_mode_enum.value
+                    print_info(f"Last prompt analyzed: '{last_prompt.strip()}'")
+                    print_info(
+                        f"Detected mode: {self._get_mode_display_name(detected_mode)}"
+                    )
+                else:
+                    print_info(
+                        f"Current mode: {self._get_mode_display_name(self.current_mode)}"
+                    )
+                    print_info("(No recent prompt to analyze)")
+            else:
+                print_info(
+                    f"Current mode: {self._get_mode_display_name(self.current_mode)}"
+                )
+
             print_info("Available modes: basic, dos")
             return
 
@@ -227,6 +249,9 @@ Use @help <command> for detailed help on specific commands.
             print_info(
                 f"Mode change to '{self._get_mode_display_name(new_mode)}' requested"
             )
+            # 手動でモードを変更する場合
+            if terminal:
+                terminal.set_mode(new_mode)
         else:
             print_warn(f"Invalid mode: {mode_arg}")
 

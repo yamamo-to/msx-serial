@@ -45,6 +45,15 @@ def handle_performance_command(terminal, command: str) -> bool:
                 print_error("Invalid instant mode. Use: on, off, or toggle")
         else:
             _handle_instant_mode(terminal, "toggle")
+    elif subcommand == "debug":
+        if len(cmd_parts) >= 3:
+            mode = cmd_parts[2].lower()
+            if mode in ["on", "off", "toggle"]:
+                _handle_debug_mode(terminal, mode)
+            else:
+                print_error("Invalid debug mode. Use: on, off, or toggle")
+        else:
+            _handle_debug_mode(terminal, "toggle")
     elif subcommand == "mode":
         if len(cmd_parts) >= 3:
             mode = cmd_parts[2].lower()
@@ -168,6 +177,36 @@ def _handle_instant_mode(terminal, mode: str):
             print_error("Instant mode toggle not available")
 
 
+def _handle_debug_mode(terminal, mode: str):
+    """Handle debug mode commands
+
+    Args:
+        terminal: Terminal instance
+        mode: "on", "off", or "toggle"
+    """
+    if not hasattr(terminal, "debug_mode"):
+        print_error("Debug mode not available in this terminal version")
+        return
+
+    if mode == "on":
+        if not terminal.debug_mode:
+            if hasattr(terminal, "toggle_debug_mode"):
+                terminal.toggle_debug_mode()
+        else:
+            print_info("Debug mode is already enabled")
+    elif mode == "off":
+        if terminal.debug_mode:
+            if hasattr(terminal, "toggle_debug_mode"):
+                terminal.toggle_debug_mode()
+        else:
+            print_info("Debug mode is already disabled")
+    elif mode == "toggle":
+        if hasattr(terminal, "toggle_debug_mode"):
+            terminal.toggle_debug_mode()
+        else:
+            print_error("Debug mode toggle not available")
+
+
 def _set_performance_mode(terminal, mode: str):
     """Set performance mode
 
@@ -245,6 +284,7 @@ def _show_performance_help():
 @perf toggle                     - Toggle fast mode on/off
 @perf responsive [on|off|toggle] - Control responsive mode
 @perf instant [on|off|toggle]    - Control instant mode (best for DIR commands)
+@perf debug [on|off|toggle]       - Control debug mode
 @perf mode [fast|normal|responsive|instant] - Set overall performance mode
 @perf help                       - Show this help
 

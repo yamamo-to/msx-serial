@@ -9,7 +9,7 @@ import time
 from ..connection.manager import ConnectionManager
 from ..io.user_interface import UserInterface
 from ..transfer.file_transfer import FileTransferManager
-from ..protocol.msx_detector import MSXProtocolDetector
+from ..protocol.msx_detector import MSXProtocolDetector, MSXMode
 from ..ui.color_output import print_info, print_exception
 from ..connection.base import ConnectionConfig
 from .data_processor import DataProcessor
@@ -46,15 +46,16 @@ class OptimizedMSXTerminalSession:
         self.suppress_output = False
         self.prompt_detected = False
         self.last_data_time = 0
+        self.debug_mode = False
 
         # Performance settings - adjusted for better responsiveness
         if instant_mode:
-            self.receive_delay = 0.0001  # Almost no delay for instant mode
-            self.batch_size = 1  # Single character processing for instant response
-            self.timeout_check_interval = 0.01  # Very frequent timeout checks
-        elif responsive_mode:
-            self.receive_delay = 0.001  # Very fast polling for responsiveness
-            self.batch_size = 512  # Smaller batches for immediate output
+            self.receive_delay = 0.0001
+            self.batch_size = 1  # Single character processing
+            self.timeout_check_interval = 0.01  # More frequent timeout checks
+        elif self.responsive_mode:
+            self.receive_delay = 0.001
+            self.batch_size = 512
             self.timeout_check_interval = 0.05  # More frequent timeout checks
         else:
             self.receive_delay = 0.005 if fast_mode else 0.001
@@ -87,6 +88,9 @@ class OptimizedMSXTerminalSession:
             self.user_interface.display = self.display
 
         self.user_interface.terminal = self
+
+        # Set up echo detection
+        self.user_interface.set_data_processor(self.data_processor)
 
         self.file_transfer = FileTransferManager(
             connection=self.connection_manager.connection,
@@ -259,11 +263,26 @@ class OptimizedMSXTerminalSession:
             text, is_prompt = timeout_result
             self._display_output(text, is_prompt)
 
-        # Check for prompt candidate timeout
+        # Check for prompt candidate timeout - more aggressive for BASIC detection
         prompt_result = self.data_processor.check_prompt_candidate(0.02)
         if prompt_result:
             text, is_prompt = prompt_result
             self._display_output(text, is_prompt)
+
+        # Additional check for potential BASIC prompts that might be missed
+        if self.data_processor.buffer.has_content():
+            buffer_content = self.data_processor.buffer.get_content()
+            # If buffer contains BASIC-related content and ends with "Ok", process it
+            if (
+                "BASIC" in buffer_content.upper()
+                or "Microsoft" in buffer_content
+                or "Copyright" in buffer_content
+            ) and buffer_content.strip().endswith("Ok"):
+                # Force process this as a potential BASIC prompt
+                is_prompt = self.protocol_detector.detect_prompt(buffer_content)
+                if is_prompt:
+                    self._display_output(buffer_content, True)
+                    self.data_processor.buffer.clear()
 
     def _display_output(self, text: str, is_prompt: bool) -> None:
         """Display output text
@@ -272,18 +291,36 @@ class OptimizedMSXTerminalSession:
             text: Text to display
             is_prompt: Whether this is a prompt
         """
-        self.user_interface.print_receive(text, is_prompt)
+        # Always display text (including whitespace and line breaks)
+        if text:  # Only skip completely empty strings
+            self.user_interface.print_receive(text, is_prompt)
+
+        # Always update prompt state if this is marked as a prompt
         if is_prompt:
-            self._update_prompt_state(text)
+            # Use saved prompt content if text is empty (instant mode case)
+            prompt_text = (
+                text if text.strip() else self.data_processor.last_prompt_content
+            )
+            if prompt_text:
+                self._update_prompt_state(prompt_text)
 
     def _update_prompt_state(self, prompt_text: str) -> None:
         """Update prompt detection state and mode"""
         self.prompt_detected = True
         self.user_interface.prompt_detected = True
 
-        # Update mode based on prompt
-        if self.protocol_detector.force_mode_update(prompt_text):
-            self.user_interface.update_mode(self.protocol_detector.current_mode)
+        # Update mode based on prompt - always try to update
+        detected_mode_enum = self.protocol_detector.detect_mode(prompt_text)
+        if detected_mode_enum != MSXMode.UNKNOWN:
+            # Force update protocol detector mode
+            old_mode = self.protocol_detector.current_mode
+            self.protocol_detector.current_mode = detected_mode_enum.value
+            
+            # Always update user interface when valid mode is detected
+            self.user_interface.update_mode(detected_mode_enum.value)
+            
+            if self.protocol_detector.debug_mode:
+                print_info(f"[MSX Debug] Mode updated: {old_mode} -> {detected_mode_enum.value}")
 
     def _input_loop(self) -> None:
         """Main user input loop"""
@@ -411,6 +448,16 @@ class OptimizedMSXTerminalSession:
             self.timeout_check_interval = 0.1
 
         print_info(f"Instant mode {'enabled' if self.instant_mode else 'disabled'}")
+
+    def toggle_debug_mode(self) -> None:
+        """Toggle debug mode for protocol detection"""
+        self.debug_mode = not self.debug_mode
+
+        # Update protocol detector debug mode
+        if hasattr(self.protocol_detector, "debug_mode"):
+            self.protocol_detector.debug_mode = self.debug_mode
+
+        print_info(f"Debug mode {'enabled' if self.debug_mode else 'disabled'}")
 
 
 # Backward compatibility alias
