@@ -9,6 +9,8 @@ from prompt_toolkit.completion import CompleteEvent
 
 from msx_serial.completion.completers.command_completer import CommandCompleter
 from msx_serial.commands.command_types import CommandType
+from msx_serial.completion.completers.base import BaseCompleter, CompletionContext
+from prompt_toolkit.completion import Completion
 
 
 class TestCommandCompleter(unittest.TestCase):
@@ -145,7 +147,7 @@ class TestCommandCompleter(unittest.TestCase):
         completions = list(self.completer.get_completions(document, CompleteEvent()))
         self.assertGreater(
             len(completions), 0, "不明モードでもコマンド補完があるはずです"
-        )
+                )
 
     def test_mode_switching_functionality(self):
         """モード切り替え機能のテスト"""
@@ -183,6 +185,86 @@ class TestCommandCompleter(unittest.TestCase):
                     self.assertIsInstance(completions, list)
                 except Exception as e:
                     self.fail(f"補完処理でエラーが発生: {e}")
+
+
+class DummyCompleter(BaseCompleter):
+    def get_completions(self, document, complete_event):
+        return iter([])
+
+
+def test_basecompleter_build_prefix_cache():
+    completer = DummyCompleter()
+    # 空リスト
+    cache = completer._build_prefix_cache([])
+    assert isinstance(cache, dict)
+    # 複数キーワード
+    cache = completer._build_prefix_cache([["PRINT"], ["PSET"]])
+    assert "P" in cache and "PR" in cache and "PRINT" in cache
+
+
+def test_basecompleter_get_keyword_info():
+    completer = DummyCompleter()
+    # listの場合
+    name, meta = completer._get_keyword_info(["PRINT", "desc"], "basic")
+    assert name == "PRINT" and meta == "desc"
+    # strの場合（実在するキーを使う）
+    key = next(iter(completer.msx_keywords))
+    name, meta = completer._get_keyword_info(key, key)
+    assert name == key and isinstance(meta, str)
+
+
+def test_basecompleter_create_completion():
+    completer = DummyCompleter()
+    comp = completer._create_completion("ABC", -1, display="A", meta="meta")
+    assert isinstance(comp, Completion)
+    assert comp.text == "ABC"
+    assert comp.display_text == "A"
+    # prompt-toolkitのバージョンでdisplay_metaの型が異なる場合があるため、
+    # 文字列またはFormattedTextであることを確認
+    if hasattr(comp.display_meta, '__iter__') and not isinstance(comp.display_meta, str):
+        # FormattedTextの場合
+        assert str(comp.display_meta) == "meta" or comp.display_meta[0][1] == "meta"
+    else:
+        # 文字列の場合
+        assert comp.display_meta == "meta"
+
+
+def test_basecompleter_match_prefix():
+    completer = DummyCompleter()
+    candidates = ["PRINT", "PSET", "RUN"]
+    # prefixなし
+    result = completer._match_prefix(candidates, "")
+    assert set(result) == set(candidates)
+    # prefix一致
+    result = completer._match_prefix(candidates, "PR")
+    assert result == ["PRINT"]
+    # prefix大文字小文字
+    result = completer._match_prefix(candidates, "ps")
+    assert result == ["PSET"]
+    # prefix不一致
+    result = completer._match_prefix(candidates, "ZZ")
+    assert result == []
+
+
+def test_basecompleter_generate_keyword_completions():
+    completer = DummyCompleter()
+    # 存在しないkeyword_type
+    context = CompletionContext("", "FOO")
+    result = list(completer._generate_keyword_completions(context, "notfound"))
+    assert result == []
+    # 存在するkeyword_type - 実際に存在するキーワードタイプを使用
+    available_keyword_types = list(completer.msx_keywords.keys())
+    if available_keyword_types:
+        # 最初に見つかったキーワードタイプを使用
+        keyword_type = available_keyword_types[0]
+        keywords = completer.msx_keywords[keyword_type]["keywords"]
+        if keywords:
+            # 最初のキーワードの最初の文字を使ってテスト
+            first_keyword = keywords[0][0] if isinstance(keywords[0], list) else keywords[0]
+            prefix = first_keyword[0] if first_keyword else "P"
+            context = CompletionContext("", prefix)
+            result = list(completer._generate_keyword_completions(context, keyword_type))
+            assert any(isinstance(r, Completion) for r in result)
 
 
 if __name__ == "__main__":
