@@ -4,6 +4,7 @@ Tests for protocol module
 
 from msx_serial.protocol.msx_detector import MSXProtocolDetector
 from msx_serial.protocol.msx_detector import MSXMode
+from unittest.mock import patch
 
 
 class TestMSXProtocolDetector:
@@ -148,3 +149,71 @@ class TestMSXProtocolDetector:
 
         assert result is True
         assert self.detector.current_mode == MSXMode.DOS.value
+
+
+def test_debug_print_enabled(capsys):
+    detector = MSXProtocolDetector(debug_mode=True)
+    with patch("msx_serial.protocol.msx_detector.print_info") as mock_print:
+        detector._debug_print("test debug")
+        mock_print.assert_called_once()
+
+
+def test_debug_print_disabled():
+    detector = MSXProtocolDetector(debug_mode=False)
+    with patch("msx_serial.protocol.msx_detector.print_info") as mock_print:
+        detector._debug_print("should not print")
+        mock_print.assert_not_called()
+
+
+def test_enable_disable_debug():
+    detector = MSXProtocolDetector(debug_mode=False)
+    with patch("msx_serial.protocol.msx_detector.print_info") as mock_print:
+        detector.enable_debug()
+        assert detector.debug_mode is True
+        mock_print.assert_called_once_with("MSX protocol detection debug mode enabled")
+    with patch("msx_serial.protocol.msx_detector.print_info") as mock_print:
+        detector.disable_debug()
+        assert detector.debug_mode is False
+        mock_print.assert_called_once_with("MSX protocol detection debug mode disabled")
+
+
+def test_detect_prompt_multiline_basic():
+    detector = MSXProtocolDetector()
+    multi = "Hello\nOk"
+    assert detector.detect_prompt(multi) is True
+
+
+def test_detect_prompt_multiline_dos():
+    detector = MSXProtocolDetector()
+    multi = "Hello\nA:>"
+    assert detector.detect_prompt(multi) is True
+
+
+def test_detect_prompt_multiline_false():
+    detector = MSXProtocolDetector()
+    multi = "Hello\nWorld"
+    assert detector.detect_prompt(multi) is False
+
+
+def test_detect_mode_multiline_unknown():
+    detector = MSXProtocolDetector()
+    multi = "Hello\nWorld"
+    assert detector.detect_mode(multi).value == "unknown"
+
+
+def test_detect_mode_multiline_unknown_debug():
+    detector = MSXProtocolDetector(debug_mode=True)
+    multi = "Hello\nWorld"
+    with patch("msx_serial.protocol.msx_detector.print_info") as mock_print:
+        mode = detector.detect_mode(multi)
+        assert mode.value == "unknown"
+        mock_print.assert_any_call("[MSX Debug] Unknown mode from multi-line prompt")
+
+
+def test_detect_mode_singleline_unknown_debug():
+    detector = MSXProtocolDetector(debug_mode=True)
+    with patch("msx_serial.protocol.msx_detector.print_info") as mock_print:
+        mode = detector.detect_mode("???")
+        assert mode.value == "unknown"
+        # else節のdebug出力
+        mock_print.assert_any_call("[MSX Debug] Unknown mode from prompt: '???'")
