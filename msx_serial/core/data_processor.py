@@ -111,46 +111,57 @@ class DataProcessor:
         """
         output = []
 
-        # Debug: Show what we're actually receiving
-        if hasattr(self.detector, "debug_mode") and self.detector.debug_mode:
-            import sys
+        self._debug_received_data(raw_data)
 
-            repr_data = repr(raw_data)
-            print(f"[DEBUG] Received: {repr_data}", file=sys.stderr)
-
-        # 1. Always display received data immediately (core principle)
+        # Always display received data immediately (core principle)
         if self.echo_suppressed or not self.last_sent_command:
             output.append((raw_data, False))
 
-        # 2. Simultaneously add to buffer for prompt detection
+        # Add to buffer for prompt detection
         self.buffer.add_data(raw_data)
         current_content = self.buffer.get_content()
 
-        # 3. Handle command echo suppression
-        if self.last_sent_command and not self.echo_suppressed:
-            if self.last_sent_command in current_content:
-                self.echo_suppressed = True
-                # Remove the command echo from future processing
-                command_end = current_content.find(self.last_sent_command) + len(
-                    self.last_sent_command
-                )
-                if command_end < len(current_content):
-                    remaining = current_content[command_end:].lstrip("\r\n ")
-                    self.buffer.clear()
-                    if remaining:
-                        self.buffer.add_data(remaining)
-                else:
-                    self.buffer.clear()
+        # Handle command echo suppression
+        if self._should_suppress_echo(current_content):
+            self._process_echo_suppression(current_content)
 
-        # 4. Check for prompt detection (for mode detection only)
+        # Check for prompt detection (for mode detection only)
         if self.detector.detect_prompt(current_content):
-            # Save for mode detection and clear buffer
             self.last_prompt_content = current_content
             self.buffer.clear()
-            # Signal that a prompt was detected
             output.append(("", True))
 
         return output
+
+    def _debug_received_data(self, raw_data: str) -> None:
+        """Debug output for received data"""
+        if hasattr(self.detector, "debug_mode") and self.detector.debug_mode:
+            import sys
+
+            print(f"[DEBUG] Received: {repr(raw_data)}", file=sys.stderr)
+
+    def _should_suppress_echo(self, current_content: str) -> bool:
+        """Check if echo should be suppressed"""
+        return (
+            self.last_sent_command
+            and not self.echo_suppressed
+            and self.last_sent_command in current_content
+        )
+
+    def _process_echo_suppression(self, current_content: str) -> None:
+        """Process command echo suppression"""
+        self.echo_suppressed = True
+        command_end = current_content.find(self.last_sent_command) + len(
+            self.last_sent_command
+        )
+
+        if command_end < len(current_content):
+            remaining = current_content[command_end:].lstrip("\r\n ")
+            self.buffer.clear()
+            if remaining:
+                self.buffer.add_data(remaining)
+        else:
+            self.buffer.clear()
 
     def _process_data_buffered(self, raw_data: str) -> List[Tuple[str, bool]]:
         """Process data in buffered mode - original behavior
@@ -182,8 +193,20 @@ class DataProcessor:
         """
         content = content.strip()
 
-        # Common MSX prompts
-        prompt_patterns = [
+        # Check common MSX prompts
+        for pattern in self._get_prompt_patterns():
+            if content.endswith(pattern):
+                return True
+
+        # Check for BASIC message ending with Ok
+        if content.endswith("Ok"):
+            return self._has_basic_keywords(content)
+
+        return False
+
+    def _get_prompt_patterns(self) -> list[str]:
+        """Get list of MSX prompt patterns"""
+        return [
             "A>",
             "B>",
             "C>",
@@ -205,60 +228,11 @@ class DataProcessor:
             "?Redo from start",
         ]
 
-        for pattern in prompt_patterns:
-            if content.endswith(pattern):
-                return True
-
-        # Also check if content ends with "Ok" after multi-line BASIC message
-        if content.endswith("Ok"):
-            # Look for BASIC-related keywords in the content
-            basic_keywords = ["BASIC", "Microsoft", "Copyright", "Bytes free", "MSX"]
-            content_upper = content.upper()
-            for keyword in basic_keywords:
-                if keyword.upper() in content_upper:
-                    return True
-
-        return False
-
-    def _is_potential_basic_content(self, content: str) -> bool:
-        """Check if content might be part of a BASIC message
-
-        Args:
-            content: Content to check
-
-        Returns:
-            True if this might be BASIC content
-        """
+    def _has_basic_keywords(self, content: str) -> bool:
+        """Check if content contains BASIC-related keywords"""
+        basic_keywords = ["BASIC", "Microsoft", "Copyright", "Bytes free", "MSX"]
         content_upper = content.upper()
-        basic_indicators = ["BASIC", "MICROSOFT", "COPYRIGHT", "MSX", "BYTES FREE"]
-
-        for indicator in basic_indicators:
-            if indicator in content_upper:
-                return True
-
-        # Also check if it starts with "BASIC"
-        if content.strip().startswith("BASIC"):
-            return True
-
-        return False
-
-    def _is_potential_dir_content(self, content: str) -> bool:
-        """Check if content might be part of a DIR message
-
-        Args:
-            content: Content to check
-
-        Returns:
-            True if this might be DIR content
-        """
-        content_upper = content.upper()
-        dir_indicators = ["DIR", "VOLUME", "DIRECTORY", "DRIVE"]
-
-        for indicator in dir_indicators:
-            if indicator in content_upper:
-                return True
-
-        return False
+        return any(keyword.upper() in content_upper for keyword in basic_keywords)
 
     def check_timeout(self, timeout: float = 0.1) -> Optional[Tuple[str, bool]]:
         """Check for timeout and process buffered data

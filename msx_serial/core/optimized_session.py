@@ -187,9 +187,8 @@ class OptimizedMSXTerminalSession:
         """Check if content looks like BASIC startup sequence"""
         content_upper = content.upper()
         return (
-            ("BASIC" in content_upper or "Microsoft" in content or "Copyright" in content)
-            and content.strip().endswith("Ok")
-        )
+            "BASIC" in content_upper or "Microsoft" in content or "Copyright" in content
+        ) and content.strip().endswith("Ok")
 
     def _display_output(self, text: str, is_prompt: bool) -> None:
         """Display output text
