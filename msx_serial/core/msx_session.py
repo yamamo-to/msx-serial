@@ -7,7 +7,7 @@ import threading
 import time
 
 from ..connection.manager import ConnectionManager
-from ..core.data_processor import DataProcessor
+from .data_processor import DataProcessor
 from ..display.optimized_display import OptimizedTerminalDisplay
 from ..io.user_interface import UserInterface
 from ..transfer.file_transfer import FileTransferManager
