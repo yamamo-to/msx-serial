@@ -2,7 +2,7 @@
 MSX Serial Terminal
 """
 
-from .core.optimized_session import MSXSession
+from .core.msx_session import MSXSession
 from .__main__ import main
 
 # Use optimized session as main terminal

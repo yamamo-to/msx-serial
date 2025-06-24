@@ -2,7 +2,7 @@
 
 import argparse
 import sys
-from msx_serial.core.optimized_session import MSXSession
+from msx_serial.core.msx_session import MSXSession
 from msx_serial.connection.connection import detect_connection_type
 
 

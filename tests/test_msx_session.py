@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch, MagicMock, Mock, call
 
-from msx_serial.core.optimized_session import MSXSession
+from msx_serial.core.msx_session import MSXSession
 from msx_serial.connection.dummy import DummyConfig
 from msx_serial.protocol.msx_detector import MSXMode
 
@@ -62,7 +62,7 @@ class TestMSXSession(unittest.TestCase):
             )
             self.assertEqual(session.encoding, "utf-8")
 
-    @patch("msx_serial.core.optimized_session.print_info")
+    @patch("msx_serial.core.msx_session.print_info")
     @patch("threading.Thread")
     def test_run_normal_flow(
         self, mock_thread: MagicMock, mock_print_info: MagicMock
@@ -86,7 +86,7 @@ class TestMSXSession(unittest.TestCase):
             # input_loopが呼ばれることを確認
             mock_input_loop.assert_called_once()
 
-    @patch("msx_serial.core.optimized_session.print_info")
+    @patch("msx_serial.core.msx_session.print_info")
     @patch("threading.Thread")
     def test_run_keyboard_interrupt(
         self, mock_thread: MagicMock, mock_print_info: MagicMock
@@ -106,7 +106,7 @@ class TestMSXSession(unittest.TestCase):
             ]
             mock_print_info.assert_has_calls(calls)
 
-    @patch("msx_serial.core.optimized_session.print_info")
+    @patch("msx_serial.core.msx_session.print_info")
     @patch("threading.Thread")
     def test_run_cleanup(
         self, mock_thread: MagicMock, mock_print_info: MagicMock
@@ -172,7 +172,7 @@ class TestMSXSession(unittest.TestCase):
         self.session.connection_manager.connection.read = Mock(return_value=mock_data)
 
         with patch(
-            "msx_serial.core.optimized_session.print_exception"
+            "msx_serial.core.msx_session.print_exception"
         ) as mock_print_exc:
             result = self.session._process_incoming_data()
 
@@ -331,7 +331,7 @@ class TestMSXSession(unittest.TestCase):
             self.assertEqual(self.session.protocol_detector.current_mode, original_mode)
             mock_update.assert_not_called()
 
-    @patch("msx_serial.core.optimized_session.print_info")
+    @patch("msx_serial.core.msx_session.print_info")
     def test_update_prompt_state_debug_mode(self, mock_print_info: MagicMock) -> None:
         """デバッグモード時のプロンプト状態更新テスト"""
         self.session.protocol_detector.detect_mode = Mock(return_value=MSXMode.BASIC)
@@ -351,7 +351,7 @@ class TestMSXSession(unittest.TestCase):
             self.assertEqual(self.session.protocol_detector.current_mode, "dos")
             mock_update.assert_called_once_with("dos")
 
-    @patch("msx_serial.core.optimized_session.print_info")
+    @patch("msx_serial.core.msx_session.print_info")
     def test_toggle_debug_mode_enable(self, mock_print_info: MagicMock) -> None:
         """デバッグモード有効化テスト"""
         self.session.protocol_detector.debug_mode = False
@@ -361,7 +361,7 @@ class TestMSXSession(unittest.TestCase):
         self.assertTrue(self.session.protocol_detector.debug_mode)
         mock_print_info.assert_called_with("Debug mode enabled")
 
-    @patch("msx_serial.core.optimized_session.print_info")
+    @patch("msx_serial.core.msx_session.print_info")
     def test_toggle_debug_mode_disable(self, mock_print_info: MagicMock) -> None:
         """デバッグモード無効化テスト"""
         self.session.protocol_detector.debug_mode = True
@@ -371,7 +371,7 @@ class TestMSXSession(unittest.TestCase):
         self.assertFalse(self.session.protocol_detector.debug_mode)
         mock_print_info.assert_called_with("Debug mode disabled")
 
-    @patch("msx_serial.core.optimized_session.print_info")
+    @patch("msx_serial.core.msx_session.print_info")
     def test_toggle_debug_mode_no_attribute(self, mock_print_info: MagicMock) -> None:
         """debug_mode属性がない場合のテスト"""
         # debug_mode属性を削除
@@ -408,7 +408,7 @@ class TestMSXSession(unittest.TestCase):
         # sendが呼ばれることを確認
         self.session.user_interface.send.assert_called_once_with("test")
 
-    @patch("msx_serial.core.optimized_session.print_info")
+    @patch("msx_serial.core.msx_session.print_info")
     def test_input_loop_keyboard_interrupt(self, mock_print_info: MagicMock) -> None:
         """入力ループでのKeyboardInterrupt処理テスト"""
         self.session.user_interface.prompt = Mock(side_effect=KeyboardInterrupt)
@@ -417,7 +417,7 @@ class TestMSXSession(unittest.TestCase):
 
         mock_print_info.assert_called_with("Ctrl+C detected. Exiting...")
 
-    @patch("msx_serial.core.optimized_session.print_exception")
+    @patch("msx_serial.core.msx_session.print_exception")
     def test_input_loop_exception(self, mock_print_exception: MagicMock) -> None:
         """入力ループでの例外処理テスト"""
         test_exception = Exception("test error")
@@ -429,7 +429,7 @@ class TestMSXSession(unittest.TestCase):
 
     @patch("time.time")
     @patch("time.sleep")
-    @patch("msx_serial.core.optimized_session.print_exception")
+    @patch("msx_serial.core.msx_session.print_exception")
     def test_receive_loop_normal_operation(
         self,
         mock_print_exception: MagicMock,
@@ -474,7 +474,7 @@ class TestMSXSession(unittest.TestCase):
             # タイムアウトチェックが呼ばれることを確認
             mock_check_timeouts.assert_called()
 
-    @patch("msx_serial.core.optimized_session.print_exception")
+    @patch("msx_serial.core.msx_session.print_exception")
     def test_receive_loop_exception_handling(
         self, mock_print_exception: MagicMock
     ) -> None:

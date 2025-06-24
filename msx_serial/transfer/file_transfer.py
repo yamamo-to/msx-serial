@@ -14,7 +14,7 @@ from ..common.color_output import print_info, print_exception
 from ..connection.base import Connection
 
 if TYPE_CHECKING:
-    from ..core.optimized_session import MSXSession
+    from ..core.msx_session import MSXSession
 
 
 class FileTransferManager:

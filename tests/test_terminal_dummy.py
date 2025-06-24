@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import patch, MagicMock, Mock
-from msx_serial.core.optimized_session import MSXSession
+from msx_serial.core.msx_session import MSXSession
 from msx_serial.connection.dummy import DummyConfig, DummyConnection
 from msx_serial.io.user_interface import UserInterface
 from msx_serial.transfer.file_transfer import FileTransferManager
