@@ -171,9 +171,7 @@ class TestMSXSession(unittest.TestCase):
         )
         self.session.connection_manager.connection.read = Mock(return_value=mock_data)
 
-        with patch(
-            "msx_serial.core.msx_session.print_exception"
-        ) as mock_print_exc:
+        with patch("msx_serial.core.msx_session.print_exception") as mock_print_exc:
             result = self.session._process_incoming_data()
 
             self.assertFalse(result)

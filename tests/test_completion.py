@@ -147,7 +147,7 @@ class TestCommandCompleter(unittest.TestCase):
         completions = list(self.completer.get_completions(document, CompleteEvent()))
         self.assertGreater(
             len(completions), 0, "不明モードでもコマンド補完があるはずです"
-                )
+        )
 
     def test_mode_switching_functionality(self):
         """モード切り替え機能のテスト"""
@@ -221,7 +221,9 @@ def test_basecompleter_create_completion():
     assert comp.display_text == "A"
     # prompt-toolkitのバージョンでdisplay_metaの型が異なる場合があるため、
     # 文字列またはFormattedTextであることを確認
-    if hasattr(comp.display_meta, '__iter__') and not isinstance(comp.display_meta, str):
+    if hasattr(comp.display_meta, "__iter__") and not isinstance(
+        comp.display_meta, str
+    ):
         # FormattedTextの場合
         assert str(comp.display_meta) == "meta" or comp.display_meta[0][1] == "meta"
     else:
@@ -260,10 +262,14 @@ def test_basecompleter_generate_keyword_completions():
         keywords = completer.msx_keywords[keyword_type]["keywords"]
         if keywords:
             # 最初のキーワードの最初の文字を使ってテスト
-            first_keyword = keywords[0][0] if isinstance(keywords[0], list) else keywords[0]
+            first_keyword = (
+                keywords[0][0] if isinstance(keywords[0], list) else keywords[0]
+            )
             prefix = first_keyword[0] if first_keyword else "P"
             context = CompletionContext("", prefix)
-            result = list(completer._generate_keyword_completions(context, keyword_type))
+            result = list(
+                completer._generate_keyword_completions(context, keyword_type)
+            )
             assert any(isinstance(r, Completion) for r in result)
 
 

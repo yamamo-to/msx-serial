@@ -20,15 +20,15 @@ class TelnetConnection(Connection):
         self.host = config.host
         self.port = config.port
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        
+
         # Set socket options for low latency
         self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-        
+
         # Connect to host
         self.socket.connect((self.host, self.port))
         self.socket.setblocking(False)  # Non-blocking for instant reads
-        
+
         self._buffer = bytearray()
         self._connected = True
 
@@ -46,7 +46,7 @@ class TelnetConnection(Connection):
         try:
             # Fill buffer with available data if needed
             self._fill_buffer_if_needed(size)
-            
+
             # Return requested size data from buffer
             data = self._buffer[:size]
             self._buffer = self._buffer[size:]
@@ -59,7 +59,7 @@ class TelnetConnection(Connection):
         """Fill buffer with available data if we don't have enough"""
         if len(self._buffer) >= required_size:
             return
-            
+
         try:
             # Use select to check for available data without blocking
             ready, _, _ = select.select([self.socket], [], [], 0)
