@@ -12,7 +12,22 @@ class TestInputSession:
 
     def setup_method(self):
         """Setup test"""
+        # パッチコンテキストを設定して、各テストでPromptSessionをモックする
+        self.mock_prompt_session_patcher = patch(
+            "msx_serial.io.input_session.PromptSession"
+        )
+        self.mock_prompt_session = self.mock_prompt_session_patcher.start()
+
+        # PromptSessionのモックを設定
+        mock_session = Mock()
+        mock_session.prompt.return_value = "mocked input"
+        self.mock_prompt_session.return_value = mock_session
+
         self.session = InputSession()
+
+    def teardown_method(self):
+        """Teardown test"""
+        self.mock_prompt_session_patcher.stop()
 
     def test_init_default(self):
         """Test initialization with defaults"""

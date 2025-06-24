@@ -14,7 +14,7 @@ from ..common.color_output import print_info, print_exception
 from ..connection.base import Connection
 
 if TYPE_CHECKING:
-    from ..core.optimized_session import OptimizedMSXTerminalSession
+    from ..core.optimized_session import MSXSession
 
 
 class FileTransferManager:
@@ -26,9 +26,9 @@ class FileTransferManager:
         self.encoding = encoding
         self.chunk_size = 1024
         self.timeout = 10.0
-        self.terminal: Optional["OptimizedMSXTerminalSession"] = None
+        self.terminal: Optional["MSXSession"] = None
 
-    def set_terminal(self, terminal: Optional["OptimizedMSXTerminalSession"]) -> None:
+    def set_terminal(self, terminal: Optional["MSXSession"]) -> None:
         """Set terminal instance reference"""
         self.terminal = terminal
 

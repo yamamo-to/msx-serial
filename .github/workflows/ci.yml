@@ -29,6 +29,10 @@ jobs:
           pip install --no-cache-dir -e ".[dev]"
 
       - name: Run tests
+        env:
+          # CI環境でのprompt-toolkit対応
+          TERM: xterm-256color
+          PYTEST_DISABLE_PLUGIN_AUTOLOAD: 1
         run: |
           pytest tests/ --cov=msx_serial --cov-report=xml -v
 

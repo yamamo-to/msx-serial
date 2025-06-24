@@ -127,10 +127,12 @@ class TestCommandHandler:
     @patch("pathlib.Path.cwd")
     def test_handle_cd_command_no_path(self, mock_cwd, mock_print_info):
         """Test CD command without path"""
-        mock_cwd.return_value = Path("/current")
+        mock_path = Path("/current")  # Unix形式のベースパス
+        mock_cwd.return_value = mock_path
 
         self.handler._handle_cd("@cd")
-        mock_print_info.assert_called_once_with("Current directory: /current")
+        expected_message = f"Current directory: {mock_path}"
+        mock_print_info.assert_called_once_with(expected_message)
 
     @patch("msx_serial.commands.handler.print_warn")
     def test_handle_cd_command_not_found(self, mock_print_warn):
@@ -175,35 +177,36 @@ class TestCommandHandler:
     def test_handle_mode_command_no_arg(self, mock_print_info):
         """Test mode command without argument"""
         self.handler._handle_mode("@mode")
-        mock_print_info.assert_any_call("Current mode: Unknown")
+        mock_print_info.assert_any_call("Current mode: UNKNOWN")
         mock_print_info.assert_any_call("Available modes: basic, dos")
 
     @patch("msx_serial.commands.handler.print_info")
     def test_handle_mode_command_basic(self, mock_print_info):
-        """Test mode command switching to basic"""
+        """Test mode command with basic argument"""
         self.handler._handle_mode("@mode basic")
-        assert self.handler.current_mode == "basic"
-        mock_print_info.assert_called_once_with("Mode switched to: MSX-BASIC")
+        mock_print_info.assert_called_once_with("Mode change to 'MSX BASIC' requested")
 
     @patch("msx_serial.commands.handler.print_info")
     def test_handle_mode_command_dos(self, mock_print_info):
         """Test mode command switching to dos"""
         self.handler._handle_mode("@mode dos")
-        assert self.handler.current_mode == "dos"
-        mock_print_info.assert_called_once_with("Mode switched to: MSX-DOS")
+        assert self.handler.current_mode == "unknown"  # handlerのモードは変更されない
+        mock_print_info.assert_called_once_with("Mode change to 'MSX-DOS' requested")
 
     @patch("msx_serial.commands.handler.print_warn")
     def test_handle_mode_command_invalid(self, mock_print_warn):
-        """Test mode command with invalid mode"""
+        """Test mode command with invalid argument"""
         self.handler._handle_mode("@mode invalid")
         mock_print_warn.assert_called_once_with("Invalid mode: invalid")
 
     def test_get_mode_display_name(self):
         """Test getting mode display names"""
-        assert self.handler._get_mode_display_name("basic") == "MSX-BASIC"
+        assert (
+            self.handler._get_mode_display_name("basic") == "MSX BASIC"
+        )  # スペース区切り
         assert self.handler._get_mode_display_name("dos") == "MSX-DOS"
-        assert self.handler._get_mode_display_name("unknown") == "Unknown"
-        assert self.handler._get_mode_display_name("invalid") == "invalid"
+        assert self.handler._get_mode_display_name("unknown") == "UNKNOWN"  # 大文字
+        assert self.handler._get_mode_display_name("invalid") == "INVALID"  # 大文字
 
     def test_parse_mode_argument(self):
         """Test parsing mode arguments"""

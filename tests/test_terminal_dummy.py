@@ -1,39 +1,43 @@
 import unittest
-from unittest.mock import patch, MagicMock
-from msx_serial.terminal import (
-    MSXTerminal,
-)  # msx_charsetを初期化するために最初にインポート
+from unittest.mock import patch, MagicMock, Mock
+from msx_serial.core.optimized_session import MSXSession
 from msx_serial.connection.dummy import DummyConfig, DummyConnection
-from msx_serial.input.user_input import UserInputHandler
+from msx_serial.io.user_interface import UserInterface
 from msx_serial.transfer.file_transfer import FileTransferManager
 
 
 class TestMSXTerminalWithDummy(unittest.TestCase):
-    @patch("msx_serial.util.loader_iot_nodes.IotNodes")
-    def setUp(self, mock_iot_nodes: MagicMock) -> None:
+    @patch("msx_serial.completion.iot_loader.IotNodes")
+    @patch("msx_serial.io.input_session.PromptSession")
+    def setUp(self, mock_prompt_session: MagicMock, mock_iot_nodes: MagicMock) -> None:
+        # PromptSessionのモックを設定
+        mock_session = Mock()
+        mock_session.prompt.return_value = "mocked input"
+        mock_prompt_session.return_value = mock_session
+
         mock_iot_nodes.return_value.get_node_names.return_value = []
         config = DummyConfig()
         self.conn = DummyConnection(config)
-        self.terminal = MSXTerminal(
+        self.terminal = MSXSession(
             config=config, encoding="msx-jp", prompt_style="#00ff00 bold"
         )
-        self.user_input = UserInputHandler("#00ff00 bold", "msx-jp", self.conn)
+        self.user_interface = UserInterface("#00ff00 bold", "msx-jp", self.conn)
         self.file_transfer = FileTransferManager(self.conn, "msx-jp")
         self.file_transfer.set_terminal(self.terminal)
 
-        self.terminal.user_input = self.user_input
+        self.terminal.user_interface = self.user_interface
         self.terminal.file_transfer = self.file_transfer
 
     def test_send_and_echo(self) -> None:
         """送信とエコーバックのテスト"""
-        self.user_input.send("TEST")
+        self.user_interface.send("TEST")
         data = self.conn.get_sent_data()
         self.assertIn(b"TEST", data[0])
 
     def test_exit_command(self) -> None:
         """終了コマンドのテスト"""
         stop_event = self.terminal.stop_event
-        handled = self.user_input.handle_special_commands(
+        handled = self.user_interface.handle_special_commands(
             "@exit", self.file_transfer, stop_event
         )
         self.assertTrue(handled)

@@ -2,7 +2,7 @@
 
 import argparse
 import sys
-from msx_serial.core.optimized_session import OptimizedMSXTerminalSession
+from msx_serial.core.optimized_session import MSXSession
 from msx_serial.connection.connection import detect_connection_type
 
 
@@ -24,7 +24,7 @@ def main():
         config = detect_connection_type(args.connection)
 
         # Create and run terminal
-        terminal = OptimizedMSXTerminalSession(
+        terminal = MSXSession(
             config=config,
             encoding=args.encoding,
         )

@@ -16,7 +16,7 @@ from ..common.color_output import print_info, print_exception
 from ..connection.base import ConnectionConfig
 
 
-class OptimizedMSXTerminalSession:
+class MSXSession:
     """Optimized MSX terminal session with instant response"""
 
     def __init__(
