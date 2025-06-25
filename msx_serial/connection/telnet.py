@@ -3,6 +3,7 @@ import select
 from dataclasses import dataclass
 from .base import Connection, ConnectionConfig
 from ..common.color_output import print_exception
+import logging
 
 
 @dataclass
@@ -90,10 +91,12 @@ class TelnetConnection(Connection):
             return len(self._buffer)
 
     def close(self) -> None:
+        """Close the telnet connection"""
         try:
             self.socket.close()
-        except Exception:
-            pass
+        except Exception as e:
+            # ソケット終了時のエラーをログに記録（通常は無害）
+            logging.debug(f"Socket close warning: {e}")
         self._connected = False
 
     def is_open(self) -> bool:

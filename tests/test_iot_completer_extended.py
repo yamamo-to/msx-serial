@@ -39,11 +39,13 @@ class TestIoTCompleterExtended(unittest.TestCase):
             "iotget",  # 小文字
             "IoTGet",  # 混合ケース
         ]
-        
+
         for test_input in test_cases:
             with self.subTest(input=test_input):
                 document = Document(test_input)
-                completions = list(self.completer.get_completions(document, CompleteEvent()))
+                completions = list(
+                    self.completer.get_completions(document, CompleteEvent())
+                )
                 # エラーが発生しないことを確認
                 self.assertIsInstance(completions, list)
 
@@ -55,11 +57,13 @@ class TestIoTCompleterExtended(unittest.TestCase):
             "IOTS",
             "IOTF",
         ]
-        
+
         for test_input in test_cases:
             with self.subTest(input=test_input):
                 document = Document(test_input)
-                completions = list(self.completer.get_completions(document, CompleteEvent()))
+                completions = list(
+                    self.completer.get_completions(document, CompleteEvent())
+                )
                 # 部分マッチでも適切に動作することを確認
                 self.assertIsInstance(completions, list)
 
@@ -71,14 +75,23 @@ class TestIoTCompleterExtended(unittest.TestCase):
             "\tIOTFIND",
             " IOTGET",
         ]
-        
+
         for test_input in test_cases:
             with self.subTest(input=test_input):
                 document = Document(test_input)
-                completions = list(self.completer.get_completions(document, CompleteEvent()))
+                completions = list(
+                    self.completer.get_completions(document, CompleteEvent())
+                )
                 # 空白文字があってもエラーが発生しないことを確認
                 self.assertIsInstance(completions, list)
 
+    def test_multiple_spaces_pattern(self):
+        """複数スペースパターンのテスト"""
+        completions = list(
+            self.completer.get_completions(Document('_IOTGET(  "'), CompleteEvent())
+        )
+        self.assertIsInstance(completions, list)
+
 
 if __name__ == "__main__":
-    unittest.main() 
+    unittest.main()

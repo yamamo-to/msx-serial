@@ -1,105 +1,71 @@
-# MSX Serial Terminal Makefile
+# MSX Serial Terminal - Development Makefile
 
-.PHONY: help test lint format check-version update-readme clean install dev-install build tag upload-test upload-prod release release-interactive
+.PHONY: help test lint format check-all security complexity clean build install dev-install
 
+# デフォルトターゲット
 help:
-	@echo "利用可能なコマンド:"
-	@echo "  test           - テストを実行"
-	@echo "  lint           - コード品質チェック"
-	@echo "  format         - コードフォーマット"
-	@echo "  check-version  - バージョン同期をチェック"
-	@echo "  update-readme  - README.mdのバージョンを更新"
-	@echo "  clean          - 一時ファイルを削除"
-	@echo "  install        - パッケージをインストール"
-	@echo "  dev-install    - 開発モードでインストール"
-	@echo "  build          - パッケージをビルド（distディレクトリクリーン付き）"
-	@echo "  tag            - 現在のバージョンでGitタグを作成"
-	@echo "  upload-test    - TestPyPIにアップロード"
-	@echo "  upload-prod    - PyPIにアップロード（本番）"
-	@echo "  release        - リリース準備（テスト、フォーマット、バージョン更新）"
-	@echo "  release-interactive - 対話的リリースプロセス"
+	@echo "Available commands:"
+	@echo "  test            - Run all tests with coverage"
+	@echo "  lint            - Run all linting tools"
+	@echo "  format          - Format code with black"
+	@echo "  check-all       - Run all quality checks"
+	@echo "  security        - Run security analysis"
+	@echo "  complexity      - Analyze code complexity"
+	@echo "  clean           - Clean build artifacts"
+	@echo "  build           - Build package"
+	@echo "  install         - Install package"
+	@echo "  dev-install     - Install in development mode"
 
+# テスト実行
 test:
-	python -m pytest
+	python -m pytest --cov=msx_serial --cov-report=html --cov-report=term-missing
 
-test-coverage:
-	python -m pytest --cov=msx_serial --cov-report=term-missing
+# 全体的な品質チェック
+check-all: format lint test security complexity
 
+# リンティング
 lint:
-	mypy msx_serial/
 	flake8 msx_serial/ tests/
+	mypy msx_serial/
 
+# フォーマット
 format:
 	black msx_serial/ tests/
+	isort msx_serial/ tests/
 
+# セキュリティチェック
+security:
+	bandit -r msx_serial/ -f screen
+
+# 複雑度分析
+complexity:
+	radon cc --total-average --show-complexity msx_serial/
+	radon mi msx_serial/ --show
+
+# バージョン同期チェック
 check-version:
-	python update_readme_version.py
+	python update_readme_version.py --check
 
-update-readme:
-	python update_readme_version.py
-
+# ビルド成果物のクリーンアップ
 clean:
-	find . -type f -name "*.pyc" -delete
-	find . -type d -name "__pycache__" -delete
-	find . -type d -name "*.egg-info" -exec rm -rf {} +
-	rm -rf build/ dist/ .coverage htmlcov/ .pytest_cache/
-
-install:
-	pip install -e . --use-pep517
-
-dev-install:
-	pip install -e . --use-pep517
-	pip install pytest pytest-cov black mypy flake8 twine build
-
-# distディレクトリを確実にクリーンしてからビルド
-build:
-	@echo "🧹 distディレクトリをクリーン..."
+	rm -rf build/
 	rm -rf dist/
-	@echo "🔨 パッケージをビルド..."
+	rm -rf *.egg-info/
+	rm -rf htmlcov/
+	rm -rf .coverage
+	rm -rf .pytest_cache/
+	rm -rf .mypy_cache/
+	find . -type d -name __pycache__ -delete
+	find . -type f -name "*.pyc" -delete
+
+# パッケージビルド
+build: clean
 	python -m build
-	@echo "📦 ビルド完了: dist/"
-	@ls -la dist/
 
-# 現在のバージョンでGitタグを作成
-tag:
-	@echo "🏷️  Gitタグを作成..."
-	@VERSION=$$(python -c "import msx_serial._version; print(msx_serial._version.__version__)"); \
-	echo "バージョン: $$VERSION"; \
-	if git tag -l | grep -q "^v$$VERSION$$"; then \
-		echo "⚠️  タグ v$$VERSION は既に存在します"; \
-		git tag -l | grep "^v$$VERSION$$"; \
-	else \
-		git tag -a "v$$VERSION" -m "Release v$$VERSION"; \
-		echo "✅ タグ v$$VERSION を作成しました"; \
-	fi
+# 通常インストール
+install:
+	pip install .
 
-upload-test: build
-	@echo "🧪 TestPyPIにアップロードします..."
-	@echo "注意: これはテスト環境です"
-	python -m twine upload --repository testpypi dist/*
-	@echo "🔗 TestPyPI確認: https://test.pypi.org/project/msx-serial/"
-
-upload-prod: build
-	@echo "⚠️  警告: 本番PyPIにアップロードしようとしています ⚠️"
-	@echo "このアクションは取り消せません！"
-	@echo "続行するには 'yes' と入力してください:"
-	@read confirm && [ "$$confirm" = "yes" ] || (echo "キャンセルされました" && exit 1)
-	python -m twine upload dist/*
-	@echo "🎉 PyPIアップロード完了!"
-	@echo "🔗 PyPI確認: https://pypi.org/project/msx-serial/"
-
-release: format lint test check-version
-	@echo "✅ リリース準備完了！"
-	@echo ""
-	@echo "📋 推奨リリース手順:"
-	@echo "1. git add -A && git commit -m 'Release準備'"
-	@echo "2. git push"
-	@echo "3. make tag           # Gitタグ作成"
-	@echo "4. git push --tags    # タグをプッシュ"
-	@echo "5. make upload-test   # TestPyPIでテスト"
-	@echo "6. make upload-prod   # 本番リリース"
-	@echo ""
-	@echo "または: make release-interactive  # 対話的リリース"
-
-release-interactive:
-	python scripts/release.py 
+# 開発環境インストール
+dev-install:
+	pip install -e . 

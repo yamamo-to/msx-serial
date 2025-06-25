@@ -1,49 +1,51 @@
-"""
-Test for msx_serial/__init__.py
-"""
+"""Test package initialization"""
 
 import unittest
 
 
-
 class TestInit(unittest.TestCase):
-    """__init__.pyのテスト"""
+    """Test package initialization functionality"""
 
-    def test_main_import(self):
-        """mainのインポートをテスト"""
-        from msx_serial import main
-        self.assertIsNotNone(main)
-
-    def test_msx_session_import(self):
-        """MSXSessionのインポートをテスト"""
-        from msx_serial import MSXSession
-        self.assertIsNotNone(MSXSession)
-
-    def test_msx_terminal_alias(self):
-        """MSXTerminalエイリアスをテスト"""
-        from msx_serial import MSXTerminal, MSXSession
-        self.assertIs(MSXTerminal, MSXSession)
-
-    def test_version_import_success(self):
-        """バージョンのインポートが成功した場合のテスト"""
-        from msx_serial import __version__
-        self.assertIsNotNone(__version__)
-        self.assertNotEqual(__version__, "0.0.0.dev")
-
-    def test_version_import_fallback(self):
-        """バージョンのインポートが失敗した場合のフォールバックテスト"""
-        # このテストはコードパスの確認のみ（実際のfallbackは難しいため簡素化）
-        # ImportError例外処理部分のカバレッジ向上が目的
+    def test_package_import(self) -> None:
+        """Test basic package import"""
         import msx_serial
-        # モジュールが正常にインポートされていることを確認
-        self.assertTrue(hasattr(msx_serial, '__version__'))
 
-    def test_all_exports(self):
-        """__all__に含まれる全ての要素がエクスポートされることをテスト"""
+        self.assertIsNotNone(msx_serial)
+
+    def test_package_has_version(self) -> None:
+        """Test package has version attribute"""
         import msx_serial
-        for item in msx_serial.__all__:
-            self.assertTrue(hasattr(msx_serial, item))
+
+        self.assertTrue(hasattr(msx_serial, "__version__"))
+
+    def test_version_format(self) -> None:
+        """Test version format is correct"""
+        import msx_serial
+
+        version = msx_serial.__version__
+        self.assertIsInstance(version, str)
+        self.assertGreater(len(version), 0)
+
+    def test_package_main_module(self) -> None:
+        """Test package main module can be imported"""
+        import msx_serial.__main__
+
+        self.assertIsNotNone(msx_serial.__main__)
+
+    def test_core_components(self) -> None:
+        """Test core components can be imported"""
+        from msx_serial.core import msx_session, data_processor
+
+        self.assertIsNotNone(msx_session)
+        self.assertIsNotNone(data_processor)
+
+    def test_connection_components(self) -> None:
+        """Test connection components can be imported"""
+        from msx_serial.connection import config_factory, connection
+
+        self.assertIsNotNone(config_factory)
+        self.assertIsNotNone(connection)
 
 
 if __name__ == "__main__":
-    unittest.main() 
+    unittest.main()

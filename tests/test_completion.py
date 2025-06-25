@@ -186,6 +186,13 @@ class TestCommandCompleter(unittest.TestCase):
                 except Exception as e:
                     self.fail(f"補完処理でエラーが発生: {e}")
 
+    def test_complete_general_keywords(self):
+        """_complete_general_keywords の実行テスト"""
+        from msx_serial.completion.completers.base import CompletionContext
+        context = CompletionContext("PR", "PR")
+        completions = list(self.completer._complete_general_keywords(context))
+        self.assertIsInstance(completions, list)
+
 
 class DummyCompleter(BaseCompleter):
     def get_completions(self, document, complete_event):
@@ -271,6 +278,58 @@ def test_basecompleter_generate_keyword_completions():
                 completer._generate_keyword_completions(context, keyword_type)
             )
             assert any(isinstance(r, Completion) for r in result)
+
+
+class TestCommandCompleterExtended(unittest.TestCase):
+    """CommandCompleterの拡張テスト"""
+
+    def setUp(self):
+        from msx_serial.completion.completers.command_completer import CommandCompleter
+
+        self.completer = CommandCompleter(["@help", "@mode", "@exit"], "basic")
+
+    def test_set_mode(self):
+        """set_modeメソッドのテスト"""
+        self.completer.set_mode("dos")
+        self.assertEqual(self.completer.current_mode, "dos")
+
+    def test_complete_all_subcommands(self):
+        """_complete_all_subcommands の実行テスト"""
+        from msx_serial.completion.completers.base import CompletionContext
+        context = CompletionContext("_ABC", "ABC")
+        completions = list(self.completer._complete_all_subcommands(context))
+        self.assertIsInstance(completions, list)
+
+    def test_complete_call_subcommands(self):
+        """_complete_call_subcommands の実行テスト"""
+        from msx_serial.completion.completers.base import CompletionContext
+
+        context = CompletionContext("CLS", "CLS")
+        completions = list(self.completer._complete_call_subcommands(context))
+        self.assertIsInstance(completions, list)
+
+
+class TestIoTCompleterExtended(unittest.TestCase):
+    """IoTCompleterの拡張テスト"""
+
+    def setUp(self):
+        from msx_serial.completion.completers.iot_completer import IoTCompleter
+
+        self.completer = IoTCompleter()
+
+    def test_get_completions_with_comma(self):
+        """カンマが含まれる場合の補完テスト"""
+        from prompt_toolkit.document import Document
+        from prompt_toolkit.completion import CompleteEvent
+
+        document = Document('IOTGET("device", ')
+        completions = list(self.completer.get_completions(document, CompleteEvent()))
+        self.assertEqual(len(completions), 0)  # カンマがあるので補完しない
+
+    def test_device_list_initialization(self):
+        """デバイスリストの初期化テスト"""
+        self.assertIsNotNone(self.completer.device_list)
+        self.assertIsInstance(self.completer.device_list, list)
 
 
 if __name__ == "__main__":

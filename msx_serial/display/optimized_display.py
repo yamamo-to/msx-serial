@@ -1,66 +1,72 @@
 """
-Optimized terminal output handler for MSX serial communication
+最適化されたターミナル表示機能
 """
 
-import os
+import subprocess
 import sys
+import time
 from typing import Dict, Any
 from threading import RLock
 
 
 class OptimizedTerminalDisplay:
-    """Unified terminal display optimized for instant MSX communication"""
+    """最適化されたターミナル表示機能を提供するクラス"""
 
-    def __init__(
-        self,
-        receive_color: str = "\033[92m",  # Green ANSI
-    ):
-        """Initialize display with instant mode"""
-        self.receive_color = receive_color
-        self.prompt_color = f"{receive_color}\033[1m"  # Bold
-        self.reset_color = "\033[0m"
-
-        # Performance tracking
+    def __init__(self) -> None:
+        self.last_output_time = time.time()
+        self.total_bytes_displayed = 0
+        self.performance_mode = "optimized"
         self.stats = {
             "total_writes": 0,
             "instant_writes": 0,
+            "buffered_writes": 0,
+            "total_bytes": 0,
         }
-
-        # Thread safety
         self._output_lock = RLock()
 
     def clear_screen(self) -> None:
-        """Clear terminal screen"""
-        if os.name == "nt":
-            os.system("cls")
-        else:
-            sys.stdout.write("\033[2J\033[H")
-            sys.stdout.flush()
+        """高速な画面クリア"""
+        try:
+            if sys.platform == "win32":
+                subprocess.run(["cmd", "/c", "cls"], check=False, timeout=5)
+            else:
+                subprocess.run(["clear"], check=False, timeout=5)
+        except (subprocess.SubprocessError, FileNotFoundError, OSError):
+            # 画面クリアに失敗した場合は何もしない
+            pass
 
     def print_receive(self, text: str, is_prompt: bool = False) -> None:
-        """Display received data with instant formatting"""
+        """受信テキストの最適化表示
+
+        Args:
+            text: 表示テキスト
+            is_prompt: プロンプトフラグ
+        """
+        formatted = text
         with self._output_lock:
-            self.stats["total_writes"] += 1
-
-            # Format text without adding extra newlines
-            if is_prompt:
-                formatted = f"{self.prompt_color}{text}{self.reset_color}"
-            else:
-                formatted = f"{self.receive_color}{text}{self.reset_color}"
-
             # Always write instantly
             self._write_instant(formatted)
+            self.total_bytes_displayed += len(formatted.encode("utf-8"))
+            self.last_output_time = time.time()
 
     def _write_instant(self, text: str) -> None:
-        """Write directly to stdout"""
+        """即座にテキストを出力
+
+        Args:
+            text: 出力テキスト
+        """
         sys.stdout.write(text)
         sys.stdout.flush()
         self.stats["instant_writes"] += 1
 
     def flush(self) -> None:
-        """Flush stdout (no-op since we're always instant)"""
+        """出力をフラッシュ"""
         sys.stdout.flush()
 
     def get_performance_stats(self) -> Dict[str, Any]:
-        """Get performance statistics"""
+        """パフォーマンス統計を取得
+
+        Returns:
+            統計情報の辞書
+        """
         return self.stats.copy()

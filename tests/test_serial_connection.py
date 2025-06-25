@@ -34,7 +34,7 @@ class TestSerialConfig(unittest.TestCase):
             timeout=1.0,
             xonxoff=True,
             rtscts=True,
-            dsrdtr=True
+            dsrdtr=True,
         )
         self.assertEqual(config.port, "/dev/ttyUSB0")
         self.assertEqual(config.baudrate, 9600)
@@ -54,14 +54,14 @@ class TestSerialConnection(unittest.TestCase):
         """テストセットアップ"""
         self.config = SerialConfig(port="/dev/ttyUSB0", baudrate=9600)
 
-    @patch('msx_serial.connection.serial.serial.Serial')
+    @patch("msx_serial.connection.serial.serial.Serial")
     def test_init_with_config(self, mock_serial):
         """設定を使った初期化のテスト"""
         mock_serial_instance = Mock()
         mock_serial.return_value = mock_serial_instance
-        
+
         connection = SerialConnection(self.config)
-        
+
         mock_serial.assert_called_once_with(
             port="/dev/ttyUSB0",
             baudrate=9600,
@@ -71,90 +71,90 @@ class TestSerialConnection(unittest.TestCase):
             timeout=None,
             xonxoff=False,
             rtscts=False,
-            dsrdtr=False
+            dsrdtr=False,
         )
         self.assertEqual(connection.connection, mock_serial_instance)
 
-    @patch('msx_serial.connection.serial.serial.Serial')
+    @patch("msx_serial.connection.serial.serial.Serial")
     def test_write(self, mock_serial):
         """書き込みのテスト"""
         mock_serial_instance = Mock()
         mock_serial.return_value = mock_serial_instance
-        
+
         connection = SerialConnection(self.config)
         test_data = b"test data"
-        
+
         connection.write(test_data)
         mock_serial_instance.write.assert_called_once_with(test_data)
 
-    @patch('msx_serial.connection.serial.serial.Serial')
+    @patch("msx_serial.connection.serial.serial.Serial")
     def test_flush(self, mock_serial):
         """フラッシュのテスト"""
         mock_serial_instance = Mock()
         mock_serial.return_value = mock_serial_instance
-        
+
         connection = SerialConnection(self.config)
-        
+
         connection.flush()
         mock_serial_instance.flush.assert_called_once()
 
-    @patch('msx_serial.connection.serial.serial.Serial')
+    @patch("msx_serial.connection.serial.serial.Serial")
     def test_read(self, mock_serial):
         """読み込みのテスト"""
         mock_serial_instance = Mock()
         mock_serial_instance.read.return_value = b"response"
         mock_serial.return_value = mock_serial_instance
-        
+
         connection = SerialConnection(self.config)
         result = connection.read(10)
-        
+
         mock_serial_instance.read.assert_called_once_with(10)
         self.assertEqual(result, b"response")
 
-    @patch('msx_serial.connection.serial.serial.Serial')
+    @patch("msx_serial.connection.serial.serial.Serial")
     def test_in_waiting(self, mock_serial):
         """受信待ちバイト数のテスト"""
         mock_serial_instance = Mock()
         mock_serial_instance.in_waiting = 5
         mock_serial.return_value = mock_serial_instance
-        
+
         connection = SerialConnection(self.config)
         result = connection.in_waiting()
-        
+
         self.assertEqual(result, 5)
 
-    @patch('msx_serial.connection.serial.serial.Serial')
+    @patch("msx_serial.connection.serial.serial.Serial")
     def test_close(self, mock_serial):
         """接続終了のテスト"""
         mock_serial_instance = Mock()
         mock_serial.return_value = mock_serial_instance
-        
+
         connection = SerialConnection(self.config)
-        
+
         connection.close()
         mock_serial_instance.close.assert_called_once()
 
-    @patch('msx_serial.connection.serial.serial.Serial')
+    @patch("msx_serial.connection.serial.serial.Serial")
     def test_is_open(self, mock_serial):
         """接続状態確認のテスト"""
         mock_serial_instance = Mock()
         mock_serial_instance.is_open = True
         mock_serial.return_value = mock_serial_instance
-        
+
         connection = SerialConnection(self.config)
         result = connection.is_open()
-        
+
         self.assertTrue(result)
 
-    @patch('msx_serial.connection.serial.serial.Serial')
+    @patch("msx_serial.connection.serial.serial.Serial")
     def test_serial_exception_handling(self, mock_serial):
         """シリアルポート例外処理のテスト"""
         from serial import SerialException
+
         mock_serial.side_effect = SerialException("Port not found")
-        
         with self.assertRaises(SerialException):
             SerialConnection(self.config)
 
 
 if __name__ == "__main__":
-    unittest.main() 
+    unittest.main()
