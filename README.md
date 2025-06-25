@@ -1,238 +1,252 @@
-# MSX Serial Terminal
+# MSXシリアルターミナル
 
 [![CI](https://github.com/yamamo-to/msx-serial/actions/workflows/ci.yml/badge.svg)](https://github.com/yamamo-to/msx-serial/actions/workflows/ci.yml)
 [![PyPI version](https://badge.fury.io/py/msx-serial.svg)](https://badge.fury.io/py/msx-serial)
 
-A high-performance terminal program for MSX communication via serial connection or telnet. Features instant character display, automatic mode detection, and Japanese text support.
+シリアル接続やTelnetを通じてMSXと通信するための高性能ターミナルプログラムです。瞬時の文字表示、自動モード検出、日本語テキストサポートを特徴としています。
 
-## Features
+## 特徴
 
-✨ **Instant Communication**: Optimized for real-time character-by-character MSX interaction  
-🔍 **Automatic Mode Detection**: Detects BASIC and MSX-DOS modes automatically  
-🌐 **Multiple Connection Types**: Serial, Telnet, and Dummy connections  
-📝 **Japanese Text Support**: Full MSX character encoding support  
-📁 **File Transfer**: BASIC program upload and text file paste functionality  
-🎯 **Smart Completion**: Context-aware command completion  
-🎨 **Color Display**: Beautiful colored terminal output  
+✨ **瞬時通信**: リアルタイムでの文字単位MSX通信に最適化  
+🔍 **自動モード検出**: BASICとMSX-DOSモードを自動検出  
+🌐 **複数接続タイプ**: シリアル、Telnet、ダミー接続に対応  
+📝 **日本語テキストサポート**: MSX文字エンコーディングの完全サポート  
+📁 **ファイル転送**: BASICプログラムアップロードとテキストファイル貼り付け機能  
+🎯 **スマート補完**: コンテキスト対応のコマンド補完  
+🎨 **カラー表示**: 美しいカラーターミナル出力  
+⚡ **高いテストカバレッジ**: 95%のコードカバレッジと455のテストケース
 
-## Installation
+## インストール
 
 ```bash
 pip install msx-serial
 ```
 
-## Usage
+## 使用方法
 
-### Basic Connection
+### 基本接続
 
 ```bash
-# Serial connections
+# シリアル接続
 msx-serial COM1                                    # Windows
 msx-serial /dev/ttyUSB0                           # Linux
 msx-serial /dev/tty.usbserial-12345678901         # macOS
 
-# Serial with parameters
+# パラメータ付きシリアル接続
 msx-serial 'serial:///dev/ttyUSB0?baudrate=115200&bytesize=8&parity=N&stopbits=1'
 
-# Telnet connections
+# Telnet接続
 msx-serial 192.168.1.100:2223
 msx-serial telnet://192.168.1.100:2223
 
-# Dummy connection (for testing)
+# ダミー接続（テスト用）
 msx-serial dummy://
 ```
 
-### Command Line Options
+### コマンドラインオプション
 
 ```
-usage: msx-serial [-h] [--encoding ENCODING] [--debug] connection
+使用方法: msx-serial [-h] [--encoding ENCODING] [--debug] connection
 
-MSX Serial Terminal
+MSXシリアルターミナル
 
-positional arguments:
-  connection           Connection string (e.g. COM4, /dev/ttyUSB0, 192.168.1.100:2223, dummy://)
+位置引数:
+  connection           接続文字列 (例: COM4, /dev/ttyUSB0, 192.168.1.100:2223, dummy://)
 
-options:
-  -h, --help           Show help message and exit
-  --encoding ENCODING  Text encoding (default: msx-jp)
-  --debug              Enable debug mode
+オプション:
+  -h, --help           ヘルプメッセージを表示して終了
+  --encoding ENCODING  テキストエンコーディング (デフォルト: msx-jp)
+  --debug              デバッグモードを有効化
 ```
 
-### Special Commands
+### 特殊コマンド
 
-| Command | Description | Available In |
-|---------|-------------|--------------|
-| `@paste` | Paste text file content | BASIC mode only |
-| `@upload` | Upload file as BASIC program | BASIC mode only |
-| `@cd` | Change current directory | All modes |
-| `@encode` | Set text encoding | All modes |
-| `@help` | Show command help | All modes |
-| `@mode` | Display/force MSX mode | All modes |
-| `@exit` | Exit program | All modes |
+| コマンド | 説明 | 利用可能モード |
+|---------|------|---------------|
+| `@paste` | テキストファイル内容を貼り付け | BASICモードのみ |
+| `@upload` | ファイルをBASICプログラムとしてアップロード | BASICモードのみ |
+| `@cd` | 現在のディレクトリを変更 | 全モード |
+| `@encode` | テキストエンコーディングを設定 | 全モード |
+| `@help` | コマンドヘルプを表示 | 全モード |
+| `@mode` | MSXモードを表示/強制変更 | 全モード |
+| `@perf` | パフォーマンス統計を表示 | 全モード |
+| `@exit` | プログラムを終了 | 全モード |
 
-Use `@help` for detailed command usage information.
+詳細なコマンド使用方法は `@help` をご覧ください。
 
-### MSX Mode Detection
+### MSXモード検出
 
-The terminal automatically detects and adapts to MSX operating modes:
+ターミナルは自動的にMSX動作モードを検出して動作を調整します：
 
-- **BASIC Mode**: Detected by `Ok` prompt - enables file upload/paste commands
-- **MSX-DOS Mode**: Detected by `A:>`, `B:>`, `C:>` etc. prompts  
-- **Unknown Mode**: Default state until mode is detected
+- **BASICモード**: `Ok` プロンプトで検出 - ファイルアップロード/貼り付けコマンドが有効
+- **MSX-DOSモード**: `A:>`, `B:>`, `C:>` 等のプロンプトで検出  
+- **不明モード**: モードが検出されるまでのデフォルト状態
 
-### Mode Commands
+### モードコマンド
 
 ```bash
-@mode          # Display current MSX mode
-@mode basic    # Force BASIC mode
-@mode dos      # Force MSX-DOS mode  
-@mode unknown  # Reset to unknown mode
+@mode          # 現在のMSXモードを表示
+@mode basic    # BASICモードに強制変更
+@mode dos      # MSX-DOSモードに強制変更  
+@mode unknown  # 不明モードにリセット
 ```
 
-## Connection URI Format
+## 接続URI形式
 
-### Serial Connections
+### シリアル接続
 
 ```bash
-# Basic format
+# 基本形式
 serial:///dev/ttyUSB0
 
-# With parameters
+# パラメータ付き
 serial:///dev/ttyUSB0?baudrate=115200&bytesize=8&parity=N&stopbits=1&timeout=1
 ```
 
-**Supported Parameters:**
-- `baudrate`: Baud rate (default: 9600)
-- `bytesize`: Data bits (5, 6, 7, 8 - default: 8) 
-- `parity`: Parity (N, E, O, M, S - default: N)
-- `stopbits`: Stop bits (1, 1.5, 2 - default: 1)
-- `timeout`: Read timeout in seconds
-- `xonxoff`: Software flow control (true/false)
-- `rtscts`: Hardware flow control (true/false)
-- `dsrdtr`: DSR/DTR flow control (true/false)
+**サポートされるパラメータ:**
+- `baudrate`: ボーレート (デフォルト: 9600)
+- `bytesize`: データビット (5, 6, 7, 8 - デフォルト: 8) 
+- `parity`: パリティ (N, E, O, M, S - デフォルト: N)
+- `stopbits`: ストップビット (1, 1.5, 2 - デフォルト: 1)
+- `timeout`: 読み取りタイムアウト（秒）
+- `xonxoff`: ソフトウェアフロー制御 (true/false)
+- `rtscts`: ハードウェアフロー制御 (true/false)
+- `dsrdtr`: DSR/DTRフロー制御 (true/false)
 
-### Telnet Connections
+### Telnet接続
 
 ```bash
-# Basic format
+# 基本形式
 telnet://hostname:port
 
-# Examples
+# 例
 telnet://192.168.1.100:2223
 telnet://msx.local:2223
 ```
 
-## Text Encoding Support
+## テキストエンコーディング対応
 
-Supported encodings for MSX text:
-- `msx-jp`: Japanese MSX encoding (default)
-- `msx-intl`: International MSX encoding
-- `msx-br`: Brazilian MSX encoding  
-- `shift-jis`: Shift-JIS encoding
-- `utf-8`: UTF-8 encoding
+MSXテキスト用にサポートされるエンコーディング:
+- `msx-jp`: 日本語MSXエンコーディング (デフォルト)
+- `msx-intl`: 国際MSXエンコーディング
+- `msx-br`: ブラジルMSXエンコーディング  
+- `shift-jis`: Shift-JISエンコーディング
+- `utf-8`: UTF-8エンコーディング
 
-Change encoding with: `@encode msx-jp`
+エンコーディング変更: `@encode msx-jp`
 
-## Architecture
+## アーキテクチャ
 
-### Core Components
+### コアコンポーネント
 
-- **OptimizedTerminalSession**: Main terminal session with instant response
-- **ConnectionManager**: Unified connection handling (Serial/Telnet/Dummy)
-- **MSXProtocolDetector**: Automatic mode detection from prompts
-- **DataProcessor**: Real-time data processing with instant display
-- **CommandCompleter**: Context-aware command completion
-- **FileTransferManager**: File upload and paste operations
+- **MSXSession**: 瞬時応答付きメインターミナルセッション
+- **ConnectionManager**: 統合接続処理 (Serial/Telnet/Dummy)
+- **MSXProtocolDetector**: プロンプトからの自動モード検出
+- **DataProcessor**: 瞬時表示付きリアルタイムデータ処理
+- **CommandCompleter**: コンテキスト対応コマンド補完
+- **FileTransferManager**: ファイルアップロードと貼り付け操作
 
-### Project Structure
+### プロジェクト構造
 
 ```
 msx_serial/
-├── core/              # Core terminal session and data processing
-├── connection/        # Connection implementations (Serial/Telnet/Dummy)
-├── protocol/          # MSX protocol detection and mode management
-├── display/           # Terminal display handlers
-├── completion/        # Command completion system
-├── commands/          # Special command handlers
-├── io/                # Input/output coordination
-├── transfer/          # File transfer functionality
-├── common/            # Shared utilities and color output
-└── data/              # Static data (command lists, keywords)
+├── core/              # コアターミナルセッションとデータ処理
+├── connection/        # 接続実装 (Serial/Telnet/Dummy)
+├── protocol/          # MSXプロトコル検出とモード管理
+├── display/           # ターミナル表示ハンドラー
+├── completion/        # コマンド補完システム
+├── commands/          # 特殊コマンドハンドラー
+├── io/                # 入出力調整
+├── transfer/          # ファイル転送機能
+├── common/            # 共有ユーティリティとカラー出力
+├── data/              # 静的データ (コマンドリスト、キーワード)
+└── man/               # マニュアルページ（BASICコマンド説明）
 ```
 
-### Key Design Principles
+### 主要設計原則
 
-1. **Instant Response**: Character-by-character processing for real-time MSX interaction
-2. **Automatic Adaptation**: Mode detection adapts terminal behavior to MSX state
-3. **Unified Connection**: Single interface for multiple connection types
-4. **Context Awareness**: Commands and completion adapt to current MSX mode
-5. **Robust Error Handling**: Graceful handling of connection and encoding issues
+1. **瞬時応答**: リアルタイムMSX通信のための文字単位処理
+2. **自動適応**: モード検出によってターミナル動作をMSX状態に適応
+3. **統合接続**: 複数接続タイプに対する単一インターフェース
+4. **コンテキスト認識**: 現在のMSXモードにコマンドと補完が適応
+5. **堅牢なエラー処理**: 接続とエンコーディング問題の優雅な処理
 
-## Development
+## テスト
 
-### Requirements
-
-- Python 3.9+
-- Dependencies listed in `pyproject.toml`
-
-### Setup Development Environment
+プロジェクトには包括的なテストスイートが含まれています：
 
 ```bash
-# Clone repository
+# 全テスト実行
+python -m pytest
+
+# カバレッジ付き実行
+python -m pytest --cov=msx_serial --cov-report=term-missing
+
+# 特定テスト実行
+python -m pytest tests/test_completion.py
+```
+
+**テスト統計:**
+- 総テスト数: 455件
+- コードカバレッジ: 95%
+- テスト成功率: 100%
+
+## 開発
+
+### 要件
+
+- Python 3.9+
+- `pyproject.toml` に記載された依存関係
+
+### 開発環境セットアップ
+
+```bash
+# リポジトリクローン
 git clone https://github.com/yamamo-to/msx-serial
 cd msx-serial
 
-# Create virtual environment
+# 仮想環境作成
 python -m venv venv
 source venv/bin/activate  # Linux/macOS
-# or
+# または
 .\venv\Scripts\activate   # Windows
 
-# Install in development mode
+# 開発モードでインストール
 pip install -e . --use-pep517
 ```
 
-### Running Tests
+### コード品質
 
 ```bash
-# Run all tests
-python -m pytest
+# コードフォーマット
+black msx_serial/ tests/
 
-# Run with coverage
-python -m pytest --cov=msx_serial
+# リンターチェック
+flake8 msx_serial/ tests/
 
-# Run specific test file
-python -m pytest tests/test_protocol.py -v
+# 型チェック
+mypy msx_serial/
 ```
 
-### Key Dependencies
+## ライセンス
 
-- **pyserial**: Serial communication
-- **prompt-toolkit**: Interactive command line interface
-- **colorama**: Terminal color support
-- **msx-charset**: MSX character encoding conversion
-- **chardet**: Character encoding detection
-- **PyYAML**: YAML configuration file support
-- **tqdm**: Progress bars for file transfers
+このプロジェクトはMITライセンスのもとで公開されています。
 
-## Performance Optimizations
+## 貢献
 
-The terminal is optimized for MSX communication with several key improvements:
+プルリクエストや課題報告を歓迎します。貢献前にテストを実行し、コード品質チェックを通過させてください。
 
-- **Instant Mode**: Character-by-character processing eliminates buffering delays
-- **Adaptive Delays**: Smart timing based on data activity patterns
-- **Efficient Display**: Direct ANSI escape sequence output
-- **Single Character Reads**: Optimal for MSX's character-based interaction
-- **Echo Suppression**: Intelligent command echo handling
+## 更新履歴
 
-## Acknowledgments
+### v0.2.16.dev2
+- 包括的なテストスイート実装（455テスト、95%カバレッジ）
+- blackによるコードフォーマット統一
+- 不要コードの削除とクリーンアップ
+- 日本語ドキュメント統一
 
-Base64 upload functionality inspired by:
-https://qiita.com/enu7/items/23cab122141fb8d07c6d
-
-MSX-BASIC command reference converted from:
-https://github.com/fu-sen/MSX-BASIC
-
-## License
-
-MIT License
+### 主要機能
+- 瞬時応答MSX通信
+- 自動モード検出
+- ファイル転送機能
+- 日本語テキストサポート
+- 包括的テストカバレッジ

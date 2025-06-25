@@ -1,11 +1,11 @@
-"""Color output utilities for MSX terminal"""
+"""MSXターミナル用カラー出力ユーティリティ"""
 
 from colorama import Fore, Style, init
 from typing import Dict
 
 init()
 
-# Color mapping
+# カラーマッピング
 COLORS: Dict[str, str] = {
     "info": Fore.CYAN,
     "warn": Fore.YELLOW,
@@ -30,7 +30,7 @@ def _print_colored(message: str, color_key: str, **kwargs) -> None:
     print(_colorize(message, color), **kwargs)
 
 
-# Primary output functions
+# 主要出力関数
 def print_info(message: str) -> None:
     """Print info message"""
     _print_colored(message, "info")
@@ -76,7 +76,7 @@ def print_prompt_receive(message: str) -> None:
     _print_colored(message, "receive", end="", flush=True)
 
 
-# String generation functions
+# 文字列生成関数
 def str_info(message: str) -> str:
     """Generate colored info string"""
     return _colorize(f"[info]{message}", COLORS["info"])
@@ -97,7 +97,7 @@ def str_exception(message: str, e: Exception) -> str:
     return _colorize(f"[{message}] {e}", COLORS["exception"])
 
 
-# Configuration
+# 設定
 def set_color_config(**kwargs: str) -> None:
     """Customize colors"""
     for key, color in kwargs.items():

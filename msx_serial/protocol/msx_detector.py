@@ -9,7 +9,7 @@ from ..common.color_output import print_info
 
 
 class MSXMode(Enum):
-    """MSX operation modes"""
+    """MSX動作モード"""
 
     UNKNOWN = "unknown"
     BASIC = "basic"
@@ -17,7 +17,7 @@ class MSXMode(Enum):
 
 
 class MSXProtocolDetector:
-    """Detect MSX prompts and manage mode state"""
+    """MSXプロンプトを検出してモード状態を管理"""
 
     def __init__(self, debug_mode: bool = False):
         # MSX prompt patterns
@@ -29,7 +29,7 @@ class MSXProtocolDetector:
         self.debug_mode = debug_mode
 
     def _debug_print(self, message: str) -> None:
-        """Print debug message if debug mode is enabled"""
+        """デバッグモードが有効な場合にデバッグメッセージを出力"""
         if self.debug_mode:
             print_info(f"[MSX Debug] {message}")
 
@@ -204,11 +204,11 @@ class MSXProtocolDetector:
         return False
 
     def enable_debug(self) -> None:
-        """Enable debug mode"""
+        """デバッグモードを有効化"""
         self.debug_mode = True
         print_info("MSX protocol detection debug mode enabled")
 
     def disable_debug(self) -> None:
-        """Disable debug mode"""
+        """デバッグモードを無効化"""
         self.debug_mode = False
         print_info("MSX protocol detection debug mode disabled")

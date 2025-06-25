@@ -1,4 +1,4 @@
-"""Main entry point for MSX Serial Terminal"""
+"""MSXシリアルターミナルのメインエントリーポイント"""
 
 import argparse
 import sys
@@ -7,7 +7,7 @@ from msx_serial.connection.connection import detect_connection_type
 
 
 def main():
-    """Main entry point"""
+    """メインエントリーポイント"""
     parser = argparse.ArgumentParser(description="MSX Serial Terminal")
     parser.add_argument(
         "connection",
@@ -20,10 +20,10 @@ def main():
     args = parser.parse_args()
 
     try:
-        # Detect connection type from URI
+        # URIから接続タイプを検出
         config = detect_connection_type(args.connection)
 
-        # Create and run terminal
+        # ターミナルを作成して実行
         terminal = MSXSession(
             config=config,
             encoding=args.encoding,

@@ -17,7 +17,7 @@ from ..connection.base import ConnectionConfig
 
 
 class MSXSession:
-    """Optimized MSX terminal session with instant response"""
+    """瞬時応答最適化されたMSXターミナルセッション"""
 
     def __init__(
         self,
@@ -38,19 +38,19 @@ class MSXSession:
         self.prompt_detected = False
         self.last_data_time = 0
 
-        # Fixed settings for optimal performance
+        # 最適パフォーマンスのための固定設定
         self.receive_delay = 0.0001
-        self.batch_size = 1  # Single character processing
+        self.batch_size = 1  # 単一文字処理
         self.timeout_check_interval = 0.01
 
-        # Initialize components
+        # コンポーネントの初期化
         self.connection_manager = ConnectionManager(config)
         self.protocol_detector = MSXProtocolDetector()
 
-        # Initialize data processor with instant mode
+        # 瞬時モードでデータプロセッサを初期化
         self.data_processor = DataProcessor(self.protocol_detector, instant_mode=True)
 
-        # Use optimized display (instant mode for MSX communication)
+        # 最適化表示を使用（MSX通信用の瞬時モード）
         self.display = OptimizedTerminalDisplay()
 
         self.user_interface = UserInterface(
@@ -63,7 +63,7 @@ class MSXSession:
         self.user_interface.display = self.display
         self.user_interface.terminal = self
 
-        # Set up echo detection
+        # エコー検出の設定
         self.user_interface.set_data_processor(self.data_processor)
 
         self.file_transfer = FileTransferManager(
@@ -73,14 +73,14 @@ class MSXSession:
         self.file_transfer.set_terminal(self)
 
     def run(self) -> None:
-        """Start terminal session"""
+        """ターミナルセッションを開始"""
         try:
             print_info("Starting MSX Terminal Session")
 
-            # Start background receive thread
+            # バックグラウンド受信スレッドを開始
             threading.Thread(target=self._receive_loop, daemon=True).start()
 
-            # Main input loop
+            # メイン入力ループ
             self._input_loop()
 
         except KeyboardInterrupt:

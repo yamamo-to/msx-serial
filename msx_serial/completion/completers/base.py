@@ -11,7 +11,7 @@ from ..iot_loader import IotNodes
 
 
 class CompletionContext:
-    """補完コンテキストを管理するクラス"""
+    """補完コンテキストを管理"""
 
     def __init__(self, text: str, word: str) -> None:
         self.text = text
@@ -80,7 +80,7 @@ class BaseCompleter(Completer):
         display: Optional[str] = None,
         meta: Optional[str] = None,
     ) -> Completion:
-        """Create completion with consistent formatting"""
+        """一貫したフォーマットで補完を作成"""
         return Completion(
             text,
             start_position=start_position,
@@ -89,7 +89,7 @@ class BaseCompleter(Completer):
         )
 
     def _match_prefix(self, candidates: List[str], prefix: str) -> List[str]:
-        """Filter candidates by prefix"""
+        """プレフィックスで候補をフィルタリング"""
         if not prefix:
             return candidates
         return [c for c in candidates if c.upper().startswith(prefix.upper())]
@@ -97,7 +97,7 @@ class BaseCompleter(Completer):
     def _generate_keyword_completions(
         self, context: CompletionContext, keyword_type: str
     ) -> Iterator[Completion]:
-        """Generate completions for a specific keyword type"""
+        """特定のキーワードタイプの補完を生成"""
         if keyword_type not in self.msx_keywords:
             return
 
