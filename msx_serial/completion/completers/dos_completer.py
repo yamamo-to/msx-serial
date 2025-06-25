@@ -33,9 +33,8 @@ class DOSCompleter(BaseCompleter):
                 data = yaml.safe_load(f)
 
             return [(cmd["name"], cmd["description"]) for cmd in data["dos_commands"]]
-        except Exception as e:
+        except Exception:
             # ファイル読み込みに失敗した場合は基本的なコマンドのみ
-            print(f"DOSコマンドファイルの読み込みに失敗: {e}")
             return [
                 ("BASIC", "MSX-BASICを起動"),
                 ("DIR", "ディレクトリの内容を表示"),

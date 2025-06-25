@@ -136,9 +136,8 @@ class DataProcessor:
     def _debug_received_data(self, raw_data: str) -> None:
         """Debug output for received data"""
         if hasattr(self.detector, "debug_mode") and self.detector.debug_mode:
-            import sys
-
-            print(f"[DEBUG] Received: {repr(raw_data)}", file=sys.stderr)
+            # Debug output removed for cleaner production code
+            pass
 
     def _should_suppress_echo(self, current_content: str) -> bool:
         """Check if echo should be suppressed"""

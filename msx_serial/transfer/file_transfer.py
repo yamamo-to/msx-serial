@@ -7,7 +7,7 @@ import base64
 import chardet
 from pathlib import Path
 from tqdm import tqdm
-from typing import TYPE_CHECKING, Optional, Union, BinaryIO, TextIO
+from typing import TYPE_CHECKING, Optional, Union
 
 from .basic_sender import send_basic_program
 from ..common.color_output import print_info, print_exception
