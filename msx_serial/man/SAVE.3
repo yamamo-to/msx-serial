@@ -1,0 +1,31 @@
+.TH "SAVE" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+SAVE \- プログラムをファイルに保存します。
+
+.SH SYNOPSIS
+.B SAVE <ファイル名>[,A]
+
+.SH DESCRIPTION
+.PP
+プログラムをファイルに保存します。
+
+.SH EXAMPLES
+.PP
+SAVE "TEST.BAS"
+
+.SH NOTES
+.PP
+.PP
+<ファイル名> にはドライブ名、
+.PP
+DIsk BASIC 2 以降ではディレクトリ名を含む事ができます。
+.PP
+,A を付けた場合はアスキーモードで保存します。
+.PP
+アスキーモードは中間コードに変換されずに
+.PP
+入力されたプログラムの状態でそのまま保存されます。
+.PP
+MERGE 文を用いてプログラムの連結が可能なほ他、
+.PP
+テキストエディタ等で直接参照する事ができます。

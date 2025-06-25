@@ -1,0 +1,32 @@
+.TH "NOT" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+NOT \- ビット反転した値を返します。
+
+.SH SYNOPSIS
+.B NOT <数式>
+
+.SH DESCRIPTION
+.PP
+ビット反転した値を返します。
+
+.SH EXAMPLES
+.PP
+PRINT 5,-5
+ [表示] -6      4
+
+.SH NOTES
+.PP
+.PP
+<数式> を 2 進数にした際のビット単位で反転した値を返します。
+.PP
+符号ビットを含めて処理されるため、
+.PP
+結果として符号を反転し -1 した値となります。
+.PP
+    <数式>  結果
+.PP
+       0      1
+.PP
+       1      0
+.PP
+NOT 0 は -1、NOT -1 は 0 となり、この反転動作で使用します。

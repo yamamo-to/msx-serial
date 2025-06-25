@@ -1,0 +1,6 @@
+include LICENSE
+include README.md
+include pyproject.toml
+recursive-include msx_serial/data *.yml
+recursive-include msx_serial/man *
+recursive-include msx_serial/transfer *.bas 

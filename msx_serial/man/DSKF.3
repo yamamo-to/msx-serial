@@ -1,0 +1,23 @@
+.TH "DSKF" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+DSKF \- ディスクの空容量を得ます。
+
+.SH SYNOPSIS
+.B DSKF(<ドライブ番号>)
+
+.SH DESCRIPTION
+.PP
+ディスクの空容量を得ます。
+
+.SH EXAMPLES
+.PP
+FR=DSKF(1)
+
+.SH NOTES
+.PP
+.PP
+<ドライブ番号> はカレント(デフォルト)ドライブが 0、
+.PP
+A: が 1 …… H: が 7 です。値はクラスタ単位となります。
+.PP
+クラスタのサイズはディスクの種類・容量によって異なります。

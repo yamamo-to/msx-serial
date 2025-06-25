@@ -1,0 +1,30 @@
+.TH "XOR" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+XOR \- 排他的論理和を返します。
+
+.SH SYNOPSIS
+.B <数式1> XOR <数式2>
+
+.SH DESCRIPTION
+.PP
+排他的論理和を返します。
+
+.SH EXAMPLES
+.PP
+PRINT 7 XOR 5
+ [表示] 2
+
+.SH NOTES
+.PP
+.PP
+<数式1> <数式2> を 2 進数にした際のビット単位で処理されます。
+.PP
+    <数式1> <数式2>  結果
+.PP
+       0       0       0
+.PP
+       0       1       1
+.PP
+       1       0       1
+.PP
+       1       1       0

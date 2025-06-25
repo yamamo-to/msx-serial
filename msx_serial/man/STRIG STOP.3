@@ -1,0 +1,31 @@
+.TH "STRIG STOP" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+STRIG STOP \- ON STRIG GOSUB による割り込みを一時停止します。
+
+.SH SYNOPSIS
+.B STRIG(<番号>) STOP
+
+.SH DESCRIPTION
+.PP
+ON STRIG GOSUB による割り込みを一時停止します。
+
+.SH EXAMPLES
+.PP
+STRIG(1) STOP
+
+.SH NOTES
+.PP
+.PP
+<番号> は以下とおりです。
+.PP
+    0 スペースキー
+.PP
+    1 ポート 1 の A ボタン
+.PP
+    2 ポート 2 の A ボタン
+.PP
+    3 ポート 1 の B ボタン
+.PP
+    4 ポート 2 の B ボタン
+.PP
+STRIG STOP は STRIG ON が実行されている場合に有効です。

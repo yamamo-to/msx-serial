@@ -1,0 +1,31 @@
+.TH "CALL SYSTEM" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+CALL SYSTEM \- MSX-DOS を起動します。
+
+.SH SYNOPSIS
+.B CALL SYSTEM(<DOSコマンド名>)
+
+.SH DESCRIPTION
+.PP
+MSX-DOS を起動します。
+
+.SH EXAMPLES
+.PP
+CALL SYSTEM("PMEXT ARC.PMA")
+
+.SH NOTES
+.PP
+.PP
+MSX-DOS から MSX-BASIC を起動している時に有効です。
+.PP
+MSX-DOS を起動すると全ファイルは閉じられ、
+.PP
+メモリ上のプログラムやメモリディスク上のファイルは削除されます。
+.PP
+MSX-DOS(1) は MSX-DOS に戻るだけで、実行は行なわれません。
+.PP
+<DOSコマンド名> は MSX-DOS2 のみ有効です。
+.PP
+指定を行なわない場合は
+.PP
+ルートディレクトリにある REBOOT.BAT の実行を試みます。

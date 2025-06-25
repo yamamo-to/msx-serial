@@ -1,0 +1,25 @@
+.TH "MKI$" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+MKI$ \- 整数型を文字型に変換します。
+
+.SH SYNOPSIS
+.B MKI$(<数式>)
+
+.SH DESCRIPTION
+.PP
+整数型を文字型に変換します。
+
+.SH EXAMPLES
+.PP
+LSET FI$=MKI$(II%)
+
+.SH NOTES
+.PP
+.PP
+ランダムアクセスファイルは文字型しか扱えないため、
+.PP
+変数の型を変換するために用意されています。
+.PP
+MKI$ により整数型は2バイトの文字型に変化させる機能です。
+.PP
+これを戻す場合は CVI を用います。

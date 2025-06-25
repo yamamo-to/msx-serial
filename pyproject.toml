@@ -1,0 +1,85 @@
+[build-system]
+requires = ["setuptools>=64", "wheel", "setuptools_scm>=7.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "msx-serial"
+dynamic = ["version"]
+authors = [
+    {name = "yamamo-to", email = "humorum@gmail.com"}
+]
+description = "MSXシリアルターミナル"
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+license-files = ["LICEN[CS]E*"]
+dependencies = [
+    "colorama",
+    "prompt-toolkit",
+    "pyserial",
+    "PyYAML",
+    "chardet",
+    "msx-charset",
+    "tqdm",
+    "standard-telnetlib",
+    "jinja2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "flake8>=6.0",
+    "mypy>=1.0",
+    "build>=1.0",
+    "twine>=4.0",
+    "types-colorama",
+    "types-PyYAML",
+    "types-pyserial",
+    "types-tqdm",
+]
+
+[project.scripts]
+msx-serial = "msx_serial:main"
+
+[tool.setuptools]
+packages = ["msx_serial"]
+package-data = {msx_serial = ["data/*.yml", "man/*", "transfer/*.bas"]}
+include-package-data = true
+
+[tool.setuptools_scm]
+write_to = "msx_serial/_version.py"
+local_scheme = "no-local-version"
+fallback_version = "0.0.0"
+
+[project.urls]
+Repository = "https://github.com/yamamo-to/msx-serial"
+Issue = "https://github.com/yamamo-to/msx-serial/issues"
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+
+# テストファイルでは型チェックを緩和
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+ignore_errors = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "--cov=msx_serial --cov-report=term-missing --cov-report=xml"

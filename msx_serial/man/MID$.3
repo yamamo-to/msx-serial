@@ -1,0 +1,28 @@
+.TH "MID$" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+MID$ \- 文字列の指定場所から指定された数の文字列を取り出し・代入します。
+
+.SH SYNOPSIS
+.B MID$(<文字列>,<開始位置>[,<文字数>])
+
+.SH DESCRIPTION
+.PP
+文字列の指定場所から指定された数の文字列を取り出し・代入します。
+
+.SH EXAMPLES
+.PP
+PRINT MID$("MSX ver 1.0?",5,3)
+ [表示] ner
+M$="MSX ver 1.0?":MID$(M$,9,1)="2":PRINT M$
+ [表示] MSX ver 2.0?
+
+.SH NOTES
+.PP
+.PP
+指定した数が文字列の総数より大きい場合は
+.PP
+文字列がそのまま取り出されます。
+.PP
+MID$ は文字列の指定場所に別の文字を代入する事もできます。
+.PP
+<文字数> を省略した場合は、<開始位置> 以降全ての文字列を返します。

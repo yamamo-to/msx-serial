@@ -1,0 +1,31 @@
+.TH "SET TIME" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+SET TIME \- 時間を設定します。
+
+.SH SYNOPSIS
+.B SET TIME <時間> [,A]
+
+.SH DESCRIPTION
+.PP
+時間を設定します。
+
+.SH EXAMPLES
+.PP
+SET TIME "11:24:00"
+
+.SH NOTES
+.PP
+.PP
+<時間> は <時>:<分>:<秒> で、
+.PP
+<時> <分> <秒> はそれぞれ2桁で指定します。
+.PP
+また、<時> は24時間表記となります。
+.PP
+午前 1 時 2 分 3 秒であれば 01:02:03 となります。
+.PP
+,A をつけた場合はアラーム時間の設定を行ないます。
+.PP
+MSXPLAYer では使用している Windows の時間が
+.PP
+そのまま使われます。

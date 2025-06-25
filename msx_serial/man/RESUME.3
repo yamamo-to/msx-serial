@@ -1,0 +1,27 @@
+.TH "RESUME" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+RESUME \- エラー処理を終了し、プログラムの実行を再開します。
+
+.SH SYNOPSIS
+.B RESUME [<行番号>][NEXT]
+
+.SH DESCRIPTION
+.PP
+エラー処理を終了し、プログラムの実行を再開します。
+
+.SH EXAMPLES
+.PP
+RESUME 0
+
+.SH NOTES
+.PP
+.PP
+<行番号> が指定されている場合は
+.PP
+その行から実行を再開します。
+.PP
+<行番号> を 0 または省略している場合は
+.PP
+エラーが発生したところから実行を再開します。
+.PP
+RESUME NEXT とした場合はエラー発生の次文から実行を再開します。

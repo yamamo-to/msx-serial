@@ -1,0 +1,33 @@
+.TH "IF GOTO ELSE" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+IF GOTO ELSE \- 条件判断に応じて指定行へ飛びます。
+
+.SH SYNOPSIS
+.B IF <条件式> GOTO <行番号> [ELSE {<行番号>|<文>}]
+
+.SH DESCRIPTION
+.PP
+条件判断に応じて指定行へ飛びます。
+
+.SH EXAMPLES
+.PP
+IF I>0 GOTO 30 ELSE I=I-1:GOTO 100
+
+.SH NOTES
+.PP
+.PP
+<条件式> を判断し、正しい場合(0以外の場合)は
+.PP
+GOTO 以降の <行番号> へ飛ばし、
+.PP
+異なっている場合(0の場合)は ELSE 以降の <文> を実行します。
+.PP
+ELSE 後も <行番号> へ飛ばす場合は GOTO を省いて
+.PP
+ELSE <行番号> という形にできます。
+.PP
+<条件式> を判断し、正しい場合(0以外の場合)の判断を
+.PP
+文で処理する場合は GOTO ではなく THEN を用います。
+.PP
+ELSE が省略されている場合は、次の文に制御が移ります。

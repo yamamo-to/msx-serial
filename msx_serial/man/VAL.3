@@ -1,0 +1,21 @@
+.TH "VAL" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+VAL \- 文字列を数値に変換します。
+
+.SH SYNOPSIS
+.B VAL(<文字式>)
+
+.SH DESCRIPTION
+.PP
+文字列を数値に変換します。
+
+.SH EXAMPLES
+.PP
+10 A$="12":B$="-3"
+20 A=VAL(A$):B$=VAL(B$)
+30 C$=A$+B$:C=A+B
+40 PRINT C$,C
+ [表示] 12-3    9
+        C$ は文字列をあわせたのでそのまま表示されています。
+        C は数式に変わり 12-3 の計算結果である
+        9 が表示されています。

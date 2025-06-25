@@ -1,0 +1,31 @@
+.TH "SET PROMPT" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+SET PROMPT \- プロンプトを設定します。
+
+.SH SYNOPSIS
+.B SET PROMPT <プロンプト>
+
+.SH DESCRIPTION
+.PP
+プロンプトを設定します。
+
+.SH EXAMPLES
+.PP
+SET PROMPT "READY"
+
+.SH NOTES
+.PP
+.PP
+プロンプトを変更します。
+.PP
+初期値は Ok で、MSX(1) では Ok で固定です。
+.PP
+<プロンプト>は 6 文字以内です。
+.PP
+この設定は MSX 本体では SRAM に記録されます。
+.PP
+SET PASSWORD・SET TITLE と共有しているため、
+.PP
+これらと含めて最後に設定されたものが有効となります。
+.PP
+初期状態は SET TITLE "" として下さい。

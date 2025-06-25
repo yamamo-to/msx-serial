@@ -1,0 +1,31 @@
+.TH "STRIG" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+STRIG \- スペースキー・ジョイスティックボタンの状態を得ます。
+
+.SH SYNOPSIS
+.B STRIG(<番号>)
+
+.SH DESCRIPTION
+.PP
+スペースキー・ジョイスティックボタンの状態を得ます。
+
+.SH EXAMPLES
+.PP
+A=STRIG(1):B=STRIG(3)
+
+.SH NOTES
+.PP
+.PP
+<番号> は以下とおりです。
+.PP
+    0 スペースキー
+.PP
+    1 ポート 1 の A ボタン
+.PP
+    2 ポート 2 の A ボタン
+.PP
+    3 ポート 1 の B ボタン
+.PP
+    4 ポート 2 の B ボタン
+.PP
+押されていれば -1、押されていなければ 0 を返します。

@@ -1,0 +1,27 @@
+.TH "KILL" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+KILL \- ファイルを削除します。
+
+.SH SYNOPSIS
+.B KILL <ファイル名>
+
+.SH DESCRIPTION
+.PP
+ファイルを削除します。
+
+.SH EXAMPLES
+.PP
+KILL "TEMP.TMP"
+
+.SH NOTES
+.PP
+.PP
+<ファイル名> にはドライブ名、
+.PP
+Disk BASIC 2 以降ではディレクトリ名を
+.PP
+含む事が出来ます。
+.PP
+また、ワイルドカードによる指定も可能です。
+.PP
+OPEN によって開かれているファイルはエラーとなります。

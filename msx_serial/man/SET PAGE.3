@@ -1,0 +1,35 @@
+.TH "SET PAGE" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+SET PAGE \- 使用する画面のページを指定します。
+
+.SH SYNOPSIS
+.B SET PAGE [<表示ページ>][,<線画ページ>]
+
+.SH DESCRIPTION
+.PP
+使用する画面のページを指定します。
+
+.SH EXAMPLES
+.PP
+SET PAGE 0,1
+
+.SH NOTES
+.PP
+.PP
+<表示ページ> <線画ページ> は
+.PP
+スクリーンモードと VRAM の容量によって異なります。
+.PP
+    SCREEN 0～4         使用不可
+.PP
+    SCREEN 5～6         VRAM 64K 0～1
+.PP
+                        VRAM128K 0～3
+.PP
+    SCREEM 7～8・10～12 VRAM 64K 使用不可
+.PP
+                        VRAM128K 0～1
+.PP
+インターレースやハードウェアスクロールを行なう場合は
+.PP
+奇数ページを <表示ページ> に指定します。

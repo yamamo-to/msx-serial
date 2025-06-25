@@ -1,0 +1,27 @@
+.TH "RENUM" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+RENUM \- 行番号をふりなおします。
+
+.SH SYNOPSIS
+.B RENUM [<新行番号>][,<旧行番号>][,<増分>]
+
+.SH DESCRIPTION
+.PP
+行番号をふりなおします。
+
+.SH EXAMPLES
+.PP
+RENUM 10000,1000
+
+.SH NOTES
+.PP
+.PP
+<新行番号> を省略した場合は 10 となります。
+.PP
+<旧行番号> を省略した場合はプログラムの先頭となります。
+.PP
+<増分> を省略した場合は 10 となります。
+.PP
+GOTO や GOSUB で指定された行番号は
+.PP
+RENUM による新たな行番号へ改められます。

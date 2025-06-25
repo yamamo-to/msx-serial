@@ -1,0 +1,31 @@
+.TH "CALL MEMINI" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+CALL MEMINI \- メモリディスクを初期化・削除します。
+
+.SH SYNOPSIS
+.B CALL MEMINI[<上限>]
+
+.SH DESCRIPTION
+.PP
+メモリディスクを初期化・削除します。
+
+.SH EXAMPLES
+.PP
+CALL MEMINI
+
+.SH NOTES
+.PP
+.PP
+BASIC が利用していないメモリを
+.PP
+メモリディスクとして利用できるよう初期化を行ないます。
+.PP
+メモリディスクのデバイスは MEM: です。
+.PP
+MSX-DOS2 の RAM ディスク（H:）とは別のデバイスとなります。
+.PP
+<上限> の値は &H0000～&H7FFF ですが、
+.PP
+&H0000～&H03FE の値を指定するとメモリディスクの削除になります。
+.PP
+省略時は &H7FFF となります。

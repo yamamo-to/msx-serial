@@ -1,0 +1,79 @@
+.TH "OPEN" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+OPEN \- ファイルを開きます。
+
+.SH SYNOPSIS
+.B OPEN <ファイル名> [FOR <モード>] AS #<番号> [LEN=<レコード長>]
+
+.SH DESCRIPTION
+.PP
+ファイルを開きます。
+
+.SH EXAMPLES
+.PP
+OPEN "TEMP.DAT" FOR INPUT AS #1
+
+.SH NOTES
+.PP
+.PP
+<ファイル名> はドライブ名表記として以下のものを使用できます。
+.PP
+    CAS:   カセットテープ   (INPUT/OUTPUT)
+.PP
+           ファイル名は6文字まで有効
+.PP
+           MSX turbo R では無効
+.PP
+    CRT:   テキスト画面     (OUTPUT)
+.PP
+           ファイル名は無効
+.PP
+    GRP:   グラフィック画面 (OUTPUT)
+.PP
+           ファイル名は無効
+.PP
+    LPT:   プリンタ         (OUTPUT)
+.PP
+           ファイル名は無効
+.PP
+    MEM:   メモリディスク   (INPUT/OUTPUT)
+.PP
+           MSX2 以降で有効
+.PP
+    A:～H: ディスク	 (INPUT/OUTPUT/APPEND/省略)
+.PP
+           DiskBASIC で有効
+.PP
+    CON:   コンソール       (INPUT/OUTPUT/APPEND/省略)
+.PP
+           DiskBASIC で有効。キーボードからの入力・画面への出力
+.PP
+           ファイル名は無効
+.PP
+    NUL:   ヌル             (INPUT/OUTPUT/APPEND/省略)
+.PP
+           DiskBASIC で有効。何も行なわない
+.PP
+           ファイル名は無効
+.PP
+Disk BASIC でない場合は上記のいずれかを含まなくてはいけません。
+.PP
+Disk BASIC 2 以降では、
+.PP
+ディスクの際ファイル名にディレクトリ名を含んで記載できます。
+.PP
+<モード> は以下の通りです。
+.PP
+    INPUT  入力（シーケンシャルファイル）
+.PP
+    OUTPUT 新規出力（シーケンシャルファイル）
+.PP
+    APPEND 追加出力（シーケンシャルファイル）
+.PP
+    省略   入出力（ランダムファイル）
+.PP
+<番号> は 1 からで、最大値は MAXFILES で指定した値となります。
+.PP
+<レコード長> はランダムファイルの場合の
+.PP
+レコードの長さを指定します。1～256 で省略した場合は 256 となります。

@@ -1,0 +1,31 @@
+.TH "WIDTH" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+WIDTH \- 1行に表示する桁数を指定します。
+
+.SH SYNOPSIS
+.B WIDTH<桁数>
+
+.SH DESCRIPTION
+.PP
+1行に表示する桁数を指定します。
+
+.SH EXAMPLES
+.PP
+WIDTH 32
+
+.SH NOTES
+.PP
+.PP
+SCREEN 0 では 1～40(MSX(1))・1～80(MSX2 以降)、
+.PP
+SCREEN 1 では 1～32 が指定できます。
+.PP
+初期設定では SCREEN 0 は 39 文字、
+.PP
+SCREEN 1 は 29 文字が指定されています。
+.PP
+漢字モードの場合、値は半角の文字数で、
+.PP
+CALL KANJI(0)・CALL KANIJ2 の場合は 26～64、
+.PP
+CALL KANJI1・CALL KANJI3 の場合は 26～80 が指定できます。

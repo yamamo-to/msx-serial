@@ -1,0 +1,57 @@
+.TH "COLOR=" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+COLOR= \- カラーコードの色を変更します。
+
+.SH SYNOPSIS
+.B COLOR=(<色>,<赤>,<緑>,<青>)
+
+.SH DESCRIPTION
+.PP
+カラーコードの色を変更します。
+
+.SH EXAMPLES
+.PP
+COLOR=(15,7,7,7)
+
+.SH NOTES
+.PP
+.PP
+各色の初期値は以下の通りです。
+.PP
+（SCREEN 8・11・12 を除く。また SCREEN 6 は 0〜3 まで有効）
+.PP
+                  赤(R) 緑(G) 青(B)
+.PP
+     0 透明       0     0     0
+.PP
+     1 黒         0     0     0
+.PP
+     2 緑         1     6     1
+.PP
+     3 明るい緑   3     7     3
+.PP
+     4 暗い青     1     1     7
+.PP
+     5 明るい青   2     3     7
+.PP
+     6 暗い赤     5     1     1
+.PP
+     7 水色       2     6     7
+.PP
+     8 赤         7     1     1
+.PP
+     9 明るい赤   7     3     3
+.PP
+    10 黄色       6     6     1
+.PP
+    11 明るい黄色 6     6     4
+.PP
+    12 暗い緑     1     4     1
+.PP
+    13 紫         6     2     5
+.PP
+    14 灰色       5     5     5
+.PP
+    15 白         7     7     7
+.PP
+漢字モードでの変更は COLOR= の代わりに CALL PALLETE を使います。

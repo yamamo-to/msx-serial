@@ -1,0 +1,22 @@
+.TH "CALL KNJ" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+CALL KNJ \- 漢字コードの漢字を得ます。
+
+.SH SYNOPSIS
+.B CALL KNJ(<文字変数>,<漢字コード>)
+
+.SH DESCRIPTION
+.PP
+漢字コードの漢字を得ます。
+
+.SH EXAMPLES
+.PP
+CALL KNJ(KA$,"3441")
+ [表示] 漢
+
+.SH NOTES
+.PP
+.PP
+<漢字コード> は &H8000 未満の場合は JIS、
+.PP
+&H8000 以上の場合はシフト JIS とみなされます。

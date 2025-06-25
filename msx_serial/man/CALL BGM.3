@@ -1,0 +1,29 @@
+.TH "CALL BGM" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+CALL BGM \- MSX-MUSIC の演奏をバックグランドで
+行なうか行なわないかを設定します。
+
+.SH SYNOPSIS
+.B CALL BGM(<モード>)
+
+.SH DESCRIPTION
+.PP
+MSX-MUSIC の演奏をバックグランドで
+行なうか行なわないかを設定します。
+
+.SH EXAMPLES
+.PP
+CALL BGM(0)
+
+.SH NOTES
+.PP
+.PP
+<モード> は以下の通りです。
+.PP
+    0 バックグラウンドで動作を行なわない
+.PP
+    1 バックグラウンドで動作を行なう
+.PP
+初期値は 1 です。1 は演奏中でも他の命令が実行されます。
+.PP
+0 にする事で演奏中は他の命令が実行されないようになります。

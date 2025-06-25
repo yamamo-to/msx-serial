@@ -1,0 +1,70 @@
+.TH "PUT KANJI" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+PUT KANJI \- グラフィック画面に漢字を表示します
+
+.SH SYNOPSIS
+.B PUT KANJI[(<横座標>,<縦座標>)],<漢字コード>[,<カラーコード>
+[,<論理演算子>[,<モード>]]]
+
+.SH DESCRIPTION
+.PP
+グラフィック画面に漢字を表示します
+
+.SH EXAMPLES
+.PP
+PUT KANJI (100,100),&H2121
+
+.SH NOTES
+.PP
+.PP
+<漢字コード> は JIS 漢字コードで、
+.PP
+MSX2 では &H2121～&H4F53、
+.PP
+MSX2+ では &H2121～&H737C が有効です。
+.PP
+<論理演算子> の省略時は PSET となります。
+.PP
+S が線画を行なうデータの色・D は線画される背景色です。
+.PP
+    PSET   S
+.PP
+    PRESET not S
+.PP
+    AND    S and D
+.PP
+    OR     S or D
+.PP
+    XOR    S xor D
+.PP
+    [参考] 論理演算子の仕組み
+.PP
+           bit 毎に以下の計算が行われます。
+.PP
+    S       0 0 1 1
+.PP
+    D       0 1 0 1
+.PP
+    not S   1 1 0 0 否定
+.PP
+    S and D 0 0 0 1 論理積
+.PP
+    S or D  0 1 1 1 論理和
+.PP
+    S xor D 0 1 1 0 排他的論理和
+.PP
+この５つの他、TPSET TPRESET TAND TOR TXOR があります。
+.PP
+T がついている場合は S が透明色である 0 である場合は
+.PP
+線画を行なわずに背景色 D を表示します。
+.PP
+<モード> は以下の通りです。
+.PP
+    0 16x16ドット
+.PP
+    1 奇数ラインのみ 16x8 ドット
+.PP
+    2 偶数ラインのみ 16x8 ドット
+.PP
+1・2 は通常インターレース表示に用いられます。

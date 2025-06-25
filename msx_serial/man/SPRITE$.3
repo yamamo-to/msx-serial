@@ -1,0 +1,37 @@
+.TH "SPRITE$" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+SPRITE$ \- スプライトを定義します。
+
+.SH SYNOPSIS
+.B SPRITE$(<番号>)
+
+.SH DESCRIPTION
+.PP
+スプライトを定義します。
+
+.SH EXAMPLES
+.PP
+SPRITE$(1)=CHR$(&HF0)+CHR$(&HE0)+CHR$(&HC0)+CHR$(&H80)
+
+.SH NOTES
+.PP
+.PP
+<番号> はスプライトサイズにより異なります。
+.PP
+   スプライトサイズ <番号> の範囲
+.PP
+   8x8              0～255
+.PP
+   16x16            0～63
+.PP
+定義は 8x8 の場合は 8 文字分、
+.PP
+16x16 の場合は 32 文字分の
+.PP
+キャラクタコード(0～255)によって行ないます。
+.PP
+8x8 の場合、1 文字が 1 行分です。
+.PP
+16x16 は 8x8 のブロックで 4 等分として
+.PP
+左上・右上・左下・右下の順に定義します。

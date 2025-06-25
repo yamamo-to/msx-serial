@@ -1,0 +1,25 @@
+.TH "CVI" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+CVI \- MKI$ による文字型の値を整数型に戻します。
+
+.SH SYNOPSIS
+.B CVI(<文字式>)
+
+.SH DESCRIPTION
+.PP
+MKI$ による文字型の値を整数型に戻します。
+
+.SH EXAMPLES
+.PP
+II%=CVI(II$)
+
+.SH NOTES
+.PP
+.PP
+ランダムアクセスファイルは文字型しか扱えないため、
+.PP
+変数の型を変換するために用意されています。
+.PP
+MKI$ により整数型は2バイトの文字型に変化します。
+.PP
+CVI はそれを元の整数型に戻す機能です。

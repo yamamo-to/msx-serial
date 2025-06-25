@@ -1,0 +1,21 @@
+.TH "PEEK" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+PEEK \- メモリの内容を得ます。
+
+.SH SYNOPSIS
+.B PEEK(<番地>)
+
+.SH DESCRIPTION
+.PP
+メモリの内容を得ます。
+
+.SH EXAMPLES
+.PP
+D=PEEK(&HA000)
+
+.SH NOTES
+.PP
+.PP
+<番地> は &H0000～&HFFFF(0～65535) です。
+.PP
+得られる値は 0～255(-128～127) となります。

@@ -1,0 +1,23 @@
+.TH "EOF" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+EOF \- ファイルの入力が終了しているかどうかを得ます。
+
+.SH SYNOPSIS
+.B EOF(<ファイル番号>)
+
+.SH DESCRIPTION
+.PP
+ファイルの入力が終了しているかどうかを得ます。
+
+.SH EXAMPLES
+.PP
+IF EOF(1) THEN CLOSE #1:GOTO 10000
+
+.SH NOTES
+.PP
+.PP
+終わっている場合は -1、終わっていない場合は 0 を得ます。
+.PP
+<ファイル番号> は OPEN の INPUT モードで
+.PP
+開いている必要があります。

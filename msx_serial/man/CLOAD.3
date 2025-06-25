@@ -1,0 +1,25 @@
+.TH "CLOAD" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+CLOAD \- カセットテープからプログラムを読み込みます。
+
+.SH SYNOPSIS
+.B CLOAD [<ファイル名>]
+
+.SH DESCRIPTION
+.PP
+カセットテープからプログラムを読み込みます。
+
+.SH EXAMPLES
+.PP
+CLOAD "LOAD"
+
+.SH NOTES
+.PP
+.PP
+カセットテープから <ファイル名> のプログラムを探します。
+.PP
+省略された場合は最初に見つけたプログラムが読み込まれます。
+.PP
+読み込まれると、存在していたファイルは削除されます。
+.PP
+また、全ファイルが閉じられ、変数は初期化されます。

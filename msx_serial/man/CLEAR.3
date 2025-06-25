@@ -1,0 +1,37 @@
+.TH "CLEAR" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+CLEAR \- 変数を初期化しメモリ領域の大きさを指定します。
+
+.SH SYNOPSIS
+.B CLEAR [<文字領域の大きさ>[,<BASIC 管理領域の上限>]]
+
+.SH DESCRIPTION
+.PP
+変数を初期化しメモリ領域の大きさを指定します。
+
+.SH EXAMPLES
+.PP
+CLEAR 1000,&HD800
+
+.SH NOTES
+.PP
+.PP
+実行により、変数は初期化され、
+.PP
+DEF 関連、ON 関連の定義は無効となります。
+.PP
+また全ファイルが閉じられます。
+.PP
+<文字領域の大きさ> の値は起動直後は 200 です。
+.PP
+<BASIC 管理領域の上限> の値は &H831F～&HF380 です。
+.PP
+起動直後はシステム領域の先頭となっています。
+.PP
+Disk BASIC がない場合は &HF380、
+.PP
+ある場合は HIMEM(&HFC4A からの 2 バイト) で
+.PP
+指定されている番地です。
+.PP
+省略時は現在の設定がそのまま使われます。

@@ -1,0 +1,29 @@
+.TH "GET" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+GET \- ランダムアクセスのデータをバッファに読み込みます。
+
+.SH SYNOPSIS
+.B GET [#]<ファイル番号>[,<レコード番号>]
+
+.SH DESCRIPTION
+.PP
+ランダムアクセスのデータをバッファに読み込みます。
+
+.SH EXAMPLES
+.PP
+PUT #1,1
+
+.SH NOTES
+.PP
+.PP
+<レコード番号> は 1～4294967295 です。
+.PP
+省略されている場合は
+.PP
+最後に指定した GET・PUT のレコード番号の
+.PP
+次のレコードに書き込みが行なわれます。
+.PP
+得られたバッファの値が文字型である場合は
+.PP
+CVI CVS CVD による変換が必要です。

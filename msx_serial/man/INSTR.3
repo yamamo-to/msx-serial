@@ -1,0 +1,32 @@
+.TH "INSTR" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+INSTR \- 文字列を検索します
+
+.SH SYNOPSIS
+.B INSTR([<開始位置>],<対象文字式>,<検索文字式>)
+
+.SH DESCRIPTION
+.PP
+文字列を検索します
+
+.SH EXAMPLES
+.PP
+PRINT INSTR ("MSX ver 4.1","ver")
+ [表示] 5
+
+.SH NOTES
+.PP
+.PP
+<検索文字列> が含まれている部分を
+.PP
+<対象文字列> 内で検索します。
+.PP
+見つかった場合は文字列の先頭を 1 として、
+.PP
+検索文字式の先頭部分にあたる文字の場所を返します。
+.PP
+0 の場合は該当なしとなります。
+.PP
+<開始位置> は検索開始位置を指定します。
+.PP
+1～255 で省略した場合は先頭からの検索となります。

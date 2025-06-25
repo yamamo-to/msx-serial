@@ -1,0 +1,23 @@
+.TH "PUT" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+PUT \- ランダムアクセスのバッファに書き込んだデータを書き込みます。
+
+.SH SYNOPSIS
+.B PUT [#]<ファイル番号>[,<レコード番号>]
+
+.SH DESCRIPTION
+.PP
+ランダムアクセスのバッファに書き込んだデータを書き込みます。
+
+.SH EXAMPLES
+.PP
+PUT #1,1
+
+.SH NOTES
+.PP
+.PP
+<レコード番号> は 1～4294967295 です。
+.PP
+省略されている場合は最後に指定した GET・PUT レコード番号の
+.PP
+次のレコードに書き込みが行なわれます。

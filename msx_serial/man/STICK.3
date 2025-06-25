@@ -1,0 +1,55 @@
+.TH "STICK" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+STICK \- カーソルキー・ジョイスティックの状態を得ます。
+
+.SH SYNOPSIS
+.B STICK(<番号>)
+
+.SH DESCRIPTION
+.PP
+カーソルキー・ジョイスティックの状態を得ます。
+
+.SH EXAMPLES
+.PP
+S=STICK(1)
+
+.SH NOTES
+.PP
+.PP
+<番号> は以下の通りです。
+.PP
+    0 カーソルキー
+.PP
+    1 ポート1 のジョスティック
+.PP
+    2 ポート2 のジョスティック
+.PP
+返される値は以下の通りです。
+.PP
+    ８　１　２
+.PP
+    　＼↑／
+.PP
+    ７←０→３
+.PP
+    　／↓＼
+.PP
+    ６　５　４
+.PP
+    0 押されていない
+.PP
+    1 上
+.PP
+    2 右上
+.PP
+    3 右
+.PP
+    4 右下
+.PP
+    5 下
+.PP
+    6 左下
+.PP
+    7 左
+.PP
+    8 左上

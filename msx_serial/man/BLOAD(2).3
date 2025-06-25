@@ -1,0 +1,29 @@
+.TH "BLOAD(2)" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+BLOAD(2) \- 画面データを VRAM に読み込みます。
+
+.SH SYNOPSIS
+.B BLOAD <ファイルスペック>,S[,<オフセット>]
+
+.SH DESCRIPTION
+.PP
+画面データを VRAM に読み込みます。
+
+.SH EXAMPLES
+.PP
+BLOAD "BACK.SC2",S
+
+.SH NOTES
+.PP
+.PP
+<ファイルスペック>で指定したファイルを VRAM に読み込みます。
+.PP
+ファイルは BSAVE で保存された形式である必要があります。
+.PP
+読み込みの開始番地は BSAVE の開始番地に
+.PP
+<オフセット> が加えられた番地となります。
+.PP
+<オフセット> の値は 0～65535 の整数です。
+.PP
+省略時は 0 となります。

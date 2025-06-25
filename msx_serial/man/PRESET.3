@@ -1,0 +1,47 @@
+.TH "PRESET" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+PRESET \- 指定座標の点を消去します。
+
+.SH SYNOPSIS
+.B PRESET [STEP](<横座標>,<縦座標>)[,<カラーコード>][,<論理演算子>]
+
+.SH DESCRIPTION
+.PP
+指定座標の点を消去します。
+
+.SH EXAMPLES
+.PP
+PRESET (32,16)
+
+.SH NOTES
+.PP
+.PP
+クラフィックモード（SCREEN 2～8・10～12）で有効です。
+.PP
+PRESET の他 PSET や DRAW で指定した座標からの
+.PP
+相対にしたい場合は STEP を付加します。
+.PP
+線画色は <カラーコード> となり、
+.PP
+省略時は COLOR で指定したの背景色を用います。
+.PP
+<論理演算子> を指定すると
+.PP
+現在あった色と置かれる色で論理演算が行なわれます。
+.PP
+省略時は PSET です。
+.PP
+<論理演算子> は MSX2 以降・SCREEN 5 以降で有効です。
+.PP
+PSET と PRESET の違いは
+.PP
+<カラーコード> 省略時に置かれる色が異なります。
+.PP
+PRESET でも色が置かれる事にご注意下さい。
+.PP
+色が置かれるのが問題である場合は
+.PP
+DRAW の BM によって座標を指定する事で
+.PP
+色を置かずに座標指定が行なえます。

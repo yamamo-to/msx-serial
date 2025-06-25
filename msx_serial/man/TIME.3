@@ -1,0 +1,39 @@
+.TH "TIME" "1" "2025-05-29" "MSX-BASIC" "User Commands"
+.SH NAME
+TIME \- 時間を計ります。
+
+.SH SYNOPSIS
+.B TIME[=<数式>]
+
+.SH DESCRIPTION
+.PP
+時間を計ります。
+
+.SH EXAMPLES
+.PP
+PRINT TIME
+
+.SH NOTES
+.PP
+.PP
+約 1/60 秒で +1 されるシステム変数です。
+.PP
+値は 0～65535 で、65535 の次は 0 に戻ります。
+.PP
+値は参照の他、代入を行う事もできます。
+.PP
+MSX turbo R 等では高速モードと通常モードで
+.PP
+処理速度が異なります。
+.PP
+そのため FOR～NEXT では処理時間が異なってきますが、
+.PP
+TIME を用いる事でほぼ同じ速度で処理を行えるようにできます。
+.PP
+VDP の垂直帰線割り込みにより増加を行ないます。
+.PP
+そのため、フロッピーディスクのアクセス時などは停止します。
+.PP
+バッテリーバックアップされている日時の取得・設定については、
+.PP
+GET DATE・GET TIME・SET DATE・SET TIME を参照して下さい。
