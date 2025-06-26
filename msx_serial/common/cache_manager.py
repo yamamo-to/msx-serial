@@ -88,7 +88,7 @@ class CacheManager(Generic[T]):
             entry.touch()
             self._update_access_order(key)
             self.stats["hits"] += 1
-            return entry.value
+            return entry.value  # type: ignore
 
     def put(self, key: str, value: T, ttl: Optional[float] = None) -> None:
         """キャッシュに値を設定"""
@@ -235,7 +235,7 @@ class FunctionCache:
         self.cache_manager = CacheManager[Any](max_size, strategy, ttl)
 
     def __call__(self, func: Callable[..., Any]) -> Callable[..., Any]:
-        def wrapper(*args, **kwargs) -> Any:
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             # キーを生成
             key = self._generate_key(func, args, kwargs)
 

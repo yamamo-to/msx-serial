@@ -117,7 +117,7 @@ def profile_function(func: Callable[..., Any]) -> Callable[..., Any]:
     """関数デコレーター"""
 
     @wraps(func)
-    def wrapper(*args, **kwargs) -> Any:
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
         with _global_profiler.profile(f"{func.__module__}.{func.__qualname__}"):
             return func(*args, **kwargs)
 
