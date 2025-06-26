@@ -3,14 +3,15 @@
 """
 
 from typing import Iterator, List
-from prompt_toolkit.completion import Completion, CompleteEvent
+
+from prompt_toolkit.completion import CompleteEvent, Completion
 from prompt_toolkit.document import Document
 
 from .base import BaseCompleter, CompletionContext
-from .help_completer import HelpCompleter
-from .special_completer import SpecialCompleter
-from .iot_completer import IoTCompleter
 from .dos_completer import DOSCompleter
+from .help_completer import HelpCompleter
+from .iot_completer import IoTCompleter
+from .special_completer import SpecialCompleter
 
 
 class CommandCompleter(BaseCompleter):

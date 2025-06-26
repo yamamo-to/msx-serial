@@ -2,9 +2,9 @@
 Tests for protocol module
 """
 
-from msx_serial.protocol.msx_detector import MSXProtocolDetector
-from msx_serial.protocol.msx_detector import MSXMode
 from unittest.mock import patch
+
+from msx_serial.protocol.msx_detector import MSXMode, MSXProtocolDetector
 
 
 class TestMSXProtocolDetector:

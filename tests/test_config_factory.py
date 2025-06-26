@@ -3,14 +3,15 @@ Tests for configuration factory and validation
 """
 
 import pytest
+
 from msx_serial.connection.config_factory import (
     ConfigFactory,
     ConnectionConfigValidator,
 )
-from msx_serial.connection.uri_parser import ParsedUri
+from msx_serial.connection.dummy import DummyConfig
 from msx_serial.connection.serial import SerialConfig
 from msx_serial.connection.telnet import TelnetConfig
-from msx_serial.connection.dummy import DummyConfig
+from msx_serial.connection.uri_parser import ParsedUri
 
 
 class TestConfigFactory:

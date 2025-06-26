@@ -5,6 +5,7 @@
 import subprocess
 import sys
 from typing import Optional
+
 from prompt_toolkit import print_formatted_text
 from prompt_toolkit.formatted_text import FormattedText
 
@@ -38,9 +39,7 @@ class TerminalDisplay:
         color = f"{self.receive_color} bold" if is_prompt else self.receive_color
         print_formatted_text(FormattedText([(color, text_to_display)]))
 
-    def _wrap_text_if_needed(
-        self, text: str, max_width: Optional[int] = None
-    ) -> str:
+    def _wrap_text_if_needed(self, text: str, max_width: Optional[int] = None) -> str:
         """必要に応じてテキストを改行
 
         Args:
@@ -52,6 +51,7 @@ class TerminalDisplay:
         """
         try:
             import os
+
             terminal_size = os.get_terminal_size()
             terminal_width = terminal_size.columns
 

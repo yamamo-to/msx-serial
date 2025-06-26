@@ -1,8 +1,9 @@
 from typing import Union
+
+from .base import Connection, ConnectionConfig
+from .dummy import DummyConfig, DummyConnection
 from .serial import SerialConfig, SerialConnection
 from .telnet import TelnetConfig, TelnetConnection
-from .dummy import DummyConfig, DummyConnection
-from .base import Connection, ConnectionConfig
 
 
 class ConnectionManager:

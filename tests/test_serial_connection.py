@@ -4,7 +4,8 @@ Test for msx_serial/connection/serial.py
 
 import unittest
 from unittest.mock import Mock, patch
-from msx_serial.connection.serial import SerialConnection, SerialConfig
+
+from msx_serial.connection.serial import SerialConfig, SerialConnection
 
 
 class TestSerialConfig(unittest.TestCase):

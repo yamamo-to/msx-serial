@@ -5,8 +5,9 @@ HelpCompleter の単体試験
 
 import unittest
 from unittest.mock import patch
-from prompt_toolkit.document import Document
+
 from prompt_toolkit.completion import CompleteEvent
+from prompt_toolkit.document import Document
 
 from msx_serial.completion.completers.help_completer import HelpCompleter
 

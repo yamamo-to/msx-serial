@@ -4,12 +4,13 @@
 """
 
 import unittest
-from unittest.mock import patch, Mock
-from prompt_toolkit.document import Document
-from prompt_toolkit.completion import CompleteEvent
+from unittest.mock import Mock, patch
 
+from prompt_toolkit.completion import CompleteEvent
+from prompt_toolkit.document import Document
+
+from msx_serial.connection.dummy import DummyConfig, DummyConnection
 from msx_serial.io.user_interface import UserInterface
-from msx_serial.connection.dummy import DummyConnection, DummyConfig
 
 
 class TestModeSwitching(unittest.TestCase):

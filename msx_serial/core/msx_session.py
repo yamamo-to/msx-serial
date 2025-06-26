@@ -2,18 +2,19 @@
 Optimized MSX terminal session with instant response
 """
 
-import msx_charset  # noqa: F401  # type: ignore
 import threading
 import time
 
+import msx_charset  # noqa: F401  # type: ignore
+
+from ..common.color_output import print_exception, print_info
+from ..connection.base import ConnectionConfig
 from ..connection.manager import ConnectionManager
-from .data_processor import DataProcessor
 from ..display.optimized_display import OptimizedTerminalDisplay
 from ..io.user_interface import UserInterface
+from ..protocol.msx_detector import MSXMode, MSXProtocolDetector
 from ..transfer.file_transfer import FileTransferManager
-from ..protocol.msx_detector import MSXProtocolDetector, MSXMode
-from ..common.color_output import print_info, print_exception
-from ..connection.base import ConnectionConfig
+from .data_processor import DataProcessor
 
 
 class MSXSession:

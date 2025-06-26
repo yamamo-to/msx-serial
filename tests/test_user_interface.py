@@ -4,6 +4,7 @@ Tests for user interface module
 
 import threading
 from unittest.mock import Mock, patch
+
 from msx_serial.io.user_interface import UserInterface
 
 

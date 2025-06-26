@@ -3,7 +3,9 @@ Tests for color_output.py
 """
 
 from unittest.mock import patch
+
 import colorama
+
 from msx_serial.common import color_output
 
 

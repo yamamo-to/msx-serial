@@ -3,9 +3,9 @@ URI parsing utilities for connection configuration
 """
 
 import re
-from typing import Dict, List, Optional
-from urllib.parse import urlparse, parse_qs
 from dataclasses import dataclass
+from typing import Dict, List, Optional
+from urllib.parse import parse_qs, urlparse
 
 
 @dataclass

@@ -3,12 +3,13 @@
 """
 
 from typing import Iterator, List
-from prompt_toolkit.completion import Completion, CompleteEvent
-from prompt_toolkit.document import Document
-from prompt_toolkit.completion.filesystem import PathCompleter
 
-from .base import BaseCompleter, CompletionContext
+from prompt_toolkit.completion import CompleteEvent, Completion
+from prompt_toolkit.completion.filesystem import PathCompleter
+from prompt_toolkit.document import Document
+
 from ...commands.command_types import CommandType
+from .base import BaseCompleter, CompletionContext
 
 
 class SpecialCompleter(BaseCompleter):

@@ -4,7 +4,7 @@ Basic sender の単体試験
 """
 
 import unittest
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 from msx_serial.transfer.basic_sender import load_template, send_basic_program
 

@@ -34,7 +34,7 @@ class TestInit(unittest.TestCase):
 
     def test_core_components(self) -> None:
         """Test core components can be imported"""
-        from msx_serial.core import msx_session, data_processor
+        from msx_serial.core import data_processor, msx_session
 
         self.assertIsNotNone(msx_session)
         self.assertIsNotNone(data_processor)

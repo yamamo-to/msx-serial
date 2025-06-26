@@ -3,6 +3,7 @@ Tests for data processor module
 """
 
 from unittest.mock import Mock, patch
+
 from msx_serial.core.data_processor import DataBuffer, DataProcessor
 from msx_serial.protocol.msx_detector import MSXProtocolDetector
 
@@ -535,8 +536,9 @@ class TestDataProcessor:
 
 
 def test_process_echo_suppression_else_branch():
-    from msx_serial.core.data_processor import DataProcessor
     from unittest.mock import Mock
+
+    from msx_serial.core.data_processor import DataProcessor
 
     mock_detector = Mock()
     processor = DataProcessor(mock_detector)
@@ -547,8 +549,9 @@ def test_process_echo_suppression_else_branch():
 
 
 def test_split_prompt_data_one_line_prompt():
-    from msx_serial.core.data_processor import DataProcessor
     from unittest.mock import Mock
+
+    from msx_serial.core.data_processor import DataProcessor
 
     mock_detector = Mock()
     mock_detector.detect_prompt.return_value = True
@@ -559,8 +562,9 @@ def test_split_prompt_data_one_line_prompt():
 
 
 def test_check_timeout_buffered_no_prompt():
-    from msx_serial.core.data_processor import DataProcessor
     from unittest.mock import Mock, patch
+
+    from msx_serial.core.data_processor import DataProcessor
 
     mock_detector = Mock()
     mock_detector.detect_prompt.return_value = False
@@ -572,8 +576,9 @@ def test_check_timeout_buffered_no_prompt():
 
 
 def test_check_prompt_candidate_buffered_not_timeout():
-    from msx_serial.core.data_processor import DataProcessor
     from unittest.mock import Mock, patch
+
+    from msx_serial.core.data_processor import DataProcessor
 
     mock_detector = Mock()
     mock_detector.is_prompt_candidate.return_value = True

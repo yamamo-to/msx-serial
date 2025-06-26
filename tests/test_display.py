@@ -2,7 +2,8 @@
 Tests for display module
 """
 
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
+
 from msx_serial.display.basic_display import TerminalDisplay
 
 
@@ -23,19 +24,21 @@ class TestTerminalDisplay:
         display = TerminalDisplay("#ff0000")
         assert display.receive_color == "#ff0000"
 
-    @patch("os.system")
-    def test_clear_screen_unix(self, mock_system):
+    @patch("subprocess.run")
+    def test_clear_screen_unix(self, mock_run):
         """Test clear screen on Unix systems"""
-        with patch("os.name", "posix"):
+        with patch("sys.platform", "linux"):
             self.display.clear_screen()
-            mock_system.assert_called_once_with("clear")
+            mock_run.assert_called_once_with(["clear"], check=False, timeout=5)
 
-    @patch("os.system")
-    def test_clear_screen_windows(self, mock_system):
+    @patch("subprocess.run")
+    def test_clear_screen_windows(self, mock_run):
         """Test clear screen on Windows"""
-        with patch("os.name", "nt"):
+        with patch("sys.platform", "win32"):
             self.display.clear_screen()
-            mock_system.assert_called_once_with("cls")
+            mock_run.assert_called_once_with(
+                ["cmd", "/c", "cls"], check=False, timeout=5
+            )
 
     @patch("msx_serial.display.basic_display.print_formatted_text")
     def test_print_receive_regular(self, mock_print):

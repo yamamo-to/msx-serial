@@ -3,11 +3,13 @@ File management utilities for MSX terminal
 """
 
 import base64
-import chardet
 from pathlib import Path
-from typing import Optional, Callable, Iterator
+from typing import Callable, Iterator, Optional
+
+import chardet
+
+from ..common.color_output import print_exception, print_info
 from ..connection.base import Connection
-from ..common.color_output import print_info, print_exception
 
 
 class FileReader:

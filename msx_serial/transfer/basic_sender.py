@@ -3,8 +3,9 @@ Basic program template processor
 """
 
 from importlib import resources
-from jinja2 import Environment, FunctionLoader
 from typing import Optional
+
+from jinja2 import Environment, FunctionLoader
 
 
 def load_template(name: str) -> Optional[str]:
@@ -35,7 +36,7 @@ def send_basic_program(program: str, variables: dict[str, str]) -> str:
     """
     env = Environment(
         loader=FunctionLoader(load_template),
-        autoescape=True  # セキュリティ向上のためautoescapeを有効化
+        autoescape=True,  # セキュリティ向上のためautoescapeを有効化
     )
     template = env.get_template(program)
     rendered = template.render(variables)

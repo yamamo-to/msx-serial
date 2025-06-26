@@ -5,8 +5,8 @@
 import subprocess
 import sys
 import time
-from typing import Dict, Any
 from threading import RLock
+from typing import Any, Dict
 
 
 class OptimizedTerminalDisplay:

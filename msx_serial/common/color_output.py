@@ -1,7 +1,8 @@
 """MSXターミナル用カラー出力ユーティリティ"""
 
-from colorama import Fore, Style, init
 from typing import Dict
+
+from colorama import Fore, Style, init
 
 init()
 

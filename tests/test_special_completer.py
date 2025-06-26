@@ -3,9 +3,11 @@ Tests for SpecialCompleter (special_completer.py)
 """
 
 from unittest.mock import patch
+
 import pytest
 from prompt_toolkit.completion import CompleteEvent
 from prompt_toolkit.document import Document
+
 from msx_serial.completion.completers.special_completer import SpecialCompleter
 
 

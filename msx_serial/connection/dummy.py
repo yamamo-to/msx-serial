@@ -1,6 +1,7 @@
 # connection/dummy.py
 import queue
 from dataclasses import dataclass
+
 from .base import Connection, ConnectionConfig
 
 

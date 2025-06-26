@@ -3,8 +3,9 @@ Tests for input session module
 """
 
 from unittest.mock import Mock, patch
-from msx_serial.io.input_session import InputSession
+
 from msx_serial.completion.completers.command_completer import CommandCompleter
+from msx_serial.io.input_session import InputSession
 
 
 class TestInputSession:

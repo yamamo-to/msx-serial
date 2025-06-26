@@ -3,7 +3,8 @@ Data processing utilities for MSX terminal
 """
 
 import time
-from typing import Optional, Tuple, List
+from typing import List, Optional, Tuple
+
 from ..protocol.msx_detector import MSXProtocolDetector
 
 

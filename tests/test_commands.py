@@ -3,12 +3,14 @@ Tests for commands module
 """
 
 import threading
-from unittest.mock import Mock, patch
 import types
 from pathlib import Path
-from msx_serial.commands.handler import CommandHandler
-from msx_serial.commands.command_types import CommandType
+from unittest.mock import Mock, patch
+
 from prompt_toolkit.styles import Style
+
+from msx_serial.commands.command_types import CommandType
+from msx_serial.commands.handler import CommandHandler
 
 
 class TestCommandHandler:

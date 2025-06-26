@@ -1,9 +1,10 @@
-import unittest
 import tempfile
+import unittest
 from pathlib import Path
-from unittest.mock import patch, MagicMock, Mock, mock_open
+from unittest.mock import MagicMock, Mock, mock_open, patch
+
+from msx_serial.connection.dummy import DummyConfig, DummyConnection
 from msx_serial.transfer.file_transfer import FileTransferManager
-from msx_serial.connection.dummy import DummyConnection, DummyConfig
 
 
 class TestFileTransferManagerSimple(unittest.TestCase):

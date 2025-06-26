@@ -4,13 +4,13 @@
 """
 
 import unittest
-from prompt_toolkit.document import Document
-from prompt_toolkit.completion import CompleteEvent
 
-from msx_serial.completion.completers.command_completer import CommandCompleter
+from prompt_toolkit.completion import CompleteEvent, Completion
+from prompt_toolkit.document import Document
+
 from msx_serial.commands.command_types import CommandType
 from msx_serial.completion.completers.base import BaseCompleter, CompletionContext
-from prompt_toolkit.completion import Completion
+from msx_serial.completion.completers.command_completer import CommandCompleter
 
 
 class TestCommandCompleter(unittest.TestCase):
@@ -189,6 +189,7 @@ class TestCommandCompleter(unittest.TestCase):
     def test_complete_general_keywords(self):
         """_complete_general_keywords の実行テスト"""
         from msx_serial.completion.completers.base import CompletionContext
+
         context = CompletionContext("PR", "PR")
         completions = list(self.completer._complete_general_keywords(context))
         self.assertIsInstance(completions, list)
@@ -296,6 +297,7 @@ class TestCommandCompleterExtended(unittest.TestCase):
     def test_complete_all_subcommands(self):
         """_complete_all_subcommands の実行テスト"""
         from msx_serial.completion.completers.base import CompletionContext
+
         context = CompletionContext("_ABC", "ABC")
         completions = list(self.completer._complete_all_subcommands(context))
         self.assertIsInstance(completions, list)
@@ -319,8 +321,8 @@ class TestIoTCompleterExtended(unittest.TestCase):
 
     def test_get_completions_with_comma(self):
         """カンマが含まれる場合の補完テスト"""
-        from prompt_toolkit.document import Document
         from prompt_toolkit.completion import CompleteEvent
+        from prompt_toolkit.document import Document
 
         document = Document('IOTGET("device", ')
         completions = list(self.completer.get_completions(document, CompleteEvent()))

@@ -3,11 +3,12 @@
 """
 
 from collections import defaultdict
-from typing import Dict, List, Optional, Set, Iterator
+from typing import Dict, Iterator, List, Optional, Set
+
 from prompt_toolkit.completion import Completer, Completion
 
-from ..keyword_loader import load_keywords
 from ..iot_loader import IotNodes
+from ..keyword_loader import load_keywords
 
 
 class CompletionContext:

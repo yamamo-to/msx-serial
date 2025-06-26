@@ -3,11 +3,12 @@ Connection configuration detection and creation
 """
 
 from typing import Union
-from .uri_parser import UriParser
+
 from .config_factory import ConfigFactory, ConnectionConfigValidator
+from .dummy import DummyConfig
 from .serial import SerialConfig
 from .telnet import TelnetConfig
-from .dummy import DummyConfig
+from .uri_parser import UriParser
 
 
 class ConnectionDetector:

@@ -1,9 +1,10 @@
-import socket
-import select
-from dataclasses import dataclass
-from .base import Connection, ConnectionConfig
-from ..common.color_output import print_exception
 import logging
+import select
+import socket
+from dataclasses import dataclass
+
+from ..common.color_output import print_exception
+from .base import Connection, ConnectionConfig
 
 
 @dataclass

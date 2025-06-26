@@ -2,7 +2,7 @@
 Performance control commands for MSX Terminal
 """
 
-from ..common.color_output import print_info, print_error
+from ..common.color_output import print_error, print_info
 
 
 def handle_performance_command(terminal: object, command: str) -> bool:

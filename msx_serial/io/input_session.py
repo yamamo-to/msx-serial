@@ -4,11 +4,12 @@ Input session management for terminal
 
 import re
 from typing import Any
+
 from prompt_toolkit import PromptSession
 from prompt_toolkit.styles import Style
 
-from ..completion.completers.command_completer import CommandCompleter
 from ..commands.command_types import CommandType
+from ..completion.completers.command_completer import CommandCompleter
 
 
 class InputSession:

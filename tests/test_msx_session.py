@@ -1,8 +1,8 @@
 import unittest
-from unittest.mock import patch, MagicMock, Mock, call
+from unittest.mock import MagicMock, Mock, call, patch
 
-from msx_serial.core.msx_session import MSXSession
 from msx_serial.connection.dummy import DummyConfig
+from msx_serial.core.msx_session import MSXSession
 from msx_serial.protocol.msx_detector import MSXMode
 
 

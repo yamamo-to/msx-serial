@@ -1,7 +1,8 @@
-import unittest
 import socket
-from unittest.mock import patch, MagicMock, Mock
-from msx_serial.connection.telnet import TelnetConnection, TelnetConfig
+import unittest
+from unittest.mock import MagicMock, Mock, patch
+
+from msx_serial.connection.telnet import TelnetConfig, TelnetConnection
 
 
 class TestTelnetConfig(unittest.TestCase):

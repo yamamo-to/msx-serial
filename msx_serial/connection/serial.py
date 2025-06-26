@@ -1,6 +1,8 @@
-import serial
 from dataclasses import dataclass
 from typing import Optional, cast
+
+import serial
+
 from .base import Connection, ConnectionConfig
 
 

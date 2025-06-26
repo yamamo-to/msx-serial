@@ -3,6 +3,7 @@ Tests for data sender module
 """
 
 from unittest.mock import Mock, call
+
 from msx_serial.io.data_sender import DataSender
 
 

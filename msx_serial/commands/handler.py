@@ -5,12 +5,13 @@ Command handler for special terminal commands
 import os
 import threading
 from pathlib import Path
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
+
 from prompt_toolkit.shortcuts import radiolist_dialog
 from prompt_toolkit.styles import Style
 
+from ..common.color_output import print_exception, print_info, print_warn
 from .command_types import CommandType
-from ..common.color_output import print_info, print_warn, print_exception
 from .performance_commands import handle_performance_command
 
 if TYPE_CHECKING:

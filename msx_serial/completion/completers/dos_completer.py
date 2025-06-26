@@ -4,9 +4,10 @@ DOSコマンド補完機能
 
 from pathlib import Path
 from typing import Iterator
-from prompt_toolkit.completion import Completion, CompleteEvent
-from prompt_toolkit.document import Document
+
 import yaml
+from prompt_toolkit.completion import CompleteEvent, Completion
+from prompt_toolkit.document import Document
 
 from .base import BaseCompleter, CompletionContext
 

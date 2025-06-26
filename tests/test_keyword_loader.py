@@ -2,12 +2,14 @@
 Tests for keyword_loader.py
 """
 
-import pytest
-import yaml
-from msx_serial.completion import keyword_loader
+import io
 from pathlib import Path
 from unittest.mock import patch
-import io
+
+import pytest
+import yaml
+
+from msx_serial.completion import keyword_loader
 
 
 # 正常系: importlib.resources.filesで正常に読み込める場合

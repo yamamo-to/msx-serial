@@ -3,11 +3,12 @@ CommandCompleterの拡張テスト（カバレッジ向上用）
 """
 
 import unittest
-from prompt_toolkit.document import Document
-from prompt_toolkit.completion import CompleteEvent
 
-from msx_serial.completion.completers.command_completer import CommandCompleter
+from prompt_toolkit.completion import CompleteEvent
+from prompt_toolkit.document import Document
+
 from msx_serial.commands.command_types import CommandType
+from msx_serial.completion.completers.command_completer import CommandCompleter
 
 
 class TestCommandCompleterExtended(unittest.TestCase):

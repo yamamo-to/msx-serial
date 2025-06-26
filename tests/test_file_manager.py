@@ -4,13 +4,14 @@ Tests for file manager module
 
 import base64
 from pathlib import Path
-from unittest.mock import Mock, patch, mock_open
+from unittest.mock import Mock, mock_open, patch
+
 from msx_serial.transfer.file_manager import (
-    FileReader,
     DataEncoder,
-    TransferSession,
+    FileReader,
     FileUploader,
     ProgressTracker,
+    TransferSession,
 )
 
 

@@ -68,4 +68,39 @@ install:
 
 # 開発環境インストール
 dev-install:
-	pip install -e . 
+	pip install -e .
+
+# パフォーマンステスト
+performance:
+	@echo "Running performance tests..."
+	python -m pytest tests/test_profiler.py tests/test_cache_manager.py -v
+
+# 高度な品質チェック（新機能含む）
+quality-advanced: format lint test security complexity performance
+	@echo "Advanced quality check completed!"
+
+# 依存関係の更新チェック
+deps-check:
+	@echo "Checking for dependency updates..."
+	pip list --outdated
+
+# ドキュメント生成
+docs:
+	@echo "Generating documentation..."
+	mkdir -p docs
+	python -c "import msx_serial; help(msx_serial)" > docs/api.txt || true
+
+# メモリプロファイリング
+memory-profile:
+	@echo "Running memory profiling..."
+	python -m memory_profiler tests/test_profiler.py 2>/dev/null || echo "Install memory_profiler: pip install memory-profiler"
+
+# 全体統合テスト
+integration-test:
+	@echo "Running integration tests..."
+	python -m pytest tests/ -k "integration" -v || echo "No integration tests found"
+
+# リリース準備チェック
+release-check: test lint security complexity
+	@echo "Release readiness check completed!"
+	@echo "Coverage: $$(python -m pytest --cov=msx_serial --cov-report=term-missing | grep TOTAL | awk '{print $$4}')" 

@@ -3,8 +3,9 @@ IoTCompleterの拡張テスト（カバレッジ向上用）
 """
 
 import unittest
-from prompt_toolkit.document import Document
+
 from prompt_toolkit.completion import CompleteEvent
+from prompt_toolkit.document import Document
 
 from msx_serial.completion.completers.iot_completer import IoTCompleter
 

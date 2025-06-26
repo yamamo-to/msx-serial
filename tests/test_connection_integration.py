@@ -3,13 +3,11 @@ Integration tests for connection configuration
 """
 
 import pytest
-from msx_serial.connection.connection import (
-    ConnectionDetector,
-    detect_connection_type,
-)
+
+from msx_serial.connection.connection import ConnectionDetector, detect_connection_type
+from msx_serial.connection.dummy import DummyConfig
 from msx_serial.connection.serial import SerialConfig
 from msx_serial.connection.telnet import TelnetConfig
-from msx_serial.connection.dummy import DummyConfig
 
 
 class TestConnectionDetector:

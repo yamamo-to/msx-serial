@@ -2,16 +2,17 @@
 MSX Serial Terminal File Transfer Processing
 """
 
-import time
 import base64
-import chardet
+import time
 from pathlib import Path
-from tqdm import tqdm
 from typing import TYPE_CHECKING, Optional, Union
 
-from .basic_sender import send_basic_program
-from ..common.color_output import print_info, print_exception
+import chardet
+from tqdm import tqdm
+
+from ..common.color_output import print_exception, print_info
 from ..connection.base import Connection
+from .basic_sender import send_basic_program
 
 if TYPE_CHECKING:
     from ..core.msx_session import MSXSession

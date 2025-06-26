@@ -2,11 +2,12 @@
 Configuration factory for connection types
 """
 
-from typing import Union, Optional, Dict, List
-from .uri_parser import ParsedUri
+from typing import Dict, List, Optional, Union
+
+from .dummy import DummyConfig
 from .serial import SerialConfig
 from .telnet import TelnetConfig
-from .dummy import DummyConfig
+from .uri_parser import ParsedUri
 
 
 class ParameterExtractor:

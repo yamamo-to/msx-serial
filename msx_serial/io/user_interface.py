@@ -3,13 +3,13 @@ User interface coordinator for MSX terminal
 """
 
 import threading
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
+from ..commands.handler import CommandHandler
 from ..connection.base import Connection
 from ..display.basic_display import TerminalDisplay
-from ..commands.handler import CommandHandler
-from .input_session import InputSession
 from .data_sender import DataSender
+from .input_session import InputSession
 
 if TYPE_CHECKING:
     from ..transfer.file_transfer import FileTransferManager

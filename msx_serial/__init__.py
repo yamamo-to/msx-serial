@@ -2,8 +2,8 @@
 MSX Serial Terminal
 """
 
-from .core.msx_session import MSXSession
 from .__main__ import main
+from .core.msx_session import MSXSession
 
 # Use optimized session as main terminal
 MSXTerminal = MSXSession

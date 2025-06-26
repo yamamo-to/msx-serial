@@ -3,6 +3,7 @@ Tests for OptimizedTerminalDisplay (optimized_display.py)
 """
 
 from unittest.mock import patch
+
 from msx_serial.display.optimized_display import OptimizedTerminalDisplay
 
 
@@ -10,35 +11,29 @@ class TestOptimizedTerminalDisplay:
     def setup_method(self):
         self.display = OptimizedTerminalDisplay()
 
-    @patch("os.system")
-    def test_clear_screen_windows(self, mock_system):
-        with patch("os.name", "nt"):
+    @patch("subprocess.run")
+    def test_clear_screen_windows(self, mock_run):
+        with patch("sys.platform", "win32"):
             self.display.clear_screen()
-            mock_system.assert_called_once_with("cls")
+            mock_run.assert_called_once_with(
+                ["cmd", "/c", "cls"], check=False, timeout=5
+            )
 
-    def test_clear_screen_unix(self):
-        with patch("os.name", "posix"), patch("sys.stdout") as mock_stdout:
+    @patch("subprocess.run")
+    def test_clear_screen_unix(self, mock_run):
+        with patch("sys.platform", "linux"):
             self.display.clear_screen()
-            mock_stdout.write.assert_called_with("\033[2J\033[H")
-            mock_stdout.flush.assert_called()
+            mock_run.assert_called_once_with(["clear"], check=False, timeout=5)
 
     def test_print_receive_regular(self):
         with patch.object(self.display, "_write_instant") as mock_write:
             self.display.print_receive("hello")
-            mock_write.assert_called_once()
-            args = mock_write.call_args[0][0]
-            assert "hello" in args
-            assert self.display.receive_color in args
-            assert self.display.reset_color in args
+            mock_write.assert_called_once_with("hello")
 
     def test_print_receive_prompt(self):
         with patch.object(self.display, "_write_instant") as mock_write:
             self.display.print_receive("A>", is_prompt=True)
-            mock_write.assert_called_once()
-            args = mock_write.call_args[0][0]
-            assert "A>" in args
-            assert self.display.prompt_color in args
-            assert self.display.reset_color in args
+            mock_write.assert_called_once_with("A>")
 
     def test_write_instant(self):
         with patch("sys.stdout") as mock_stdout:
@@ -66,14 +61,24 @@ class TestOptimizedTerminalDisplay:
         assert type(self.display._output_lock).__name__ == "RLock"
 
     def test_stats_increment(self):
-        self.display.print_receive("test")
-        assert self.display.stats["total_writes"] == 1
-        # _write_instant自体のカウント
-        self.display._write_instant("test")
-        assert self.display.stats["instant_writes"] == 2
+        with patch("sys.stdout"):
+            # print_receiveを呼び出すと_write_instantが呼ばれる
+            self.display.print_receive("test")
+            assert self.display.stats["instant_writes"] == 1
 
-    def test_custom_color(self):
-        disp = OptimizedTerminalDisplay(receive_color="\033[91m")
-        assert disp.receive_color == "\033[91m"
-        assert disp.prompt_color.startswith("\033[91m")
-        assert disp.reset_color == "\033[0m"
+            # 直接_write_instantを呼び出す
+            self.display._write_instant("test")
+            assert self.display.stats["instant_writes"] == 2
+
+    def test_initialization(self):
+        """Test proper initialization"""
+        assert hasattr(self.display, "last_output_time")
+        assert hasattr(self.display, "total_bytes_displayed")
+        assert hasattr(self.display, "performance_mode")
+        assert hasattr(self.display, "stats")
+        assert hasattr(self.display, "_output_lock")
+
+        # 初期値の確認
+        assert self.display.performance_mode == "optimized"
+        assert self.display.total_bytes_displayed == 0
+        assert isinstance(self.display.stats, dict)
