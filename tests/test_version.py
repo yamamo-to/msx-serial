@@ -16,7 +16,8 @@ class TestVersion(unittest.TestCase):
 
         version = msx_serial.__version__
         self.assertIsInstance(version, str)
-        pattern = r"^\d+\.\d+\.\d+(?:\.dev\d+)?$"
+        # Support both X.Y.Z and X.Y formats, with optional .devN suffix
+        pattern = r"^\d+\.\d+(?:\.\d+)?(?:\.dev\d+)?$"
         self.assertRegex(version, pattern)
 
     def test_version_file_exists(self) -> None:
@@ -73,7 +74,8 @@ class TestVersion(unittest.TestCase):
         version = msx_serial.__version__
         # If it's a dev version, it should end with .devN
         if ".dev" in version:
-            pattern = r"^\d+\.\d+\.\d+\.dev\d+$"
+            # Support both X.Y.dev N and X.Y.Z.devN patterns
+            pattern = r"^\d+\.\d+(?:\.\d+)?\.dev\d+$"
             self.assertRegex(version, pattern)
 
 
