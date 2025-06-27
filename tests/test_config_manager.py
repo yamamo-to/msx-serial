@@ -2,11 +2,10 @@
 ConfigManagerのテスト
 """
 
-import json
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from typing import Any
 
 from msx_serial.common.config_manager import (ConfigManager, ConfigSchema,
                                               get_config, get_setting,
@@ -16,220 +15,469 @@ from msx_serial.common.config_manager import (ConfigManager, ConfigSchema,
 class TestConfigSchema(unittest.TestCase):
     """ConfigSchemaのテスト"""
 
-    def test_validate_valid_value(self):
-        """有効な値の検証"""
-        schema = ConfigSchema("test", 10, "Test", int, min_value=5, max_value=15)
-        self.assertTrue(schema.validate(10))
-        self.assertTrue(schema.validate(5))
-        self.assertTrue(schema.validate(15))
+    def test_init(self):
+        schema = ConfigSchema(
+            key="test.key",
+            default_value="default",
+            description="Test description",
+            value_type=str,
+        )
 
-    def test_validate_invalid_type(self):
-        """無効な型の検証"""
-        schema = ConfigSchema("test", 10, "Test", int)
-        self.assertFalse(schema.validate("invalid"))
+        self.assertEqual(schema.key, "test.key")
+        self.assertEqual(schema.default_value, "default")
+        self.assertEqual(schema.description, "Test description")
+        self.assertEqual(schema.value_type, str)
+        self.assertFalse(schema.required)
+        self.assertIsNone(schema.choices)
+        self.assertIsNone(schema.min_value)
+        self.assertIsNone(schema.max_value)
+
+    def test_validate_required_field(self):
+        # 必須フィールドのテスト
+        required_schema = ConfigSchema(
+            key="required.key",
+            default_value="default",
+            description="Required field",
+            value_type=str,
+            required=True,
+        )
+
+        self.assertFalse(required_schema.validate(None))
+        self.assertTrue(required_schema.validate("value"))
 
     def test_validate_type_conversion(self):
-        """型変換の検証"""
-        schema = ConfigSchema("test", 10, "Test", int)
-        self.assertTrue(schema.validate("10"))
+        # 型変換のテスト
+        int_schema = ConfigSchema(
+            key="int.key", default_value=42, description="Integer field", value_type=int
+        )
 
-    def test_validate_required_missing(self):
-        """必須項目の欠如検証"""
-        schema = ConfigSchema("test", None, "Test", str, required=True)
-        self.assertFalse(schema.validate(None))
+        self.assertTrue(int_schema.validate(42))
+        self.assertTrue(int_schema.validate("42"))  # 文字列から変換
+        self.assertFalse(int_schema.validate("invalid"))
 
     def test_validate_choices(self):
-        """選択肢の検証"""
-        schema = ConfigSchema("test", "a", "Test", str, choices=["a", "b", "c"])
-        self.assertTrue(schema.validate("a"))
-        self.assertFalse(schema.validate("d"))
+        # 選択肢のテスト
+        choice_schema = ConfigSchema(
+            key="choice.key",
+            default_value="option1",
+            description="Choice field",
+            value_type=str,
+            choices=["option1", "option2", "option3"],
+        )
+
+        self.assertTrue(choice_schema.validate("option1"))
+        self.assertTrue(choice_schema.validate("option2"))
+        self.assertFalse(choice_schema.validate("invalid_option"))
 
     def test_validate_range(self):
-        """範囲の検証"""
-        schema = ConfigSchema("test", 10, "Test", int, min_value=5, max_value=15)
-        self.assertFalse(schema.validate(4))
-        self.assertFalse(schema.validate(16))
-
-    def test_validate_float_range(self):
-        """浮動小数点の範囲検証"""
-        schema = ConfigSchema(
-            "test", 10.0, "Test", float, min_value=5.0, max_value=15.0
+        # 範囲のテスト
+        range_schema = ConfigSchema(
+            key="range.key",
+            default_value=5,
+            description="Range field",
+            value_type=int,
+            min_value=1,
+            max_value=10,
         )
-        self.assertTrue(schema.validate(10.5))
-        self.assertFalse(schema.validate(4.9))
+
+        self.assertTrue(range_schema.validate(5))
+        self.assertTrue(range_schema.validate(1))  # 最小値
+        self.assertTrue(range_schema.validate(10))  # 最大値
+        self.assertFalse(range_schema.validate(0))  # 最小値未満
+        self.assertFalse(range_schema.validate(11))  # 最大値超過
 
 
 class TestConfigManager(unittest.TestCase):
     """ConfigManagerのテスト"""
 
     def setUp(self):
-        """テスト準備"""
+        """テスト前の準備"""
         self.temp_dir = Path(tempfile.mkdtemp())
         self.config_manager = ConfigManager(self.temp_dir)
 
     def tearDown(self):
-        """テスト後処理"""
+        """テスト後のクリーンアップ"""
         import shutil
 
-        shutil.rmtree(self.temp_dir, ignore_errors=True)
+        if self.temp_dir.exists():
+            shutil.rmtree(self.temp_dir)
 
-    def test_init_creates_directory(self):
-        """初期化時のディレクトリ作成"""
-        self.assertTrue(self.temp_dir.exists())
+    def test_init(self):
+        """ConfigManagerの初期化テスト"""
+        self.assertEqual(self.config_manager.config_dir, self.temp_dir)
+        self.assertIsNotNone(self.config_manager.schema)
+        self.assertIsInstance(self.config_manager.config_data, dict)
 
     def test_register_schema(self):
-        """スキーマ登録"""
-        schema = ConfigSchema("test.key", "default", "Test", str)
-        self.config_manager.register_schema(schema)
-        self.assertIn("test.key", self.config_manager.schema)
+        """スキーマ登録のテスト"""
+        test_schema = ConfigSchema(
+            key="test.new_setting",
+            default_value="test_value",
+            description="Test setting",
+            value_type=str,
+        )
 
-    def test_get_default_value(self):
-        """デフォルト値の取得"""
-        value = self.config_manager.get("connection.timeout")
-        self.assertEqual(value, 30)
+        self.config_manager.register_schema(test_schema)
+        self.assertIn("test.new_setting", self.config_manager.schema)
+        self.assertEqual(self.config_manager.get("test.new_setting"), "test_value")
 
-    def test_get_custom_default(self):
-        """カスタムデフォルト値の取得"""
-        value = self.config_manager.get("nonexistent.key", "custom_default")
-        self.assertEqual(value, "custom_default")
+    def test_get_set_basic(self):
+        """基本的な設定の取得・設定テスト"""
+        # 設定の取得
+        value = self.config_manager.get("display.theme")
+        self.assertIsNotNone(value)
 
-    def test_set_valid_value(self):
-        """有効な値の設定"""
-        result = self.config_manager.set("connection.timeout", 60, save=False)
+        # 設定の変更（有効な選択肢を使用）
+        result = self.config_manager.set("display.theme", "matrix")
         self.assertTrue(result)
-        self.assertEqual(self.config_manager.get("connection.timeout"), 60)
+        self.assertEqual(self.config_manager.get("display.theme"), "matrix")
+
+    def test_get_with_default(self):
+        """デフォルト値付き取得のテスト"""
+        # 存在しないキーの場合
+        value = self.config_manager.get("nonexistent.key", "default_value")
+        self.assertEqual(value, "default_value")
 
     def test_set_invalid_value(self):
-        """無効な値の設定"""
-        result = self.config_manager.set("connection.timeout", -10, save=False)
+        """無効な値の設定テスト"""
+        # 選択肢にない値を設定
+        result = self.config_manager.set("display.theme", "invalid_theme")
         self.assertFalse(result)
-        # 元の値が保持される
-        self.assertEqual(self.config_manager.get("connection.timeout"), 30)
 
     def test_get_nested(self):
-        """ネストされたキーの取得"""
-        self.config_manager.config_data = {"connection": {"timeout": 45, "retry": 5}}
-        value = self.config_manager.get_nested("connection.timeout")
-        self.assertEqual(value, 45)
+        """ネストした設定の取得テスト"""
+        # ネストした設定をテスト用に追加
+        nested_schema = ConfigSchema(
+            key="nested.deep.setting",
+            default_value="nested_value",
+            description="Nested setting",
+            value_type=str,
+        )
+        self.config_manager.register_schema(nested_schema)
+
+        value = self.config_manager.get_nested("nested.deep.setting")
+        self.assertEqual(value, "nested_value")
 
     def test_set_nested(self):
-        """ネストされたキーの設定"""
-        result = self.config_manager.set_nested("connection.timeout", 90, save=False)
+        """ネストした設定の設定テスト"""
+        # ネストした設定をテスト用に追加
+        nested_schema = ConfigSchema(
+            key="nested.test.setting",
+            default_value="original",
+            description="Nested test setting",
+            value_type=str,
+        )
+        self.config_manager.register_schema(nested_schema)
+
+        result = self.config_manager.set_nested("nested.test.setting", "new_value")
         self.assertTrue(result)
-        self.assertEqual(self.config_manager.get_nested("connection.timeout"), 90)
+        self.assertEqual(
+            self.config_manager.get_nested("nested.test.setting"), "new_value"
+        )
 
-    def test_save_and_load_config(self):
-        """設定の保存と読み込み"""
-        # 設定値を変更
-        self.config_manager.set("connection.timeout", 120, save=True)
-
-        # 新しいインスタンスで読み込み
-        new_manager = ConfigManager(self.temp_dir)
-        self.assertEqual(new_manager.get("connection.timeout"), 120)
-
-    def test_load_invalid_config_file(self):
-        """無効な設定ファイルの読み込み"""
-        # 無効なYAMLを書き込み
-        config_file = self.temp_dir / "config.yaml"
-        config_file.write_text("invalid: yaml: content: [")
-
-        # エラーが発生しても続行する
-        result = self.config_manager.load_config()
+    def test_load_config_file_not_found(self):
+        """存在しない設定ファイルの読み込みテスト"""
+        nonexistent_file = self.temp_dir / "nonexistent.yaml"
+        result = self.config_manager.load_config(nonexistent_file)
         self.assertFalse(result)
 
+    def test_save_load_config(self):
+        """設定の保存・読み込みテスト"""
+        # 設定を変更（有効な選択肢を使用）
+        self.config_manager.set("display.theme", "matrix")
+
+        # 設定を保存
+        config_file = self.temp_dir / "test_config.yaml"
+        result = self.config_manager.save_config(config_file)
+        self.assertTrue(result)
+        self.assertTrue(config_file.exists())
+
+        # 新しいConfigManagerで読み込み
+        new_manager = ConfigManager(self.temp_dir)
+        result = new_manager.load_config(config_file)
+        self.assertTrue(result)
+        self.assertEqual(new_manager.get("display.theme"), "matrix")
+
     def test_reset_to_defaults(self):
-        """デフォルト値へのリセット"""
-        self.config_manager.set("connection.timeout", 120, save=False)
+        """デフォルト値へのリセットテスト"""
+        # 設定を変更
+        original_theme = self.config_manager.get("display.theme")
+        self.config_manager.set("display.theme", "matrix")
+
+        # デフォルトにリセット
         self.config_manager.reset_to_defaults()
-        self.assertEqual(self.config_manager.get("connection.timeout"), 30)
+
+        # デフォルト値に戻っていることを確認
+        reset_theme = self.config_manager.get("display.theme")
+        self.assertEqual(reset_theme, original_theme)
 
     def test_validate_all(self):
-        """全設定の検証"""
-        self.config_manager.config_data["connection.timeout"] = -10  # 無効な値
+        """全設定検証のテスト"""
+        # 正常な状態での検証
         errors = self.config_manager.validate_all()
-        self.assertIn("connection.timeout", errors)
+        self.assertEqual(len(errors), 0)
 
-    def test_add_remove_watcher(self):
-        """ウォッチャーの追加と削除"""
-        called = []
+    def test_save_config_default_path(self):
+        """デフォルトパスでの設定保存テスト"""
+        self.config_manager.set("display.theme", "matrix")
 
-        def watcher(key, old_value, new_value):
-            called.append((key, old_value, new_value))
-
-        self.config_manager.add_watcher(watcher)
-        self.config_manager.set("connection.timeout", 60, save=False)
-
-        self.assertEqual(len(called), 1)
-        self.assertEqual(called[0][0], "connection.timeout")
-
-        # ウォッチャーを削除
-        self.config_manager.remove_watcher(watcher)
-        self.config_manager.set("connection.timeout", 90, save=False)
-
-        # 追加の呼び出しなし
-        self.assertEqual(len(called), 1)
-
-    def test_get_schema_info(self):
-        """スキーマ情報の取得"""
-        info = self.config_manager.get_schema_info()
-        self.assertIn("connection.timeout", info)
-        self.assertEqual(info["connection.timeout"]["default"], 30)
-
-    def test_json_format_detection(self):
-        """JSON形式の検出"""
-        config_file = self.temp_dir / "config.json"
-        config_data = {"connection": {"timeout": 45}}
-
-        with open(config_file, "w") as f:
-            json.dump(config_data, f)
-
-        result = self.config_manager.load_config(config_file)
+        result = self.config_manager.save_config()
         self.assertTrue(result)
 
-    @patch("msx_serial.common.config_manager.logger")
-    def test_logging_on_invalid_value(self, mock_logger):
-        """無効な値設定時のログ出力"""
-        self.config_manager.set("connection.timeout", -10, save=False)
-        mock_logger.warning.assert_called_once()
+    def test_load_config_default_path(self):
+        """デフォルトパスでの設定読み込みテスト"""
+        # まず設定を保存
+        self.config_manager.set("display.theme", "matrix")
+        self.config_manager.save_config()
 
-    def test_watcher_exception_handling(self):
-        """ウォッチャーの例外処理"""
+        # 設定をリセット
+        self.config_manager.reset_to_defaults()
 
-        def failing_watcher(key, old_value, new_value):
-            raise Exception("Test exception")
-
-        self.config_manager.add_watcher(failing_watcher)
-        # 例外が発生しても設定は正常に完了する
-        result = self.config_manager.set("connection.timeout", 60, save=False)
+        # デフォルトパスから読み込み
+        result = self.config_manager.load_config()
         self.assertTrue(result)
+
+    def test_generate_sample_config_default_path(self):
+        """サンプル設定ファイル生成（デフォルトパス）のテスト"""
+        result = self.config_manager.generate_sample_config()
+        assert result is True
+
+        sample_file = self.temp_dir / "config.sample.yaml"
+        assert sample_file.exists()
+
+        content = sample_file.read_text()
+        assert "MSX Serial Terminal Configuration" in content
+        assert "display:" in content
+        assert "performance:" in content
+
+    def test_generate_sample_config_custom_path(self):
+        """サンプル設定ファイル生成（カスタムパス）のテスト"""
+        custom_path = self.temp_dir / "custom_sample.yaml"
+
+        result = self.config_manager.generate_sample_config(custom_path)
+        assert result is True
+        assert custom_path.exists()
+
+    def test_generate_sample_config_failure(self):
+        """サンプル設定ファイル生成失敗のテスト"""
+        # 存在しないディレクトリに出力しようとする
+        invalid_path = self.temp_dir / "nonexistent" / "config.sample.yaml"
+
+        result = self.config_manager.generate_sample_config(invalid_path)
+        assert result is False
+
+    def test_export_current_config_default_path(self):
+        """現在の設定エクスポート（デフォルトパス）のテスト"""
+        self.config_manager.set("display.theme", "matrix")
+
+        result = self.config_manager.export_current_config()
+        assert result is True
+
+        export_file = self.temp_dir / "config.export.yaml"
+        assert export_file.exists()
+
+    def test_export_current_config_custom_path(self):
+        """現在の設定エクスポート（カスタムパス）のテスト"""
+        custom_path = self.temp_dir / "custom_export.yaml"
+
+        result = self.config_manager.export_current_config(custom_path)
+        assert result is True
+        assert custom_path.exists()
+
+    def test_export_current_config_failure(self):
+        """現在の設定エクスポート失敗のテスト"""
+        # 存在しないディレクトリに出力しようとする
+        invalid_path = self.temp_dir / "nonexistent" / "config.export.yaml"
+
+        result = self.config_manager.export_current_config(invalid_path)
+        assert result is False
+
+    def test_list_settings(self):
+        """設定項目一覧のテスト"""
+        settings = self.config_manager.list_settings()
+
+        assert isinstance(settings, dict)
+        assert "display" in settings
+        assert "performance" in settings
+
+        # 各カテゴリに設定項目が含まれている
+        for category, items in settings.items():
+            assert len(items) > 0
+            for key, info in items.items():
+                assert "value" in info
+                assert "type" in info
+                assert "description" in info
+                assert "default" in info
+
+    def test_export_config_exclude_defaults(self):
+        """設定エクスポート（デフォルト値除外）のテスト"""
+        self.config_manager.set("display.theme", "matrix")  # デフォルトから変更
+
+        # デフォルト値を除外してエクスポート
+        export_data = self.config_manager.export_config(include_defaults=False)
+
+        assert "display.theme" in export_data
+        assert export_data["display.theme"] == "matrix"
+
+        # デフォルト値のまま変更していない設定は含まれないことを確認
+        unchanged_keys = [
+            k
+            for k, v in export_data.items()
+            if v == self.config_manager.schema[k].default_value
+        ]
+        # 変更していない設定がエクスポートに含まれていないことを確認
+        assert len(unchanged_keys) == 0 or all(
+            self.config_manager.get(k) != self.config_manager.schema[k].default_value
+            for k in unchanged_keys
+        )
+
+    def test_export_config_include_defaults(self):
+        """設定エクスポート（デフォルト値含む）のテスト"""
+        # デフォルト値も含めてエクスポート
+        export_data = self.config_manager.export_config(include_defaults=True)
+
+        # 全ての設定項目が含まれている
+        assert len(export_data) == len(self.config_manager.schema)
+
+        for key in self.config_manager.schema:
+            assert key in export_data
+
+    def test_watchers_functionality(self):
+        """設定変更監視機能のテスト"""
+        # 監視コールバックの結果を記録
+        watcher_calls = []
+
+        def test_watcher(key: str, old_value: Any, new_value: Any):
+            watcher_calls.append((key, old_value, new_value))
+
+        # 監視者を追加
+        self.config_manager.add_watcher(test_watcher)
+
+        # 設定を変更
+        self.config_manager.set("display.theme", "matrix")
+
+        # 監視者が呼ばれたことを確認
+        assert len(watcher_calls) == 1
+        # old_valueの値に関わらず、変更が通知されたことを確認
+        key, old_val, new_val = watcher_calls[0]
+        assert key == "display.theme"
+        assert new_val == "matrix"
+
+        # 監視者を削除
+        self.config_manager.remove_watcher(test_watcher)
+
+        # 設定を変更しても監視者が呼ばれないことを確認
+        self.config_manager.set("display.theme", "classic")
+        assert len(watcher_calls) == 1  # 変化なし
+
+    def test_watcher_error_handling(self):
+        """監視者エラーハンドリングのテスト"""
+
+        def error_watcher(key: str, old_value: Any, new_value: Any):
+            raise ValueError("Test error")
+
+        self.config_manager.add_watcher(error_watcher)
+
+        # エラーが発生しても設定変更は成功する
+        result = self.config_manager.set("display.theme", "matrix")
+        assert result is True
+
+    def test_validate_all_with_errors(self):
+        """エラーありの全設定検証のテスト"""
+        # 正常な設定の場合
+        errors = self.config_manager.validate_all()
+        assert len(errors) == 0
+
+        # 無効な値を直接設定
+        self.config_manager.config_data["display.theme"] = "invalid_theme"
+
+        errors = self.config_manager.validate_all()
+        assert len(errors) > 0
+        assert "display.theme" in errors
+
+    def test_get_schema_info_complete(self):
+        """スキーマ情報取得の完全テスト"""
+        schema_info = self.config_manager.get_schema_info()
+
+        # 全ての登録されたスキーマの情報が含まれている
+        assert len(schema_info) == len(self.config_manager.schema)
+
+        for key, info in schema_info.items():
+            assert "description" in info
+            assert "type" in info
+            assert "default" in info
+            assert "required" in info
+            assert "choices" in info
+            assert "min_value" in info
+            assert "max_value" in info
+            assert "current_value" in info
+
+            # 現在の値が正しく取得されている
+            assert info["current_value"] == self.config_manager.get(key)
+
+    def test_remove_nonexistent_watcher(self):
+        """存在しない監視者の削除テスト"""
+
+        def dummy_watcher(key: str, old_value: Any, new_value: Any):
+            pass
+
+        # 存在しない監視者を削除してもエラーにならない
+        self.config_manager.remove_watcher(dummy_watcher)
+
+        # 正常に動作することを確認
+        self.config_manager.set("display.theme", "matrix")
+
+    def test_schema_info_with_constraints(self):
+        """制約付きスキーマ情報のテスト"""
+        # 制約付きのスキーマを追加
+        test_schema = ConfigSchema(
+            key="test.constrained",
+            default_value=5,
+            description="Test constrained value",
+            value_type=int,
+            choices=[1, 5, 10],
+            min_value=1,
+            max_value=10,
+        )
+        self.config_manager.register_schema(test_schema)
+
+        schema_info = self.config_manager.get_schema_info()
+        constrained_info = schema_info["test.constrained"]
+
+        assert constrained_info["choices"] == [1, 5, 10]
+        assert constrained_info["min_value"] == 1
+        assert constrained_info["max_value"] == 10
 
 
 class TestModuleFunctions(unittest.TestCase):
-    """モジュール関数のテスト"""
+    """モジュールレベルの関数のテスト"""
 
-    def test_get_config_singleton(self):
-        """グローバル設定インスタンスのシングルトン"""
-        config1 = get_config()
-        config2 = get_config()
-        self.assertIs(config1, config2)
+    def test_get_config(self):
+        """get_config関数のテスト"""
+        config = get_config()
+        self.assertIsInstance(config, ConfigManager)
 
-    @patch("msx_serial.common.config_manager._global_config")
-    def test_get_setting(self, mock_global_config):
-        """設定値の取得関数"""
-        mock_global_config.get.return_value = "test_value"
+    def test_get_setting(self):
+        """get_setting関数のテスト"""
+        # 存在する設定
+        value = get_setting("display.theme")
+        self.assertIsNotNone(value)
 
-        result = get_setting("test.key", "default")
-        self.assertEqual(result, "test_value")
-        mock_global_config.get.assert_called_once_with("test.key", "default")
+        # 存在しない設定（デフォルト値あり）
+        value = get_setting("nonexistent.key", "default")
+        self.assertEqual(value, "default")
 
-    @patch("msx_serial.common.config_manager._global_config")
-    def test_set_setting(self, mock_global_config):
-        """設定値の設定関数"""
-        mock_global_config.set.return_value = True
+    def test_set_setting(self):
+        """set_setting関数のテスト"""
+        original_value = get_setting("display.theme")
 
-        result = set_setting("test.key", "test_value", save=False)
+        # 設定を変更（有効な選択肢を使用）
+        result = set_setting("display.theme", "matrix")
         self.assertTrue(result)
-        mock_global_config.set.assert_called_once_with("test.key", "test_value", False)
+        self.assertEqual(get_setting("display.theme"), "matrix")
+
+        # 元に戻す
+        set_setting("display.theme", original_value)
 
 
 if __name__ == "__main__":

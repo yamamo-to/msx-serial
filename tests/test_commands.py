@@ -264,6 +264,344 @@ class TestCommandHandler:
         self.handler._handle_help("@help NONEXISTENT")
         mock_print_warn.assert_called_once_with("No help available for 'nonexistent'")
 
+    def test_config_command_list(self):
+        """@config listコマンドのテスト"""
+        handler = CommandHandler(Style.from_dict({}))
+
+        with patch("msx_serial.commands.handler.print_info") as mock_print:
+            handler._handle_config("@config list")
+            mock_print.assert_called()
+
+    def test_config_command_help(self):
+        """@config helpコマンドのテスト"""
+        handler = CommandHandler(Style.from_dict({}))
+
+        with patch("msx_serial.commands.handler.print_info") as mock_print:
+            handler._handle_config("@config help")
+            mock_print.assert_called()
+
+    def test_config_command_get_valid_key(self):
+        """@config get（有効なキー）のテスト"""
+        handler = CommandHandler(Style.from_dict({}))
+
+        with patch("msx_serial.commands.handler.get_config") as mock_get_config:
+            mock_config = Mock()
+            mock_config.get_schema_info.return_value = {
+                "display.theme": {
+                    "current_value": "dark",
+                    "default": "light",
+                    "description": "Display theme",
+                    "type": "str",
+                }
+            }
+            mock_get_config.return_value = mock_config
+
+            with patch("msx_serial.commands.handler.print_info") as mock_print:
+                handler._handle_config("@config get display.theme")
+                mock_print.assert_called()
+
+    def test_config_command_get_invalid_key(self):
+        """@config get（無効なキー）のテスト"""
+        handler = CommandHandler(Style.from_dict({}))
+
+        with patch("msx_serial.commands.handler.get_config") as mock_get_config:
+            mock_config = Mock()
+            mock_config.get_schema_info.return_value = {}
+            mock_get_config.return_value = mock_config
+
+            with patch("msx_serial.commands.handler.print_warn") as mock_print:
+                handler._handle_config("@config get invalid.key")
+                mock_print.assert_called_with(
+                    "Configuration key 'invalid.key' not found"
+                )
+
+    def test_config_command_set_valid(self):
+        """@config set（有効な値）のテスト"""
+        handler = CommandHandler(Style.from_dict({}))
+
+        with (
+            patch("msx_serial.commands.handler.get_config") as mock_get_config,
+            patch("msx_serial.commands.handler.set_setting") as mock_set_setting,
+        ):
+
+            mock_config = Mock()
+            mock_config.get_schema_info.return_value = {
+                "performance.delay": {
+                    "current_value": 0.001,
+                    "default": 0.001,
+                    "description": "Performance delay",
+                    "type": "float",
+                }
+            }
+            mock_get_config.return_value = mock_config
+            mock_set_setting.return_value = True
+
+            with patch("msx_serial.commands.handler.print_info") as mock_print:
+                handler._handle_config("@config set performance.delay 0.002")
+                mock_print.assert_called()
+                mock_set_setting.assert_called_once()
+
+    def test_config_command_set_invalid_type(self):
+        """@config set（無効な型）のテスト"""
+        handler = CommandHandler(Style.from_dict({}))
+
+        with patch("msx_serial.commands.handler.get_config") as mock_get_config:
+            mock_config = Mock()
+            mock_config.get_schema_info.return_value = {
+                "performance.delay": {
+                    "current_value": 0.001,
+                    "default": 0.001,
+                    "description": "Performance delay",
+                    "type": "int",
+                }
+            }
+            mock_get_config.return_value = mock_config
+
+            with patch("msx_serial.commands.handler.print_warn") as mock_print:
+                handler._handle_config("@config set performance.delay invalid_value")
+                mock_print.assert_called()
+
+    def test_config_command_reset(self):
+        """@config resetコマンドのテスト"""
+        handler = CommandHandler(Style.from_dict({}))
+
+        with (
+            patch("msx_serial.commands.handler.get_config") as mock_get_config,
+            patch("msx_serial.commands.handler.set_setting") as mock_set_setting,
+        ):
+
+            mock_config = Mock()
+            mock_config.get_schema_info.return_value = {
+                "display.theme": {
+                    "current_value": "dark",
+                    "default": "light",
+                    "description": "Display theme",
+                    "type": "str",
+                }
+            }
+            mock_get_config.return_value = mock_config
+            mock_set_setting.return_value = True
+
+            with patch("msx_serial.commands.handler.print_info") as mock_print:
+                handler._handle_config("@config reset display.theme")
+                mock_print.assert_called()
+
+    def test_config_command_usage_errors(self):
+        """@configコマンドの使用方法エラーのテスト"""
+        handler = CommandHandler(Style.from_dict({}))
+
+        with patch("msx_serial.commands.handler.print_warn") as mock_print:
+            # get without key
+            handler._handle_config("@config get")
+            mock_print.assert_called_with("Usage: @config get <key>")
+
+            # set without value
+            handler._handle_config("@config set key")
+            mock_print.assert_called_with("Usage: @config set <key> <value>")
+
+            # reset without key
+            handler._handle_config("@config reset")
+            mock_print.assert_called_with("Usage: @config reset <key>")
+
+    def test_config_command_unknown_subcommand(self):
+        """@config 不明なサブコマンドのテスト"""
+        handler = CommandHandler(Style.from_dict({}))
+
+        with (
+            patch("msx_serial.commands.handler.print_warn") as mock_warn,
+            patch.object(handler, "_show_config_help") as mock_help,
+        ):
+            handler._handle_config("@config unknown")
+            mock_warn.assert_called_with("Unknown config subcommand: unknown")
+            mock_help.assert_called()
+
+    def test_encode_command_no_args(self):
+        """@encodeコマンド（引数なし）のテスト"""
+        handler = CommandHandler(Style.from_dict({}))
+
+        with patch("msx_serial.commands.handler.print_info") as mock_print:
+            handler._handle_encode("@encode")
+            mock_print.assert_called_with(
+                "Available encodings: utf-8, msx-jp, shift_jis, cp932"
+            )
+
+    def test_encode_command_with_encoding(self):
+        """@encodeコマンド（エンコーディング指定）のテスト"""
+        handler = CommandHandler(Style.from_dict({}))
+
+        with patch("msx_serial.commands.handler.print_info") as mock_print:
+            handler._handle_encode("@encode utf-8")
+            mock_print.assert_called_with("Encoding change to 'utf-8' requested")
+
+    def test_select_file_empty_directory(self):
+        """ファイル選択（空ディレクトリ）のテスト"""
+        handler = CommandHandler(Style.from_dict({}))
+
+        with (
+            patch("pathlib.Path.cwd") as mock_cwd,
+            patch("msx_serial.commands.handler.print_warn") as mock_print,
+        ):
+
+            mock_dir = Mock()
+            mock_dir.glob.return_value = []
+            mock_cwd.return_value = mock_dir
+
+            result = handler._select_file()
+            assert result is None
+            mock_print.assert_called_with("No files found.")
+
+    def test_select_file_with_multiple_files(self):
+        """ファイル選択（複数ファイルあり）のテスト"""
+        handler = CommandHandler(Style.from_dict({}))
+
+        with (
+            patch("pathlib.Path.cwd") as mock_cwd,
+            patch("msx_serial.commands.handler.radiolist_dialog") as mock_dialog,
+        ):
+
+            # ファイルのモック
+            mock_file1 = Mock()
+            mock_file1.is_file.return_value = True
+            mock_file1.name = "test1.txt"
+
+            mock_file2 = Mock()
+            mock_file2.is_file.return_value = True
+            mock_file2.name = "test2.txt"
+
+            mock_dir = Mock()
+            mock_dir.glob.return_value = [mock_file1, mock_file2]
+            mock_cwd.return_value = mock_dir
+
+            # ダイアログのモック
+            mock_dialog_instance = Mock()
+            mock_dialog_instance.run.return_value = "/path/to/test1.txt"
+            mock_dialog.return_value = mock_dialog_instance
+
+            result = handler._select_file()
+            assert result == "/path/to/test1.txt"
+            mock_dialog.assert_called_once()
+
+    def test_bool_type_conversion_in_config_set(self):
+        """@config setでのbool型変換のテスト"""
+        handler = CommandHandler(Style.from_dict({}))
+
+        with (
+            patch("msx_serial.commands.handler.get_config") as mock_get_config,
+            patch("msx_serial.commands.handler.set_setting") as mock_set_setting,
+        ):
+
+            mock_config = Mock()
+            mock_config.get_schema_info.return_value = {
+                "test.bool": {
+                    "current_value": False,
+                    "default": False,
+                    "description": "Test boolean",
+                    "type": "bool",
+                }
+            }
+            mock_get_config.return_value = mock_config
+            mock_set_setting.return_value = True
+
+            with patch("msx_serial.commands.handler.print_info"):
+                # true値のテスト
+                for true_val in ["true", "1", "yes", "on", "enable"]:
+                    handler._handle_config(f"@config set test.bool {true_val}")
+                    mock_set_setting.assert_called_with("test.bool", True)
+
+                # false値のテスト
+                handler._handle_config("@config set test.bool false")
+                mock_set_setting.assert_called_with("test.bool", False)
+
+    def test_config_show_value_with_choices(self):
+        """@config get（選択肢あり）のテスト"""
+        handler = CommandHandler(Style.from_dict({}))
+
+        with patch("msx_serial.commands.handler.get_config") as mock_get_config:
+            mock_config = Mock()
+            mock_config.get_schema_info.return_value = {
+                "display.theme": {
+                    "current_value": "dark",
+                    "default": "light",
+                    "description": "Display theme",
+                    "type": "str",
+                    "choices": ["light", "dark", "auto"],
+                    "min_value": 1,
+                    "max_value": 10,
+                }
+            }
+            mock_get_config.return_value = mock_config
+
+            with patch("msx_serial.commands.handler.print_info") as mock_print:
+                handler._show_config_value("display.theme")
+                # 複数回呼ばれることを確認
+                assert (
+                    mock_print.call_count >= 6
+                )  # Key, Description, Current, Default, Type, Choices, Min, Max
+
+    def test_config_handle_get_set_methods(self):
+        """設定の取得・設定用のヘルパーメソッドのテスト"""
+        handler = CommandHandler(Style.from_dict({}))
+
+        # _handle_config_get のテスト
+        with (
+            patch("msx_serial.commands.handler.get_config") as mock_get_config,
+            patch("msx_serial.commands.handler.print_info") as mock_print_info,
+            patch("msx_serial.commands.handler.print_warn") as mock_print_warn,
+        ):
+
+            mock_config = Mock()
+            mock_config.get.return_value = "test_value"
+            mock_get_config.return_value = mock_config
+
+            # 正常ケース
+            handler._handle_config_get(["test.key"])
+            mock_print_info.assert_called_with("test.key: test_value")
+
+            # 引数なし
+            handler._handle_config_get([])
+            mock_print_warn.assert_called_with("設定キーを指定してください")
+
+            # 設定が見つからない
+            mock_config.get.return_value = None
+            handler._handle_config_get(["invalid.key"])
+            mock_print_warn.assert_called_with(
+                "設定キー 'invalid.key' が見つかりません"
+            )
+
+        # _handle_config_set のテスト
+        with (
+            patch("msx_serial.commands.handler.set_setting") as mock_set_setting,
+            patch("msx_serial.commands.handler.print_info") as mock_print_info,
+            patch("msx_serial.commands.handler.print_warn") as mock_print_warn,
+        ):
+
+            mock_set_setting.return_value = True
+
+            # 正常ケース（文字列）
+            handler._handle_config_set(["test.key", "test_value"])
+            mock_set_setting.assert_called_with("test.key", "test_value")
+
+            # bool値
+            handler._handle_config_set(["test.bool", "true"])
+            mock_set_setting.assert_called_with("test.bool", True)
+
+            # int値
+            handler._handle_config_set(["test.int", "42"])
+            mock_set_setting.assert_called_with("test.int", 42)
+
+            # float値
+            handler._handle_config_set(["test.float", "3.14"])
+            mock_set_setting.assert_called_with("test.float", 3.14)
+
+            # 引数不足
+            handler._handle_config_set(["key"])
+            mock_print_warn.assert_called_with("設定キーと値を指定してください")
+
+            # 設定失敗
+            mock_set_setting.return_value = False
+            handler._handle_config_set(["test.key", "value"])
+            mock_print_warn.assert_called_with("設定の更新に失敗しました: test.key")
+
 
 class DummyFileTransfer:
     def __init__(self):

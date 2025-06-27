@@ -142,7 +142,7 @@ class TestDetectConnectionTypeFunction:
 
 
 class TestEdgeCases:
-    """Test edge cases and error scenarios"""
+    """エッジケースのテスト"""
 
     def setup_method(self):
         """Setup test"""
@@ -213,3 +213,33 @@ class TestEdgeCases:
         assert config.baudrate == 115200
         assert config.parity == "N"
         assert config.timeout is None
+
+
+class TestConnectionManagerBasic:
+    """ConnectionManagerの基本テスト"""
+
+    def test_connection_manager_invalid_config_type(self):
+        """不正な設定タイプでのConnectionManager作成テスト"""
+        from msx_serial.connection.manager import ConnectionManager
+        
+        class InvalidConfig:
+            pass
+        
+        invalid_config = InvalidConfig()
+        
+        with pytest.raises(ValueError, match="不明な接続タイプ"):
+            ConnectionManager(invalid_config)
+
+    def test_connection_manager_dummy_creation(self):
+        """DummyConfigでのConnectionManager作成テスト"""
+        from msx_serial.connection.manager import ConnectionManager
+        from msx_serial.connection.dummy import DummyConfig
+        
+        dummy_config = DummyConfig()
+        manager = ConnectionManager(dummy_config)
+        
+        assert isinstance(manager.config, DummyConfig)
+        assert manager.connection is not None
+        
+        # closeメソッドのテスト
+        manager.close()
