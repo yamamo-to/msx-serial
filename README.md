@@ -168,7 +168,7 @@ make format         # black・isortフォーマット適用
 
 ## 📈 更新履歴
 
-### v0.2.17.dev9（最新）
+### v0.2.19（最新）
 - テスト失敗修正完了：全598テスト正常パス
 - テストカバレッジ95%達成（.cursorrules要件クリア）
 - BaseCompleterとMSXヘルプテストの品質向上
