@@ -189,6 +189,7 @@ Use @help <command> for detailed help on specific commands.
 
     def _show_command_help(self, command: str) -> None:
         """Show help for specific command"""
+        # 内蔵コマンドのヘルプ
         help_texts = {
             "exit": "Exit the terminal application.",
             "cd": "Change current directory. Usage: @cd [directory]",
@@ -202,8 +203,103 @@ Use @help <command> for detailed help on specific commands.
 
         if command in help_texts:
             print_info(f"{command}: {help_texts[command]}")
-        else:
-            print_warn(f"No help available for '{command}'")
+            return
+
+        # MSX BASICコマンドのヘルプファイルを検索
+        if self._show_msx_command_help(command):
+            return
+
+        # ヘルプが見つからない場合
+        print_warn(f"No help available for '{command}'")
+
+    def _show_msx_command_help(self, command: str) -> bool:
+        """Show MSX BASIC command help from man pages
+
+        Args:
+            command: Command name to search
+
+        Returns:
+            True if help was found and displayed
+        """
+        try:
+            # man ディレクトリのパスを取得
+            current_dir = Path(__file__).parent.parent
+            man_dir = current_dir / "man"
+
+            if not man_dir.exists():
+                return False
+
+            # コマンド名を大文字に変換してmanファイルを検索
+            command_upper = command.upper()
+            man_file = man_dir / f"{command_upper}.3"
+
+            if man_file.exists():
+                self._display_man_page(man_file, command_upper)
+                return True
+
+            # アンダースコアで始まる場合はCALLコマンド系として検索
+            if command.startswith("_"):
+                call_command = command[1:].upper()
+                call_man_file = man_dir / f"CALL {call_command}.3"
+                if call_man_file.exists():
+                    self._display_man_page(call_man_file, f"CALL {call_command}")
+                    return True
+
+            return False
+
+        except Exception as e:
+            print_exception("Error reading help file", e)
+            return False
+
+    def _display_man_page(self, man_file: Path, command_name: str) -> None:
+        """Display man page content
+
+        Args:
+            man_file: Path to man file
+            command_name: Command name for display
+        """
+        try:
+            content = man_file.read_text(encoding="utf-8")
+
+            # 簡単なman形式の解析
+            lines = content.split("\n")
+            in_examples = False
+
+            print_info(f"=== {command_name} ===")
+
+            for line in lines:
+                line = line.strip()
+
+                # セクションの判定
+                if line.startswith(".SH NAME"):
+                    continue
+                elif line.startswith(".SH SYNOPSIS"):
+                    print_info("\n【使用法】")
+                    continue
+                elif line.startswith(".SH DESCRIPTION"):
+                    print_info("\n【説明】")
+                    continue
+                elif line.startswith(".SH EXAMPLES"):
+                    print_info("\n【例】")
+                    in_examples = True
+                    continue
+                elif line.startswith(".SH NOTES"):
+                    print_info("\n【注意】")
+                    in_examples = False  # 例セクション終了
+                    continue
+                elif line.startswith("."):
+                    # その他の制御文字は無視
+                    continue
+
+                # 内容の表示
+                if line:
+                    if in_examples:
+                        print_info(f"  {line}")
+                    else:
+                        print_info(line)
+
+        except Exception as e:
+            print_exception(f"Error displaying help for {command_name}", e)
 
     def _handle_encode(self, user_input: str) -> None:
         """Handle encoding change command"""

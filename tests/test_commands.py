@@ -248,6 +248,22 @@ class TestCommandHandler:
             result = self.handler._select_file()
             assert result == "/path/to/test.txt"
 
+    @patch("msx_serial.commands.handler.print_info")
+    def test_handle_help_command_msx_basic(self, mock_print_info):
+        """Test @help with MSX BASIC command"""
+        self.handler._handle_help("@help ABS")
+        # ヘルプが表示される場合、複数回print_infoが呼ばれる
+        assert mock_print_info.called
+        # 最初の呼び出しでコマンド名が表示される
+        first_call = mock_print_info.call_args_list[0]
+        assert "ABS" in str(first_call)
+
+    @patch("msx_serial.commands.handler.print_warn")
+    def test_handle_help_command_non_existent(self, mock_print_warn):
+        """Test @help with non-existent command"""
+        self.handler._handle_help("@help NONEXISTENT")
+        mock_print_warn.assert_called_once_with("No help available for 'nonexistent'")
+
 
 class DummyFileTransfer:
     def __init__(self):
