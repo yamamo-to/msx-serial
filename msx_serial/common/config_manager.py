@@ -36,29 +36,50 @@ class ConfigSchema:
     max_value: Optional[Union[int, float]] = None
 
     def validate(self, value: Any) -> bool:
-        """値の妥当性を検証"""
-        if value is None and self.required:
+        """値の妥当性を検証 - 複雑度を下げるため処理を分割"""
+        if not self._validate_required(value):
             return False
 
         if value is not None:
             # 型チェック
-            if not isinstance(value, self.value_type):
-                try:
-                    value = self.value_type(value)
-                except (ValueError, TypeError):
-                    return False
+            converted_value = self._validate_and_convert_type(value)
+            if converted_value is None:
+                return False
 
             # 選択肢チェック
-            if self.choices and value not in self.choices:
+            if not self._validate_choices(converted_value):
                 return False
 
             # 範囲チェック
-            if isinstance(value, (int, float)):
-                if self.min_value is not None and value < self.min_value:
-                    return False
-                if self.max_value is not None and value > self.max_value:
-                    return False
+            if not self._validate_range(converted_value):
+                return False
 
+        return True
+
+    def _validate_required(self, value: Any) -> bool:
+        """必須フィールドの検証"""
+        return not (value is None and self.required)
+
+    def _validate_and_convert_type(self, value: Any) -> Any:
+        """型チェックと変換"""
+        if not isinstance(value, self.value_type):
+            try:
+                return self.value_type(value)
+            except (ValueError, TypeError):
+                return None
+        return value
+
+    def _validate_choices(self, value: Any) -> bool:
+        """選択肢の検証"""
+        return not (self.choices and value not in self.choices)
+
+    def _validate_range(self, value: Any) -> bool:
+        """範囲チェック"""
+        if isinstance(value, (int, float)):
+            if self.min_value is not None and value < self.min_value:
+                return False
+            if self.max_value is not None and value > self.max_value:
+                return False
         return True
 
 
