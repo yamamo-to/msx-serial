@@ -343,9 +343,14 @@ class TestBaseCompleter(unittest.TestCase):
 
     def test_get_completions_not_implemented(self):
         """get_completionsの未実装テスト"""
-        completer = BaseCompleter()
-        with self.assertRaises(NotImplementedError):
-            list(completer.get_completions(None, None))
+
+        # 抽象クラスを継承した具象クラスで未実装メソッドをテスト
+        class IncompleteCompleter(BaseCompleter):
+            pass
+
+        with self.assertRaises(TypeError):
+            # 抽象メソッドが実装されていない場合、インスタンス化時にTypeErrorが発生
+            IncompleteCompleter()
 
 
 if __name__ == "__main__":

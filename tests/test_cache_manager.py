@@ -5,14 +5,9 @@
 import time
 import unittest
 
-from msx_serial.common.cache_manager import (
-    CacheEntry,
-    CacheManager,
-    CacheStrategy,
-    FunctionCache,
-    cached,
-    get_global_cache,
-)
+from msx_serial.common.cache_manager import (CacheEntry, CacheManager,
+                                             CacheStrategy, FunctionCache,
+                                             cached, get_global_cache)
 
 
 class TestCacheEntry(unittest.TestCase):
@@ -131,7 +126,9 @@ class TestCacheManager(unittest.TestCase):
 
     def test_ttl_eviction_strategy(self):
         """TTL削除戦略のテスト"""
-        cache = CacheManager[str](max_size=2, strategy=CacheStrategy.TTL, default_ttl=0.1)
+        cache = CacheManager[str](
+            max_size=2, strategy=CacheStrategy.TTL, default_ttl=0.1
+        )
 
         cache.put("key1", "value1", ttl=0.05)  # 短いTTL
         cache.put("key2", "value2", ttl=1.0)  # 長いTTL

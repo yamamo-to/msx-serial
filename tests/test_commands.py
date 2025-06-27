@@ -193,9 +193,10 @@ This is a note
     def test_msx_command_help_call_command(self, mock_print):
         """Test MSX CALL command help"""
         mock_content = "CALL command help"
-        with patch("pathlib.Path.exists") as mock_exists:
-            # 最初のファイルは存在しない、2番目（CALLコマンド）は存在する
-            mock_exists.side_effect = lambda path: "CALL MUSIC" in str(path)
+
+        # 複数のPath.existsチェックがある - man_dir.exists(), 通常ファイル.exists(), CALLファイル.exists()
+        # man_dir: True, 通常ファイル(_MUSIC.3): False, CALLファイル(CALL MUSIC.3): True
+        with patch("pathlib.Path.exists", side_effect=[True, False, True]):
             with patch("pathlib.Path.read_text", return_value=mock_content):
                 result = self.handler._show_msx_command_help("_music")
                 assert result is True
@@ -289,11 +290,11 @@ This is a note
         mock_file1 = Mock()
         mock_file1.is_file.return_value = True
         mock_file1.name = "test1.bas"
-        
+
         mock_dialog_instance = Mock()
         mock_dialog_instance.run.return_value = "selected_file.bas"
         mock_dialog.return_value = mock_dialog_instance
-        
+
         with patch("pathlib.Path.glob", return_value=[mock_file1]):
             result = self.handler._select_file()
             assert result == "selected_file.bas"
@@ -310,7 +311,9 @@ This is a note
         """Test help command for truly non-existent command"""
         with patch.object(self.handler, "_show_msx_command_help", return_value=False):
             self.handler._handle_help("@help nonexistent")
-            mock_print_warn.assert_called_once_with("No help available for 'nonexistent'")
+            mock_print_warn.assert_called_once_with(
+                "No help available for 'nonexistent'"
+            )
 
     def test_config_command_list(self):
         """Test config list command"""
@@ -320,7 +323,7 @@ This is a note
                 "current_value": "matrix",
                 "default": "classic",
                 "description": "Display theme",
-                "type": "str"
+                "type": "str",
             }
         }
         with patch("msx_serial.commands.handler.get_config", return_value=mock_config):
@@ -342,7 +345,7 @@ This is a note
                 "current_value": "matrix",
                 "default": "classic",
                 "description": "Display theme",
-                "type": "str"
+                "type": "str",
             }
         }
         with patch("msx_serial.commands.handler.get_config", return_value=mock_config):
@@ -357,7 +360,9 @@ This is a note
         with patch("msx_serial.commands.handler.get_config", return_value=mock_config):
             with patch("msx_serial.commands.handler.print_warn") as mock_print:
                 self.handler._handle_config("@config get invalid.key")
-                mock_print.assert_called_with("Configuration key 'invalid.key' not found")
+                mock_print.assert_called_with(
+                    "Configuration key 'invalid.key' not found"
+                )
 
     def test_config_command_set_valid(self):
         """Test config set command with valid value"""
@@ -367,11 +372,13 @@ This is a note
                 "current_value": 0.001,
                 "default": 0.001,
                 "description": "Performance delay",
-                "type": "float"
+                "type": "float",
             }
         }
         with patch("msx_serial.commands.handler.get_config", return_value=mock_config):
-            with patch("msx_serial.commands.handler.set_setting", return_value=True) as mock_set:
+            with patch(
+                "msx_serial.commands.handler.set_setting", return_value=True
+            ) as mock_set:
                 with patch("msx_serial.commands.handler.print_info") as mock_print:
                     self.handler._handle_config("@config set performance.delay 0.002")
                     mock_set.assert_called_with("performance.delay", 0.002)
@@ -385,13 +392,15 @@ This is a note
                 "current_value": 10,
                 "default": 10,
                 "description": "Test integer",
-                "type": "int"
+                "type": "int",
             }
         }
         with patch("msx_serial.commands.handler.get_config", return_value=mock_config):
             with patch("msx_serial.commands.handler.print_warn") as mock_print:
                 self.handler._handle_config("@config set test.int invalid_value")
-                mock_print.assert_called_with("Invalid value type for test.int. Expected int")
+                mock_print.assert_called_with(
+                    "Invalid value type for test.int. Expected int"
+                )
 
     def test_config_command_reset(self):
         """Test config reset command"""
@@ -401,11 +410,13 @@ This is a note
                 "current_value": "matrix",
                 "default": "classic",
                 "description": "Display theme",
-                "type": "str"
+                "type": "str",
             }
         }
         with patch("msx_serial.commands.handler.get_config", return_value=mock_config):
-            with patch("msx_serial.commands.handler.set_setting", return_value=True) as mock_set:
+            with patch(
+                "msx_serial.commands.handler.set_setting", return_value=True
+            ) as mock_set:
                 with patch("msx_serial.commands.handler.print_info") as mock_print:
                     self.handler._handle_config("@config reset display.theme")
                     mock_set.assert_called_with("display.theme", "classic")
@@ -417,11 +428,11 @@ This is a note
             # get引数不足
             self.handler._handle_config("@config get")
             mock_print.assert_called_with("Usage: @config get <key>")
-            
+
             # set引数不足
             self.handler._handle_config("@config set")
             mock_print.assert_called_with("Usage: @config set <key> <value>")
-            
+
             # reset引数不足
             self.handler._handle_config("@config reset")
             mock_print.assert_called_with("Usage: @config reset <key>")
@@ -436,7 +447,9 @@ This is a note
         """Test encode command without arguments"""
         with patch("msx_serial.commands.handler.print_info") as mock_print:
             self.handler._handle_encode("@encode")
-            mock_print.assert_called_with("Available encodings: utf-8, msx-jp, shift_jis, cp932")
+            mock_print.assert_called_with(
+                "Available encodings: utf-8, msx-jp, shift_jis, cp932"
+            )
 
     def test_encode_command_with_encoding(self):
         """Test encode command with encoding argument"""
@@ -460,12 +473,12 @@ This is a note
         mock_file2 = Mock()
         mock_file2.is_file.return_value = True
         mock_file2.name = "file2.txt"
-        
+
         with patch("msx_serial.commands.handler.radiolist_dialog") as mock_dialog:
             mock_dialog_instance = Mock()
             mock_dialog_instance.run.return_value = "file1.txt"
             mock_dialog.return_value = mock_dialog_instance
-            
+
             with patch("pathlib.Path.glob", return_value=[mock_file1, mock_file2]):
                 result = self.handler._select_file()
                 assert result == "file1.txt"
@@ -478,32 +491,34 @@ This is a note
                 "current_value": False,
                 "default": False,
                 "description": "Test boolean",
-                "type": "bool"
+                "type": "bool",
             }
         }
         with patch("msx_serial.commands.handler.get_config", return_value=mock_config):
-            with patch("msx_serial.commands.handler.set_setting", return_value=True) as mock_set:
+            with patch(
+                "msx_serial.commands.handler.set_setting", return_value=True
+            ) as mock_set:
                 with patch("msx_serial.commands.handler.print_info"):
                     # trueの場合
                     self.handler._handle_config("@config set test.bool true")
                     mock_set.assert_called_with("test.bool", True)
-                    
+
                     # 1の場合
                     self.handler._handle_config("@config set test.bool 1")
                     mock_set.assert_called_with("test.bool", True)
-                    
+
                     # falseの場合
                     self.handler._handle_config("@config set test.bool false")
                     mock_set.assert_called_with("test.bool", False)
-                    
+
                     # yesの場合
                     self.handler._handle_config("@config set test.bool yes")
                     mock_set.assert_called_with("test.bool", True)
-                    
+
                     # onの場合
                     self.handler._handle_config("@config set test.bool on")
                     mock_set.assert_called_with("test.bool", True)
-                    
+
                     # enableの場合
                     self.handler._handle_config("@config set test.bool enable")
                     mock_set.assert_called_with("test.bool", True)
@@ -519,7 +534,7 @@ This is a note
                 "type": "str",
                 "choices": ["matrix", "classic"],
                 "min_value": 1,
-                "max_value": 10
+                "max_value": 10,
             }
         }
         with patch("msx_serial.commands.handler.get_config", return_value=mock_config):
@@ -531,24 +546,26 @@ This is a note
         """Test config get/set helper methods"""
         mock_config = Mock()
         mock_config.get.return_value = "test_value"
-        
+
         with patch("msx_serial.commands.handler.get_config", return_value=mock_config):
             with patch("msx_serial.commands.handler.print_info") as mock_print:
                 # get method test
                 self.handler._handle_config_get(["test.key"])
                 mock_print.assert_called_with("test.key: test_value")
-                
+
             # get method with no args
             with patch("msx_serial.commands.handler.print_warn") as mock_warn:
                 self.handler._handle_config_get([])
                 mock_warn.assert_called_with("設定キーを指定してください")
 
         # set method test
-        with patch("msx_serial.commands.handler.set_setting", return_value=True) as mock_set:
+        with patch(
+            "msx_serial.commands.handler.set_setting", return_value=True
+        ) as mock_set:
             with patch("msx_serial.commands.handler.print_info") as mock_print:
                 self.handler._handle_config_set(["test.key", "test_value"])
                 mock_set.assert_called_with("test.key", "test_value")
-                
+
             # set method with insufficient args
             with patch("msx_serial.commands.handler.print_warn") as mock_warn:
                 self.handler._handle_config_set(["test.key"])
@@ -604,8 +621,8 @@ def test_handle_special_commands_perf(monkeypatch):
     # パフォーマンスコマンドハンドラをモック
     mock_handle_performance = Mock(return_value=True)
     monkeypatch.setattr(
-        "msx_serial.commands.performance_commands.handle_performance_command", 
-        mock_handle_performance
+        "msx_serial.commands.performance_commands.handle_performance_command",
+        mock_handle_performance,
     )
 
     # テスト実行
@@ -695,7 +712,9 @@ def test_handle_special_commands_cd_help_encode_mode(monkeypatch):
     ]
 
     for command, mock_method in commands:
-        result = handler.handle_special_commands(command, file_transfer, stop_event, terminal)
+        result = handler.handle_special_commands(
+            command, file_transfer, stop_event, terminal
+        )
         assert result is True
         if "mode" in command:
             mock_method.assert_called_with(command, terminal)
