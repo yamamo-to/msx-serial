@@ -10,7 +10,7 @@ import msx_charset  # noqa: F401  # type: ignore
 from ..common.color_output import print_exception, print_info
 from ..connection.base import ConnectionConfig
 from ..connection.manager import ConnectionManager
-from ..display.optimized_display import OptimizedTerminalDisplay
+from ..display.enhanced_display import EnhancedTerminalDisplay
 from ..io.user_interface import UserInterface
 from ..protocol.msx_detector import MSXMode, MSXProtocolDetector
 from ..transfer.file_transfer import FileTransferManager
@@ -18,7 +18,7 @@ from .data_processor import DataProcessor
 
 
 class MSXSession:
-    """瞬時応答最適化されたMSXターミナルセッション"""
+    """高速応答最適化されたMSXターミナルセッション"""
 
     def __init__(
         self,
@@ -48,11 +48,11 @@ class MSXSession:
         self.connection_manager = ConnectionManager(config)
         self.protocol_detector = MSXProtocolDetector()
 
-        # 瞬時モードでデータプロセッサを初期化
+        # 高速モードでデータプロセッサを初期化
         self.data_processor = DataProcessor(self.protocol_detector, instant_mode=True)
 
-        # 最適化表示を使用（MSX通信用の瞬時モード）
-        self.display = OptimizedTerminalDisplay()
+        # 拡張表示を使用（MSX通信用の高速モード）
+        self.display = EnhancedTerminalDisplay()
 
         self.user_interface = UserInterface(
             prompt_style=prompt_style,

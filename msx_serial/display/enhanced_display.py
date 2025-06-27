@@ -1,5 +1,5 @@
 """
-最適化されたターミナル表示機能
+拡張ターミナル表示機能
 """
 
 import subprocess
@@ -9,13 +9,13 @@ from threading import RLock
 from typing import Any, Dict
 
 
-class OptimizedTerminalDisplay:
-    """最適化されたターミナル表示機能を提供するクラス"""
+class EnhancedTerminalDisplay:
+    """拡張ターミナル表示機能を提供するクラス"""
 
     def __init__(self) -> None:
         self.last_output_time = time.time()
         self.total_bytes_displayed = 0
-        self.performance_mode = "optimized"
+        self.performance_mode = "enhanced"
         self.stats = {
             "total_writes": 0,
             "instant_writes": 0,
@@ -25,7 +25,7 @@ class OptimizedTerminalDisplay:
         self._output_lock = RLock()
 
     def clear_screen(self) -> None:
-        """高速な画面クリア"""
+        """画面クリア"""
         try:
             if sys.platform == "win32":
                 subprocess.run(["cmd", "/c", "cls"], check=False, timeout=5)
@@ -36,7 +36,7 @@ class OptimizedTerminalDisplay:
             pass
 
     def print_receive(self, text: str, is_prompt: bool = False) -> None:
-        """受信テキストの最適化表示
+        """受信テキストの拡張表示
 
         Args:
             text: 表示テキスト

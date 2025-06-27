@@ -1,15 +1,15 @@
 """
-Tests for OptimizedTerminalDisplay (optimized_display.py)
+Tests for EnhancedTerminalDisplay (enhanced_display.py)
 """
 
 from unittest.mock import patch
 
-from msx_serial.display.optimized_display import OptimizedTerminalDisplay
+from msx_serial.display.enhanced_display import EnhancedTerminalDisplay
 
 
-class TestOptimizedTerminalDisplay:
+class TestEnhancedTerminalDisplay:
     def setup_method(self):
-        self.display = OptimizedTerminalDisplay()
+        self.display = EnhancedTerminalDisplay()
 
     @patch("subprocess.run")
     def test_clear_screen_windows(self, mock_run):
@@ -79,6 +79,6 @@ class TestOptimizedTerminalDisplay:
         assert hasattr(self.display, "_output_lock")
 
         # 初期値の確認
-        assert self.display.performance_mode == "optimized"
+        assert self.display.performance_mode == "enhanced"
         assert self.display.total_bytes_displayed == 0
         assert isinstance(self.display.stats, dict)

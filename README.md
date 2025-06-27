@@ -3,11 +3,11 @@
 [![CI](https://github.com/yamamo-to/msx-serial/actions/workflows/ci.yml/badge.svg)](https://github.com/yamamo-to/msx-serial/actions/workflows/ci.yml)
 [![PyPI version](https://badge.fury.io/py/msx-serial.svg)](https://badge.fury.io/py/msx-serial)
 
-シリアル接続やTelnetを通じてMSXと通信するための高性能ターミナルプログラムです。瞬時の文字表示、自動モード検出、日本語テキストサポートを特徴としています。
+シリアル接続やTelnetを通じてMSXと通信するための高性能ターミナルプログラムです。リアルタイム文字表示、自動モード検出、日本語テキストサポートを特徴としています。
 
 ## 特徴
 
-✨ **瞬時通信**: リアルタイムでの文字単位MSX通信に最適化  
+✨ **リアルタイム通信**: 文字単位での高速MSX通信に最適化  
 🔍 **自動モード検出**: BASICとMSX-DOSモードを自動検出  
 🌐 **複数接続タイプ**: シリアル、Telnet、ダミー接続に対応  
 📝 **日本語テキストサポート**: MSX文字エンコーディングの完全サポート  
@@ -152,10 +152,10 @@ MSXテキスト用にサポートされるエンコーディング:
 
 ### コアコンポーネント
 
-- **MSXSession**: 瞬時応答付きメインターミナルセッション
+- **MSXSession**: 高速応答メインターミナルセッション
 - **ConnectionManager**: 統合接続処理 (Serial/Telnet/Dummy)
 - **MSXProtocolDetector**: プロンプトからの自動モード検出
-- **DataProcessor**: 瞬時表示付きリアルタイムデータ処理
+- **DataProcessor**: 高速表示リアルタイムデータ処理
 - **CommandCompleter**: コンテキスト対応コマンド補完
 - **FileTransferManager**: ファイルアップロードと貼り付け操作
 
@@ -178,7 +178,7 @@ msx_serial/
 
 ### 主要設計原則
 
-1. **瞬時応答**: リアルタイムMSX通信のための文字単位処理
+1. **高速応答**: リアルタイムMSX通信のための文字単位処理
 2. **自動適応**: モード検出によってターミナル動作をMSX状態に適応
 3. **統合接続**: 複数接続タイプに対する単一インターフェース
 4. **コンテキスト認識**: 現在のMSXモードにコマンドと補完が適応
@@ -327,7 +327,7 @@ make upload-prod
 - 日本語ドキュメント統一
 
 ### 主要機能
-- 瞬時応答MSX通信
+- 高速応答MSX通信
 - 自動モード検出
 - ファイル転送機能
 - 日本語テキストサポート
