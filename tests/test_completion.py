@@ -338,5 +338,15 @@ class TestIoTCompleterExtended(unittest.TestCase):
         self.assertIsInstance(self.completer.device_list, list)
 
 
+class TestBaseCompleter(unittest.TestCase):
+    """BaseCompleterのテスト"""
+
+    def test_get_completions_not_implemented(self):
+        """get_completionsの未実装テスト"""
+        completer = BaseCompleter()
+        with self.assertRaises(NotImplementedError):
+            list(completer.get_completions(None, None))
+
+
 if __name__ == "__main__":
     unittest.main()
