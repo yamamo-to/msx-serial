@@ -8,13 +8,9 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from msx_serial.common.config_manager import (
-    ConfigManager,
-    ConfigSchema,
-    get_config,
-    get_setting,
-    set_setting,
-)
+from msx_serial.common.config_manager import (ConfigManager, ConfigSchema,
+                                              get_config, get_setting,
+                                              set_setting)
 
 
 class TestConfigSchema(unittest.TestCase):
@@ -56,7 +52,9 @@ class TestConfigSchema(unittest.TestCase):
 
     def test_validate_float_range(self):
         """浮動小数点の範囲検証"""
-        schema = ConfigSchema("test", 10.0, "Test", float, min_value=5.0, max_value=15.0)
+        schema = ConfigSchema(
+            "test", 10.0, "Test", float, min_value=5.0, max_value=15.0
+        )
         self.assertTrue(schema.validate(10.5))
         self.assertFalse(schema.validate(4.9))
 
@@ -72,6 +70,7 @@ class TestConfigManager(unittest.TestCase):
     def tearDown(self):
         """テスト後処理"""
         import shutil
+
         shutil.rmtree(self.temp_dir, ignore_errors=True)
 
     def test_init_creates_directory(self):
@@ -109,9 +108,7 @@ class TestConfigManager(unittest.TestCase):
 
     def test_get_nested(self):
         """ネストされたキーの取得"""
-        self.config_manager.config_data = {
-            "connection": {"timeout": 45, "retry": 5}
-        }
+        self.config_manager.config_data = {"connection": {"timeout": 45, "retry": 5}}
         value = self.config_manager.get_nested("connection.timeout")
         self.assertEqual(value, 45)
 
@@ -125,7 +122,7 @@ class TestConfigManager(unittest.TestCase):
         """設定の保存と読み込み"""
         # 設定値を変更
         self.config_manager.set("connection.timeout", 120, save=True)
-        
+
         # 新しいインスタンスで読み込み
         new_manager = ConfigManager(self.temp_dir)
         self.assertEqual(new_manager.get("connection.timeout"), 120)
@@ -135,7 +132,7 @@ class TestConfigManager(unittest.TestCase):
         # 無効なYAMLを書き込み
         config_file = self.temp_dir / "config.yaml"
         config_file.write_text("invalid: yaml: content: [")
-        
+
         # エラーが発生しても続行する
         result = self.config_manager.load_config()
         self.assertFalse(result)
@@ -155,20 +152,20 @@ class TestConfigManager(unittest.TestCase):
     def test_add_remove_watcher(self):
         """ウォッチャーの追加と削除"""
         called = []
-        
+
         def watcher(key, old_value, new_value):
             called.append((key, old_value, new_value))
-        
+
         self.config_manager.add_watcher(watcher)
         self.config_manager.set("connection.timeout", 60, save=False)
-        
+
         self.assertEqual(len(called), 1)
         self.assertEqual(called[0][0], "connection.timeout")
-        
+
         # ウォッチャーを削除
         self.config_manager.remove_watcher(watcher)
         self.config_manager.set("connection.timeout", 90, save=False)
-        
+
         # 追加の呼び出しなし
         self.assertEqual(len(called), 1)
 
@@ -182,14 +179,14 @@ class TestConfigManager(unittest.TestCase):
         """JSON形式の検出"""
         config_file = self.temp_dir / "config.json"
         config_data = {"connection": {"timeout": 45}}
-        
-        with open(config_file, 'w') as f:
+
+        with open(config_file, "w") as f:
             json.dump(config_data, f)
-        
+
         result = self.config_manager.load_config(config_file)
         self.assertTrue(result)
 
-    @patch('msx_serial.common.config_manager.logger')
+    @patch("msx_serial.common.config_manager.logger")
     def test_logging_on_invalid_value(self, mock_logger):
         """無効な値設定時のログ出力"""
         self.config_manager.set("connection.timeout", -10, save=False)
@@ -197,9 +194,10 @@ class TestConfigManager(unittest.TestCase):
 
     def test_watcher_exception_handling(self):
         """ウォッチャーの例外処理"""
+
         def failing_watcher(key, old_value, new_value):
             raise Exception("Test exception")
-        
+
         self.config_manager.add_watcher(failing_watcher)
         # 例外が発生しても設定は正常に完了する
         result = self.config_manager.set("connection.timeout", 60, save=False)
@@ -215,24 +213,24 @@ class TestModuleFunctions(unittest.TestCase):
         config2 = get_config()
         self.assertIs(config1, config2)
 
-    @patch('msx_serial.common.config_manager._global_config')
+    @patch("msx_serial.common.config_manager._global_config")
     def test_get_setting(self, mock_global_config):
         """設定値の取得関数"""
         mock_global_config.get.return_value = "test_value"
-        
+
         result = get_setting("test.key", "default")
         self.assertEqual(result, "test_value")
         mock_global_config.get.assert_called_once_with("test.key", "default")
 
-    @patch('msx_serial.common.config_manager._global_config')
+    @patch("msx_serial.common.config_manager._global_config")
     def test_set_setting(self, mock_global_config):
         """設定値の設定関数"""
         mock_global_config.set.return_value = True
-        
+
         result = set_setting("test.key", "test_value", save=False)
         self.assertTrue(result)
         mock_global_config.set.assert_called_once_with("test.key", "test_value", False)
 
 
 if __name__ == "__main__":
-    unittest.main() 
+    unittest.main()

@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import MagicMock, Mock, call, patch
 
-from msx_serial.connection.dummy import DummyConfig
+from msx_serial.connection.dummy import DummyConfig, DummyConnection
 from msx_serial.core.msx_session import MSXSession
 from msx_serial.protocol.msx_detector import MSXMode
 
@@ -21,10 +21,11 @@ class TestMSXSession(unittest.TestCase):
         # IotNodesのモック設定
         mock_iot_nodes.return_value.get_node_names.return_value = []
 
-        # DummyConfigでセッションを初期化
+        # DummyConnectionでセッションを初期化
         self.config = DummyConfig()
+        self.connection = DummyConnection(self.config)
         self.session = MSXSession(
-            config=self.config, encoding="msx-jp", prompt_style="#00ff00 bold"
+            connection=self.connection, encoding="msx-jp", prompt_style="#00ff00 bold"
         )
 
     def test_init_default_parameters(self) -> None:
@@ -43,7 +44,7 @@ class TestMSXSession(unittest.TestCase):
 
     def test_init_components(self) -> None:
         """各コンポーネントの初期化テスト"""
-        self.assertIsNotNone(self.session.connection_manager)
+        self.assertIsNotNone(self.session.connection)
         self.assertIsNotNone(self.session.protocol_detector)
         self.assertIsNotNone(self.session.data_processor)
         self.assertIsNotNone(self.session.display)
@@ -53,12 +54,13 @@ class TestMSXSession(unittest.TestCase):
     def test_init_with_custom_parameters(self) -> None:
         """カスタムパラメータでの初期化テスト"""
         config = DummyConfig()
+        connection = DummyConnection(config)
         with (
             patch("msx_serial.completion.iot_loader.IotNodes"),
             patch("msx_serial.io.input_session.PromptSession"),
         ):
             session = MSXSession(
-                config=config, encoding="utf-8", prompt_style="#ff0000"
+                connection=connection, encoding="utf-8", prompt_style="#ff0000"
             )
             self.assertEqual(session.encoding, "utf-8")
 
@@ -130,7 +132,7 @@ class TestMSXSession(unittest.TestCase):
     def test_process_incoming_data_no_data(self) -> None:
         """データなしの場合の_process_incoming_dataテスト"""
         # in_waitingが0を返すようにモック
-        self.session.connection_manager.connection.in_waiting = Mock(return_value=0)
+        self.session.connection.in_waiting = Mock(return_value=0)
 
         result = self.session._process_incoming_data()
         self.assertFalse(result)
@@ -138,8 +140,8 @@ class TestMSXSession(unittest.TestCase):
     def test_process_incoming_data_with_data(self) -> None:
         """データありの場合の_process_incoming_dataテスト"""
         # データが利用可能な状態をモック
-        self.session.connection_manager.connection.in_waiting = Mock(return_value=1)
-        self.session.connection_manager.connection.read = Mock(return_value=b"A")
+        self.session.connection.in_waiting = Mock(return_value=1)
+        self.session.connection.read = Mock(return_value=b"A")
 
         # data_processorのモック
         mock_output = [("text", False)]
@@ -155,21 +157,21 @@ class TestMSXSession(unittest.TestCase):
 
     def test_process_incoming_data_empty_read(self) -> None:
         """空のreadの場合の_process_incoming_dataテスト"""
-        self.session.connection_manager.connection.in_waiting = Mock(return_value=1)
-        self.session.connection_manager.connection.read = Mock(return_value=b"")
+        self.session.connection.in_waiting = Mock(return_value=1)
+        self.session.connection.read = Mock(return_value=b"")
 
         result = self.session._process_incoming_data()
         self.assertFalse(result)
 
     def test_process_incoming_data_decode_error(self) -> None:
         """デコードエラーの場合の_process_incoming_dataテスト"""
-        self.session.connection_manager.connection.in_waiting = Mock(return_value=1)
+        self.session.connection.in_waiting = Mock(return_value=1)
         # Create a mock that raises UnicodeDecodeError when read
         mock_data = Mock()
         mock_data.decode.side_effect = UnicodeDecodeError(
             "msx-jp", b"\xff", 0, 1, "invalid start byte"
         )
-        self.session.connection_manager.connection.read = Mock(return_value=mock_data)
+        self.session.connection.read = Mock(return_value=mock_data)
 
         with patch("msx_serial.core.msx_session.print_exception") as mock_print_exc:
             result = self.session._process_incoming_data()
@@ -180,8 +182,8 @@ class TestMSXSession(unittest.TestCase):
     def test_process_incoming_data_suppressed_output(self) -> None:
         """出力が抑制されている場合のテスト"""
         self.session.suppress_output = True
-        self.session.connection_manager.connection.in_waiting = Mock(return_value=1)
-        self.session.connection_manager.connection.read = Mock(return_value=b"A")
+        self.session.connection.in_waiting = Mock(return_value=1)
+        self.session.connection.read = Mock(return_value=b"A")
 
         with patch.object(self.session, "_display_output") as mock_display:
             result = self.session._process_incoming_data()

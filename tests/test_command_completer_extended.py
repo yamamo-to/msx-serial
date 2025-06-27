@@ -16,7 +16,7 @@ class TestCommandCompleterExtended(unittest.TestCase):
 
     def setUp(self):
         """テストの準備"""
-        self.available_commands = [str(cmd.value) for cmd in CommandType]
+        self.available_commands = [cmd.command for cmd in CommandType]
         self.completer = CommandCompleter(self.available_commands, "unknown")
 
     def test_complete_all_subcommands(self):

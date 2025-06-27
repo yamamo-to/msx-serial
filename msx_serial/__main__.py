@@ -4,6 +4,7 @@ import argparse
 import sys
 
 from msx_serial.connection.connection import detect_connection_type
+from msx_serial.connection.manager import ConnectionManager
 from msx_serial.core.msx_session import MSXSession
 
 
@@ -24,9 +25,12 @@ def main() -> None:
         # URIから接続タイプを検出
         config = detect_connection_type(args.connection)
 
+        # 接続マネージャーを作成
+        connection_manager = ConnectionManager(config)
+
         # ターミナルを作成して実行
         terminal = MSXSession(
-            config=config,
+            connection=connection_manager.connection,
             encoding=args.encoding,
         )
 

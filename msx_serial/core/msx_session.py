@@ -4,12 +4,13 @@ Optimized MSX terminal session with instant response
 
 import threading
 import time
+from typing import Optional
 
 import msx_charset  # noqa: F401  # type: ignore
 
 from ..common.color_output import print_exception, print_info
-from ..connection.base import ConnectionConfig
-from ..connection.manager import ConnectionManager
+from ..common.config_manager import get_setting
+from ..connection.base import Connection
 from ..display.enhanced_display import EnhancedTerminalDisplay
 from ..io.user_interface import UserInterface
 from ..protocol.msx_detector import MSXMode, MSXProtocolDetector
@@ -22,30 +23,41 @@ class MSXSession:
 
     def __init__(
         self,
-        config: ConnectionConfig,
-        encoding: str = "msx-jp",
-        prompt_style: str = "#00ff00 bold",
+        connection: Connection,
+        encoding: Optional[str] = None,
+        prompt_style: Optional[str] = None,
+        debug: bool = False,
+        instant_mode: bool = False,
     ):
         """Initialize optimized terminal session
 
         Args:
-            config: Connection configuration
-            encoding: Text encoding
-            prompt_style: Prompt styling
+            connection: Connection object
+            encoding: Text encoding (None to use config default)
+            prompt_style: Prompt styling (None to use config default)
+            debug: Whether to enable debug mode
+            instant_mode: Whether to use instant mode
         """
-        self.encoding = encoding
+        # 設定から値を取得（引数が指定されていない場合）
+        self.encoding = encoding or get_setting("encoding.default", "msx-jp")
+        prompt_style = prompt_style or get_setting(
+            "display.prompt_style", "#00ff00 bold"
+        )
+
         self.stop_event = threading.Event()
         self.suppress_output = False
         self.prompt_detected = False
         self.last_data_time = 0.0
 
-        # 最適パフォーマンスのための固定設定
-        self.receive_delay = 0.0001
-        self.batch_size = 1  # 単一文字処理
-        self.timeout_check_interval = 0.01
+        # 設定から最適パフォーマンス値を取得
+        self.receive_delay = get_setting("performance.receive_delay", 0.0001)
+        self.batch_size = get_setting("performance.batch_size", 1)
+        self.timeout_check_interval = get_setting(
+            "performance.timeout_check_interval", 0.01
+        )
 
         # コンポーネントの初期化
-        self.connection_manager = ConnectionManager(config)
+        self.connection = connection
         self.protocol_detector = MSXProtocolDetector()
 
         # 高速モードでデータプロセッサを初期化
@@ -56,8 +68,8 @@ class MSXSession:
 
         self.user_interface = UserInterface(
             prompt_style=prompt_style,
-            encoding=encoding,
-            connection=self.connection_manager.connection,
+            encoding=self.encoding,
+            connection=self.connection,
         )
 
         # Replace display with optimized version
@@ -68,8 +80,8 @@ class MSXSession:
         self.user_interface.set_data_processor(self.data_processor)
 
         self.file_transfer = FileTransferManager(
-            connection=self.connection_manager.connection,
-            encoding=encoding,
+            connection=self.connection,
+            encoding=self.encoding,
         )
         self.file_transfer.set_terminal(self)
 
@@ -90,7 +102,7 @@ class MSXSession:
             self.stop_event.set()
             if hasattr(self.display, "flush"):
                 self.display.flush()
-            self.connection_manager.close()
+            self.connection.close()
 
     def _receive_loop(self) -> None:
         """Data receive loop with instant processing"""
@@ -132,13 +144,13 @@ class MSXSession:
         Returns:
             True if data was processed, False if no data available
         """
-        waiting = self.connection_manager.connection.in_waiting()
+        waiting = self.connection.in_waiting()
         if not waiting:
             return False
 
         try:
             # Read single character for instant processing
-            data = self.connection_manager.connection.read(1)
+            data = self.connection.read(1)
 
             if not data:
                 return False

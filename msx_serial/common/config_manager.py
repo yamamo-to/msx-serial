@@ -83,6 +83,7 @@ class ConfigManager:
     def _define_default_schema(self) -> None:
         """デフォルトスキーマを定義"""
         schemas = [
+            # 接続設定
             ConfigSchema(
                 "connection.timeout",
                 30,
@@ -99,6 +100,13 @@ class ConfigManager:
                 min_value=0,
                 max_value=10,
             ),
+            ConfigSchema(
+                "connection.auto_reconnect",
+                True,
+                "自動再接続を有効化",
+                bool,
+            ),
+            # 表示設定
             ConfigSchema("display.color_enabled", True, "カラー表示を有効化", bool),
             ConfigSchema("display.optimization", True, "表示最適化を有効化", bool),
             ConfigSchema(
@@ -109,6 +117,26 @@ class ConfigManager:
                 min_value=1024,
                 max_value=65536,
             ),
+            ConfigSchema(
+                "display.prompt_style",
+                "#00ff00 bold",
+                "プロンプトスタイル",
+                str,
+            ),
+            ConfigSchema(
+                "display.receive_color",
+                "#00ff00",
+                "受信データ表示色",
+                str,
+            ),
+            ConfigSchema(
+                "display.theme",
+                "default",
+                "カラーテーマ",
+                str,
+                choices=["default", "matrix", "classic", "modern"],
+            ),
+            # パフォーマンス設定
             ConfigSchema(
                 "performance.profiling_enabled", False, "プロファイリングを有効化", bool
             ),
@@ -121,6 +149,51 @@ class ConfigManager:
                 max_value=10000,
             ),
             ConfigSchema(
+                "performance.receive_delay",
+                0.0001,
+                "受信遅延（秒）",
+                float,
+                min_value=0.0,
+                max_value=1.0,
+            ),
+            ConfigSchema(
+                "performance.batch_size",
+                1,
+                "バッチサイズ（バイト）",
+                int,
+                min_value=1,
+                max_value=1024,
+            ),
+            ConfigSchema(
+                "performance.timeout_check_interval",
+                0.01,
+                "タイムアウトチェック間隔（秒）",
+                float,
+                min_value=0.001,
+                max_value=1.0,
+            ),
+            ConfigSchema(
+                "performance.adaptive_buffer",
+                False,
+                "アダプティブバッファを有効化",
+                bool,
+            ),
+            # エンコーディング設定
+            ConfigSchema(
+                "encoding.default",
+                "msx-jp",
+                "デフォルトエンコーディング",
+                str,
+                choices=["msx-jp", "msx-intl", "msx-br", "shift-jis", "utf-8", "cp932"],
+            ),
+            ConfigSchema(
+                "encoding.auto_detect",
+                True,
+                "エンコーディング自動検出",
+                bool,
+            ),
+            # ログ設定
+            ConfigSchema(
                 "logging.level",
                 "INFO",
                 "ログレベル",
@@ -128,6 +201,21 @@ class ConfigManager:
                 choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
             ),
             ConfigSchema("logging.file_enabled", False, "ファイルログを有効化", bool),
+            ConfigSchema(
+                "logging.file_path",
+                "~/.msx-serial/logs/msx-serial.log",
+                "ログファイルパス",
+                str,
+            ),
+            ConfigSchema(
+                "logging.max_file_size",
+                10,
+                "最大ログファイルサイズ（MB）",
+                int,
+                min_value=1,
+                max_value=100,
+            ),
+            # 補完設定
             ConfigSchema(
                 "completion.cache_enabled", True, "補完キャッシュを有効化", bool
             ),
@@ -140,6 +228,21 @@ class ConfigManager:
                 max_value=10000,
             ),
             ConfigSchema(
+                "completion.history_enabled",
+                True,
+                "コマンド履歴を有効化",
+                bool,
+            ),
+            ConfigSchema(
+                "completion.max_history",
+                1000,
+                "最大履歴数",
+                int,
+                min_value=100,
+                max_value=10000,
+            ),
+            # 転送設定
+            ConfigSchema(
                 "transfer.chunk_size",
                 1024,
                 "転送チャンクサイズ",
@@ -149,6 +252,39 @@ class ConfigManager:
             ),
             ConfigSchema(
                 "transfer.progress_enabled", True, "転送進捗表示を有効化", bool
+            ),
+            ConfigSchema(
+                "transfer.verify_enabled",
+                False,
+                "転送検証を有効化",
+                bool,
+            ),
+            ConfigSchema(
+                "transfer.timeout",
+                30,
+                "転送タイムアウト（秒）",
+                int,
+                min_value=5,
+                max_value=300,
+            ),
+            # セッション設定
+            ConfigSchema(
+                "session.record_enabled",
+                False,
+                "セッション記録を有効化",
+                bool,
+            ),
+            ConfigSchema(
+                "session.record_path",
+                "~/.msx-serial/sessions",
+                "セッション記録パス",
+                str,
+            ),
+            ConfigSchema(
+                "session.auto_save",
+                True,
+                "自動保存を有効化",
+                bool,
             ),
         ]
 
@@ -301,6 +437,138 @@ class ConfigManager:
                 "current_value": self.get(key),
             }
         return info
+
+    def generate_sample_config(self, output_path: Optional[Path] = None) -> bool:
+        """サンプル設定ファイルを生成
+
+        Args:
+            output_path: 出力パス（Noneの場合はデフォルトパス）
+
+        Returns:
+            生成が成功したかどうか
+        """
+        file_path = output_path or (self.config_dir / "config.sample.yaml")
+
+        try:
+            # カテゴリ別にグループ化
+            categories: dict[str, dict[str, Any]] = {}
+            for key, schema in self.schema.items():
+                category = key.split(".")[0]
+                if category not in categories:
+                    categories[category] = {}
+
+                setting_key = key.split(".", 1)[1]
+                categories[category][setting_key] = {
+                    "value": schema.default_value,
+                    "description": schema.description,
+                    "type": schema.value_type.__name__,
+                    "choices": schema.choices,
+                    "min_value": schema.min_value,
+                    "max_value": schema.max_value,
+                }
+
+            # YAML形式で出力
+            with open(file_path, "w", encoding="utf-8") as f:
+                f.write("# MSX Serial Terminal Configuration\n")
+                f.write("# This is a sample configuration file\n")
+                f.write("# Copy to config.yaml and modify as needed\n\n")
+
+                for category, settings in sorted(categories.items()):
+                    f.write(f"# {category.upper()} Settings\n")
+                    f.write(f"{category}:\n")
+
+                    for setting_key, info in sorted(settings.items()):
+                        f.write(f"  # {info['description']}\n")
+                        f.write(f"  # Type: {info['type']}")
+
+                        if info["choices"]:
+                            f.write(f", Choices: {info['choices']}")
+                        if info["min_value"] is not None:
+                            f.write(f", Min: {info['min_value']}")
+                        if info["max_value"] is not None:
+                            f.write(f", Max: {info['max_value']}")
+                        f.write("\n")
+
+                        f.write(f"  {setting_key}: {info['value']}\n\n")
+
+            logger.info(f"Sample config generated: {file_path}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to generate sample config: {e}")
+            return False
+
+    def export_current_config(self, output_path: Optional[Path] = None) -> bool:
+        """現在の設定をエクスポート
+
+        Args:
+            output_path: 出力パス
+
+        Returns:
+            エクスポートが成功したかどうか
+        """
+        file_path = output_path or (self.config_dir / "config.export.yaml")
+
+        try:
+            export_data: dict[str, Any] = {}
+
+            # カテゴリ別にグループ化
+            for key in self.schema.keys():
+                category = key.split(".")[0]
+                setting_key = key.split(".", 1)[1]
+
+                if category not in export_data:
+                    export_data[category] = {}
+
+                export_data[category][setting_key] = self.get(key)
+
+            with open(file_path, "w", encoding="utf-8") as f:
+                yaml.dump(export_data, f, default_flow_style=False, allow_unicode=True)
+
+            logger.info(f"Current config exported: {file_path}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to export config: {e}")
+            return False
+
+    def list_settings(self) -> dict[str, dict[str, Any]]:
+        """設定項目を一覧表示
+
+        Returns:
+            カテゴリ別の設定項目辞書
+        """
+        categories: dict[str, dict[str, Any]] = {}
+        for key, schema in self.schema.items():
+            parts = key.split(".")
+            category = parts[0] if len(parts) > 1 else "general"
+
+            if category not in categories:
+                categories[category] = {}
+
+            current_value = self.get(key)
+            categories[category][key] = {
+                "value": current_value,
+                "type": schema.value_type.__name__,
+                "description": schema.description,
+                "default": schema.default_value,
+            }
+
+        return categories
+
+    def export_config(self, include_defaults: bool = False) -> dict[str, Any]:
+        """設定をエクスポート
+
+        Args:
+            include_defaults: デフォルト値も含めるかどうか
+
+        Returns:
+            エクスポート用の設定辞書
+        """
+        export_data: dict[str, Any] = {}
+        for key in self.schema:
+            value = self.get(key)
+            if include_defaults or value != self.schema[key].default_value:
+                export_data[key] = value
+        return export_data
 
 
 # グローバル設定マネージャー

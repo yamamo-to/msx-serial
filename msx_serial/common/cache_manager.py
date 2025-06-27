@@ -264,9 +264,9 @@ class FunctionCache:
             "kwargs": sorted(kwargs.items()),
         }
 
-        # ハッシュ化
+        # ハッシュ化（セキュリティ上安全なSHA256を使用）
         serialized = pickle.dumps(key_data, protocol=pickle.HIGHEST_PROTOCOL)
-        return hashlib.md5(serialized).hexdigest()
+        return hashlib.sha256(serialized).hexdigest()
 
 
 # グローバルキャッシュインスタンス

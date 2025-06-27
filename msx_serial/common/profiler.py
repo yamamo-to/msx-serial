@@ -5,11 +5,10 @@
 import threading
 import time
 from collections import defaultdict, deque
-from contextlib import contextmanager
+from contextlib import _GeneratorContextManager, contextmanager
 from dataclasses import dataclass
 from functools import wraps
 from typing import Any, Callable, Dict, Iterator, List, Optional
-from contextlib import _GeneratorContextManager
 
 
 @dataclass

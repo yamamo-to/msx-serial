@@ -5,14 +5,9 @@
 import time
 import unittest
 
-from msx_serial.common.profiler import (
-    PerformanceProfiler,
-    disable_profiling,
-    enable_profiling,
-    get_profiler,
-    profile_context,
-    profile_function,
-)
+from msx_serial.common.profiler import (PerformanceProfiler, disable_profiling,
+                                        enable_profiling, get_profiler,
+                                        profile_context, profile_function)
 
 
 class TestPerformanceProfiler(unittest.TestCase):

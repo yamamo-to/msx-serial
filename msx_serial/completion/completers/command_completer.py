@@ -69,14 +69,12 @@ class CommandCompleter(BaseCompleter):
                     display_meta="MSXモードを表示・変更",
                 )
 
-            # その他の特殊コマンドはBASICモードでのみ表示（@modeは除外）
-            if self.current_mode == "basic":
-                # @modeコマンドと重複しないようにフィルタリング
-                for completion in self.special_completer.get_completions(
-                    document, complete_event
-                ):
-                    if completion.text != "mode":
-                        yield completion
+            # その他の特殊コマンドも表示
+            for completion in self.special_completer.get_completions(
+                document, complete_event
+            ):
+                if completion.text != "mode":  # @modeとの重複を避ける
+                    yield completion
             return
 
         # CALL + スペースの直後はCALLサブコマンドのみ（BASICモードのみ）

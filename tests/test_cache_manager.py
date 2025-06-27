@@ -5,12 +5,8 @@
 import time
 import unittest
 
-from msx_serial.common.cache_manager import (
-    CacheManager,
-    CacheStrategy,
-    cached,
-    get_global_cache,
-)
+from msx_serial.common.cache_manager import (CacheManager, CacheStrategy,
+                                             cached, get_global_cache)
 
 
 class TestCacheManager(unittest.TestCase):

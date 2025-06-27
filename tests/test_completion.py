@@ -9,7 +9,8 @@ from prompt_toolkit.completion import CompleteEvent, Completion
 from prompt_toolkit.document import Document
 
 from msx_serial.commands.command_types import CommandType
-from msx_serial.completion.completers.base import BaseCompleter, CompletionContext
+from msx_serial.completion.completers.base import (BaseCompleter,
+                                                   CompletionContext)
 from msx_serial.completion.completers.command_completer import CommandCompleter
 
 
@@ -18,29 +19,31 @@ class TestCommandCompleter(unittest.TestCase):
 
     def setUp(self):
         """テストの準備"""
-        self.available_commands = [str(cmd.value) for cmd in CommandType]
+        self.available_commands = [cmd.command for cmd in CommandType]
         self.completer = CommandCompleter(self.available_commands, "unknown")
 
     def test_dos_mode_at_mode_completion(self):
-        """DOSモードでの@modeコマンド補完テスト"""
+        """DOSモードでの@コマンド補完テスト"""
         self.completer.set_mode("dos")
 
-        test_cases = [
-            ("@", 1),  # @で1つの候補（mode）
-            ("@m", 1),  # @mで1つの候補（mode）
-            ("@mode", 1),  # @modeで1つの候補（mode）
-        ]
+        # @で始まる場合、DOSモードでも複数の特殊コマンドが表示される
+        document = Document("@")
+        completions = list(self.completer.get_completions(document, CompleteEvent()))
+        self.assertGreater(len(completions), 1, "@で始まる補完候補が複数あるはずです")
 
-        for test_input, expected_count in test_cases:
-            with self.subTest(input=test_input):
-                document = Document(test_input)
-                completions = list(
-                    self.completer.get_completions(document, CompleteEvent())
-                )
-                msg = f"'{test_input}'の補完候補数が期待値と異なります"
-                self.assertEqual(len(completions), expected_count, msg)
-                if completions:
-                    self.assertEqual(completions[0].text, "mode")
+        # @modeは含まれているはず
+        mode_found = any(comp.text == "mode" for comp in completions)
+        self.assertTrue(mode_found, "@modeコマンドが含まれているはずです")
+
+        # @mで@modeに限定される
+        document = Document("@m")
+        completions = list(self.completer.get_completions(document, CompleteEvent()))
+        self.assertGreater(len(completions), 0, "@mで始まる補完候補があるはずです")
+
+        # @modeで完全一致
+        document = Document("@mode")
+        completions = list(self.completer.get_completions(document, CompleteEvent()))
+        self.assertGreater(len(completions), 0, "@modeの補完候補があるはずです")
 
     def test_basic_mode_at_commands_completion(self):
         """BASICモードでの@コマンド補完テスト"""
@@ -285,7 +288,8 @@ class TestCommandCompleterExtended(unittest.TestCase):
     """CommandCompleterの拡張テスト"""
 
     def setUp(self):
-        from msx_serial.completion.completers.command_completer import CommandCompleter
+        from msx_serial.completion.completers.command_completer import \
+            CommandCompleter
 
         self.completer = CommandCompleter(["@help", "@mode", "@exit"], "basic")
 

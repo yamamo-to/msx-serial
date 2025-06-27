@@ -5,12 +5,13 @@ Command handler for special terminal commands
 import os
 import threading
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 from prompt_toolkit.shortcuts import radiolist_dialog
 from prompt_toolkit.styles import Style
 
 from ..common.color_output import print_exception, print_info, print_warn
+from ..common.config_manager import get_config, set_setting
 from .command_types import CommandType
 from .performance_commands import handle_performance_command
 
@@ -51,7 +52,7 @@ class CommandHandler:
         Returns:
             List of available commands
         """
-        return [str(cmd.value) for cmd in CommandType if self.is_command_available(cmd)]
+        return [cmd.command for cmd in CommandType if self.is_command_available(cmd)]
 
     def handle_special_commands(
         self,
@@ -85,7 +86,7 @@ class CommandHandler:
 
         if not self.is_command_available(cmd):
             mode_name = "BASIC" if self.current_mode == "basic" else "MSX-DOS"
-            print_warn(f"Command '{cmd.value}' is not available in {mode_name} mode.")
+            print_warn(f"Command '{cmd.command}' is not available in {mode_name} mode.")
             return True
 
         if cmd == CommandType.EXIT:
@@ -114,6 +115,9 @@ class CommandHandler:
         elif cmd == CommandType.MODE:
             self._handle_mode(user_input, terminal)
             return True
+        elif cmd == CommandType.CONFIG:
+            self._handle_config(user_input)
+            return True
 
         return False
 
@@ -140,7 +144,7 @@ class CommandHandler:
     def _handle_cd(self, user_input: str) -> None:
         """Handle directory change command"""
         try:
-            path = user_input[len(CommandType.CD.value) :].strip()
+            path = user_input[len(CommandType.CD.command) :].strip()
             if not path:
                 print_info(f"Current directory: {Path.cwd()}")
                 return
@@ -156,7 +160,7 @@ class CommandHandler:
 
     def _handle_help(self, user_input: str) -> None:
         """Handle help command"""
-        args = user_input[len(CommandType.HELP.value) :].strip().split()
+        args = user_input[len(CommandType.HELP.command) :].strip().split()
 
         if not args:
             self._show_general_help()
@@ -203,7 +207,7 @@ Use @help <command> for detailed help on specific commands.
 
     def _handle_encode(self, user_input: str) -> None:
         """Handle encoding change command"""
-        encoding_arg = user_input[len(CommandType.ENCODE.value) :].strip()
+        encoding_arg = user_input[len(CommandType.ENCODE.command) :].strip()
 
         if not encoding_arg:
             print_info("Available encodings: utf-8, msx-jp, shift_jis, cp932")
@@ -214,7 +218,7 @@ Use @help <command> for detailed help on specific commands.
 
     def _handle_mode(self, user_input: str, terminal: object = None) -> None:
         """Handle mode switching command"""
-        mode_arg = user_input[len(CommandType.MODE.value) :].strip()
+        mode_arg = user_input[len(CommandType.MODE.command) :].strip()
 
         if not mode_arg:
             # Try to detect mode from last prompt
@@ -270,3 +274,204 @@ Use @help <command> for detailed help on specific commands.
             "msx-dos": "dos",
         }
         return mode_mapping.get(mode_arg.lower())
+
+    def _handle_config(self, user_input: str) -> None:
+        """Handle configuration command"""
+        config_args = user_input[len(CommandType.CONFIG.command) :].strip().split()
+
+        if not config_args:
+            self._show_config_help()
+            return
+
+        subcommand = config_args[0].lower()
+
+        if subcommand == "list":
+            self._show_config_list()
+        elif subcommand == "get":
+            if len(config_args) >= 2:
+                self._show_config_value(config_args[1])
+            else:
+                print_warn("Usage: @config get <key>")
+        elif subcommand == "set":
+            if len(config_args) >= 3:
+                key = config_args[1]
+                value = " ".join(config_args[2:])
+                self._set_config_value(key, value)
+            else:
+                print_warn("Usage: @config set <key> <value>")
+        elif subcommand == "reset":
+            if len(config_args) >= 2:
+                self._reset_config_value(config_args[1])
+            else:
+                print_warn("Usage: @config reset <key>")
+        elif subcommand == "help":
+            self._show_config_help()
+        else:
+            print_warn(f"Unknown config subcommand: {subcommand}")
+            self._show_config_help()
+
+    def _show_config_help(self) -> None:
+        """Show configuration help"""
+        help_text = """
+Configuration Commands:
+  @config list                - Show all configuration settings
+  @config get <key>          - Show specific setting value
+  @config set <key> <value>  - Set configuration value
+  @config reset <key>        - Reset setting to default
+  @config help               - Show this help
+
+Examples:
+  @config get display.theme
+  @config set performance.receive_delay 0.0002
+  @config reset encoding.default
+        """
+        print_info(help_text.strip())
+
+    def _show_config_list(self) -> None:
+        """Show all configuration settings"""
+        # 設定項目をカテゴリ別に分類
+        categories: dict[str, dict[str, Any]] = {}
+        config_info = get_config().get_schema_info()
+
+        for key, info in config_info.items():
+            category = key.split(".")[0]
+            if category not in categories:
+                categories[category] = {}
+            categories[category][key] = info
+
+        # カテゴリ別に表示
+        for category, settings in sorted(categories.items()):
+            print_info(f"\n[{category.upper()}]")
+            for key, info in sorted(settings.items()):
+                current = info["current_value"]
+                default = info["default"]
+                desc = info["description"]
+                print_info(f"  {key}: {current} (default: {default})")
+                print_info(f"    {desc}")
+
+    def _show_config_value(self, key: str) -> None:
+        """Show specific configuration value"""
+        config_manager = get_config()
+        schema_info = config_manager.get_schema_info()
+
+        if key not in schema_info:
+            print_warn(f"Configuration key '{key}' not found")
+            return
+
+        info = schema_info[key]
+        current = info["current_value"]
+        default = info["default"]
+        desc = info["description"]
+        choices = info.get("choices")
+
+        print_info(f"Key: {key}")
+        print_info(f"Description: {desc}")
+        print_info(f"Current Value: {current}")
+        print_info(f"Default Value: {default}")
+        print_info(f"Type: {info['type']}")
+
+        if choices:
+            print_info(f"Valid Choices: {', '.join(map(str, choices))}")
+
+        if info.get("min_value") is not None:
+            print_info(f"Min Value: {info['min_value']}")
+        if info.get("max_value") is not None:
+            print_info(f"Max Value: {info['max_value']}")
+
+    def _set_config_value(self, key: str, value_str: str) -> None:
+        """Set configuration value"""
+        config_manager = get_config()
+        schema_info = config_manager.get_schema_info()
+
+        if key not in schema_info:
+            print_warn(f"Configuration key '{key}' not found")
+            return
+
+        info = schema_info[key]
+        value_type = info["type"]
+
+        # 型変換
+        try:
+            converted_value: Any
+            if value_type == "bool":
+                converted_value = value_str.lower() in (
+                    "true",
+                    "1",
+                    "yes",
+                    "on",
+                    "enable",
+                )
+            elif value_type == "int":
+                converted_value = int(value_str)
+            elif value_type == "float":
+                converted_value = float(value_str)
+            else:
+                converted_value = value_str
+        except ValueError:
+            print_warn(f"Invalid value type for {key}. Expected {value_type}")
+            return
+
+        # 設定を更新
+        if set_setting(key, converted_value):
+            print_info(f"Configuration updated: {key} = {converted_value}")
+            print_info("Note: Some changes may require restart to take effect")
+        else:
+            print_warn(f"Failed to set {key} = {converted_value}")
+
+    def _reset_config_value(self, key: str) -> None:
+        """Reset configuration value to default"""
+        config_manager = get_config()
+        schema_info = config_manager.get_schema_info()
+
+        if key not in schema_info:
+            print_warn(f"Configuration key '{key}' not found")
+            return
+
+        default_value = schema_info[key]["default"]
+
+        if set_setting(key, default_value):
+            print_info(f"Configuration reset: {key} = {default_value}")
+        else:
+            print_warn(f"Failed to reset {key}")
+
+    def _handle_config_get(self, args: list[str]) -> None:
+        """設定値取得を処理"""
+        if not args:
+            print_warn("設定キーを指定してください")
+            return
+
+        key = args[0]
+        try:
+            value = get_config().get(key)
+            if value is not None:
+                print_info(f"{key}: {value}")
+            else:
+                print_warn(f"設定キー '{key}' が見つかりません")
+        except Exception as e:
+            print_exception("設定取得エラー", e)
+
+    def _handle_config_set(self, args: list[str]) -> None:
+        """設定値変更を処理"""
+        if len(args) < 2:
+            print_warn("設定キーと値を指定してください")
+            return
+
+        key, value_str = args[0], args[1]
+        try:
+            # 型変換を試行
+            converted_value: Any
+            if value_str.lower() in ("true", "false"):
+                converted_value = value_str.lower() == "true"
+            elif value_str.isdigit():
+                converted_value = int(value_str)
+            elif "." in value_str and value_str.replace(".", "").isdigit():
+                converted_value = float(value_str)
+            else:
+                converted_value = value_str
+
+            if set_setting(key, converted_value):
+                print_info(f"設定を更新しました: {key} = {converted_value}")
+            else:
+                print_warn(f"設定の更新に失敗しました: {key}")
+        except Exception as e:
+            print_exception("設定更新エラー", e)
