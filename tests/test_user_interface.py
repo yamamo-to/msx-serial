@@ -137,11 +137,13 @@ class TestUserInterface:
         mock_completer.dos_completer = mock_dos_completer
         self.ui.input_session.completer = mock_completer
 
-        with patch("builtins.print") as mock_print:
+        with patch("msx_serial.io.user_interface.logger") as mock_logger:
             result = self.ui.refresh_dos_cache()
             assert result is True
-            mock_print.assert_any_call("DOSファイルキャッシュを更新中...")
-            mock_print.assert_any_call("DOSファイルキャッシュの更新が完了しました")
+            mock_logger.info.assert_any_call("DOSファイルキャッシュを更新中...")
+            mock_logger.info.assert_any_call(
+                "DOSファイルキャッシュの更新が完了しました"
+            )
 
     def test_refresh_dos_cache_failure(self):
         """Test refresh_dos_cache with failed refresh"""
@@ -157,14 +159,19 @@ class TestUserInterface:
         mock_completer.dos_completer = mock_dos_completer
         self.ui.input_session.completer = mock_completer
 
-        with patch("builtins.print") as mock_print:
+        with patch("msx_serial.io.user_interface.logger") as mock_logger:
             result = self.ui.refresh_dos_cache()
             assert result is False
-            mock_print.assert_any_call("DOSファイルキャッシュを更新中...")
-            mock_print.assert_any_call("DOSファイルキャッシュの更新に失敗しました")
+            mock_logger.info.assert_any_call("DOSファイルキャッシュを更新中...")
+            mock_logger.error.assert_any_call(
+                "DOSファイルキャッシュの更新に失敗しました"
+            )
 
     def test_debug_dos_completion(self):
         """Test debug_dos_completion method"""
+        # モードを設定
+        self.ui.current_mode = "dos"
+
         # モックのCompleterとDOSCompleterを設定
         mock_completer = Mock()
         mock_dos_completer = Mock()
@@ -179,13 +186,12 @@ class TestUserInterface:
         mock_completer.current_mode = "dos"
         self.ui.input_session.completer = mock_completer
 
-        with patch("builtins.print") as mock_print:
+        with patch("msx_serial.io.user_interface.logger") as mock_logger:
             result = self.ui.debug_dos_completion("TYPE T")
 
             # デバッグ情報が出力されることを確認
-            mock_print.assert_any_call("デバッグ情報:")
-            mock_print.assert_any_call("  現在のモード: dos")
-            mock_print.assert_any_call("  Completerの現在モード: dos")
+            mock_logger.debug.assert_any_call("現在のモード: dos")
+            mock_logger.debug.assert_any_call("Completerの現在モード: dos")
 
             # リストが返されることを確認
             assert isinstance(result, list)

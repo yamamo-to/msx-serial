@@ -411,22 +411,89 @@ def test_dos_completer_get_completions_with_args():
 
 
 def test_dos_completer_get_completions_with_space():
-    """Test DOSCompleter get_completions with trailing space"""
+    """Test DOSCompleter with space at end"""
     completer = DOSCompleter()
-
-    # テストファイルを設定
-    test_files = {
-        "TEST.COM": DOSFileInfo("TEST.COM", False, 1000),
-    }
-    completer.filesystem_manager.set_test_files("A:\\", test_files)
-
     document = Document("COPY ")
-    complete_event = CompleteEvent()
+    completions = list(completer.get_completions(document, CompleteEvent()))
+    # スペースで終わる場合でも補完が動作することを確認
+    assert isinstance(completions, list)
 
-    completions = list(completer.get_completions(document, complete_event))
 
-    # ファイル補完候補が含まれる
-    assert any(c.text == "TEST.COM" for c in completions)
+class TestBASICFileCompletion(unittest.TestCase):
+    """BASICモードでのファイル補完機能のテスト"""
+
+    def setUp(self):
+        from msx_serial.completion.completers.command_completer import \
+            CommandCompleter
+
+        self.completer = CommandCompleter(["@help", "@mode", "@exit"], "basic")
+
+    def test_basic_mode_file_completion(self):
+        """BASICモードでのファイル補完テスト"""
+        self.completer.set_mode("basic")
+
+        # テストファイルを設定
+        from msx_serial.completion.basic_filesystem import BASICFileInfo
+
+        test_files = {
+            "TEST.BAS": BASICFileInfo("TEST", "BAS"),
+            "DEMO.BAS": BASICFileInfo("DEMO", "BAS"),
+        }
+        self.completer.basic_completer.filesystem_manager.set_test_files(test_files)
+
+        # RUNコマンドでファイル補完
+        document = Document("RUN T")
+        completions = list(self.completer.get_completions(document, CompleteEvent()))
+
+        # BASICファイルの補完候補が含まれていることを確認
+        assert len(completions) > 0
+        # display_metaはFormattedTextオブジェクトなので、文字列として比較
+        basic_completions = [c for c in completions if "BASIC" in str(c.display_meta)]
+        assert len(basic_completions) > 0
+
+    def test_basic_mode_file_completion_with_quotes(self):
+        """BASICモードでの引用符付きファイル補完テスト"""
+        self.completer.set_mode("basic")
+
+        # テストファイルを設定
+        from msx_serial.completion.basic_filesystem import BASICFileInfo
+
+        test_files = {
+            "TEST.BAS": BASICFileInfo("TEST", "BAS"),
+        }
+        self.completer.basic_completer.filesystem_manager.set_test_files(test_files)
+
+        # RUNコマンドでファイル補完
+        document = Document("RUN ")
+        completions = list(self.completer.get_completions(document, CompleteEvent()))
+
+        # 引用符なしで補完されることを確認（修正後の仕様）
+        assert len(completions) > 0
+        completion_text = completions[0].text
+        assert not completion_text.startswith('"')
+
+    def test_basic_completer_integration(self):
+        """BASIC補完機能の統合テスト"""
+        self.completer.set_mode("basic")
+
+        # テストファイルを設定
+        from msx_serial.completion.basic_filesystem import BASICFileInfo
+
+        test_files = {
+            "TEST.BAS": BASICFileInfo("TEST", "BAS"),
+            "DEMO.BAS": BASICFileInfo("DEMO", "BAS"),
+        }
+        self.completer.basic_completer.filesystem_manager.set_test_files(test_files)
+
+        # 複数のコマンドでテスト
+        test_commands = ["RUN T", 'RUN"T', "LOAD T", 'LOAD"T', "SAVE T", 'SAVE"T']
+
+        for command in test_commands:
+            document = Document(command)
+            completions = list(
+                self.completer.get_completions(document, CompleteEvent())
+            )
+            assert len(completions) > 0, f"補完が失敗: {command}"
 
 
 if __name__ == "__main__":

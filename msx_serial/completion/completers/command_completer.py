@@ -2,16 +2,35 @@
 コマンド補完機能
 """
 
-from typing import Any, Iterator, List, Optional
+import logging
+from typing import Iterator, List, Optional
 
 from prompt_toolkit.completion import CompleteEvent, Completion
 from prompt_toolkit.document import Document
 
+from msx_serial.common.config_manager import ConfigManager
+
 from .base import BaseCompleter, CompletionContext
+from .basic_completer import BASICCompleter
 from .dos_completer import DOSCompleter
 from .help_completer import HelpCompleter
 from .iot_completer import IoTCompleter
 from .special_completer import SpecialCompleter
+
+logger = logging.getLogger(__name__)
+
+
+def create_keyword_completion(
+    name: str, meta: str, word: str, prefix: str = ""
+) -> Completion:
+    """キーワード補完候補を生成"""
+    completion_text = name[1:] if name.startswith("_") else name
+    return Completion(
+        completion_text,
+        start_position=-len(word),
+        display=name,
+        display_meta=meta,
+    )
 
 
 class CommandCompleter(BaseCompleter):
@@ -21,15 +40,19 @@ class CommandCompleter(BaseCompleter):
         self,
         special_commands: List[str],
         current_mode: str = "unknown",
-        connection: Optional[Any] = None,
+        connection: Optional[object] = None,
     ) -> None:
         super().__init__()
         self.help_completer = HelpCompleter()
         self.special_completer = SpecialCompleter(special_commands)
         self.iot_completer = IoTCompleter()
         self.dos_completer = DOSCompleter(connection)
+        self.basic_completer = BASICCompleter(connection)
         self.current_mode = current_mode
         self.connection = connection
+        self._iot_commands = ConfigManager().get(
+            "iot.commands", ["IOTGET", "IOTSET", "IOTFIND"]
+        )
 
     def set_mode(self, mode: str) -> None:
         """現在のモードを設定
@@ -39,7 +62,7 @@ class CommandCompleter(BaseCompleter):
         """
         self.current_mode = mode
 
-    def set_connection(self, connection: Any) -> None:
+    def set_connection(self, connection: object) -> None:
         """接続オブジェクトを設定
 
         Args:
@@ -47,6 +70,7 @@ class CommandCompleter(BaseCompleter):
         """
         self.connection = connection
         self.dos_completer.set_connection(connection)
+        self.basic_completer.set_connection(connection)
 
     def set_current_directory(self, directory: str) -> None:
         """現在のディレクトリを設定（DOSモード用）
@@ -55,6 +79,7 @@ class CommandCompleter(BaseCompleter):
             directory: 現在のディレクトリパス
         """
         self.dos_completer.set_current_directory(directory)
+        self.basic_completer.set_current_directory(directory)
 
     def get_completions(
         self, document: Document, complete_event: CompleteEvent
@@ -94,8 +119,7 @@ class CommandCompleter(BaseCompleter):
 
     def _should_complete_iot_commands(self, context: CompletionContext) -> bool:
         """IOTコマンドの補完が必要かチェック"""
-        iot_commands = ("IOTGET", "IOTSET", "IOTFIND")
-        if any(cmd in context.text for cmd in iot_commands):
+        if any(cmd in context.text for cmd in self._iot_commands):
             return "," not in context.text
         return False
 
@@ -164,8 +188,9 @@ class CommandCompleter(BaseCompleter):
     ) -> Iterator[Completion]:
         """モード別の一般的なコマンド補完"""
         if self.current_mode == "basic":
-            # BASICモード: BASICキーワードと特殊コマンド
+            # BASICモード: BASICキーワードとファイル補完
             yield from self._complete_general_keywords(context)
+            yield from self.basic_completer.get_completions(document, complete_event)
         elif self.current_mode == "dos":
             # DOSモード: DOSコマンドのみ（DOSCompleterが全判断を行う）
             yield from self.dos_completer.get_completions(document, complete_event)
@@ -173,73 +198,53 @@ class CommandCompleter(BaseCompleter):
             # 不明モード: すべてのコマンド
             yield from self._complete_general_keywords(context)
             yield from self.dos_completer.get_completions(document, complete_event)
+            yield from self.basic_completer.get_completions(document, complete_event)
 
     def _complete_call_subcommands(
         self, context: CompletionContext
     ) -> Iterator[Completion]:
-        word = context.word
-        if word.startswith("_"):
-            word = word[1:]
-        for command in self.msx_keywords["CALL"]["keywords"]:
-            name = command[0]
-            meta = command[1]
-            if name.startswith(word):
-                yield Completion(
-                    name,
-                    start_position=-len(word),
-                    display=name,
-                    display_meta=meta,
-                )
+        """CALLサブコマンドの補完"""
+        word = context.word[1:] if context.word.startswith("_") else context.word
+        yield from self._complete_keywords_from_category("CALL", word)
 
     def _complete_all_subcommands(
         self, context: CompletionContext
     ) -> Iterator[Completion]:
+        """全サブコマンドの補完"""
         word = context.word
         if not word.startswith("_"):
             word = "_" + word
-        for cmd in self.sub_commands:
-            for command in self.msx_keywords[cmd]["keywords"]:
-                name = command[0]
-                meta = command[1]
-                if name.startswith(word):
-                    completion_text = name[1:] if name.startswith("_") else name
-                    yield Completion(
-                        completion_text,
-                        start_position=-len(context.word),
-                        display=name,
-                        display_meta=meta,
-                    )
+        try:
+            for cmd in self.sub_commands:
+                yield from self._complete_keywords_from_category(
+                    cmd, word, context.word
+                )
+        except AttributeError:
+            logger.debug("sub_commandsが定義されていません")
 
     def _complete_command_keywords(
         self, context: CompletionContext
     ) -> Iterator[Completion]:
+        """コマンドキーワードの補完"""
         word = context.word
         if not word.startswith("_"):
             word = "_" + word
-
-        for command in self.msx_keywords["COMMAND"]["keywords"]:
-            name = command[0]
-            meta = command[1]
-            if name.startswith(word):
-                completion_text = name[1:] if name.startswith("_") else name
-                yield Completion(
-                    completion_text,
-                    start_position=-len(context.word),
-                    display=name,
-                    display_meta=meta,
-                )
+        yield from self._complete_keywords_from_category("COMMAND", word, context.word)
 
     def _complete_general_keywords(
         self, context: CompletionContext
     ) -> Iterator[Completion]:
-        word = context.word
-        for command in self.msx_keywords["BASIC"]["keywords"]:
-            name = command[0]
-            meta = command[1]
-            if name.startswith(word):
-                yield Completion(
-                    name,
-                    start_position=-len(word),
-                    display=name,
-                    display_meta=meta,
-                )
+        """一般キーワードの補完"""
+        yield from self._complete_keywords_from_category("BASIC", context.word)
+
+    def _complete_keywords_from_category(
+        self, category: str, word: str, original_word: str = ""
+    ) -> Iterator[Completion]:
+        """カテゴリ別キーワード補完の共通処理"""
+        try:
+            keywords = self.msx_keywords[category]["keywords"]
+            for name, meta in keywords:
+                if name.startswith(word):
+                    yield create_keyword_completion(name, meta, original_word or word)
+        except (KeyError, AttributeError) as e:
+            logger.debug(f"キーワードカテゴリ '{category}' が見つかりません: {e}")

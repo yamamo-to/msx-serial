@@ -44,7 +44,7 @@ class InputSession:
             auto_suggest=None,
         )
 
-    def prompt(self) -> Any:
+    def prompt(self) -> str:
         """Display prompt and get user input
 
         Returns:
@@ -62,7 +62,7 @@ class InputSession:
         if self.prompt_detected:
             self.prompt_detected = False
 
-        return self.session.prompt("")
+        return str(self.session.prompt(""))
 
     def update_mode(self, mode: str) -> None:
         """Update current mode

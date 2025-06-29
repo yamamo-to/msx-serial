@@ -2,46 +2,69 @@
 Data sender for terminal communication
 """
 
+import logging
+from typing import Optional, Protocol
+
+from msx_serial.common.config_manager import ConfigManager
+
 from ..connection.base import Connection
+
+logger = logging.getLogger(__name__)
+
+
+class DataProcessor(Protocol):
+    """データプロセッサーのプロトコル"""
+
+    def set_last_command(self, command: str) -> None: ...
 
 
 class DataSender:
-    """Handle data transmission to MSX"""
+    """MSXへのデータ送信処理"""
 
-    def __init__(self, connection: Connection, encoding: str = "msx-jp"):
+    def __init__(self, connection: Connection, encoding: Optional[str] = None) -> None:
         self.connection = connection
-        self.encoding = encoding
-        self.data_processor = None  # Reference to data processor for echo detection
+        self.encoding = encoding or ConfigManager().get("connection.encoding", "msx-jp")
+        self.data_processor: Optional[DataProcessor] = None
+        self._special_chars = {
+            "^C": b"\x03",
+            "^[": b"\x1b",
+        }
 
-    def set_data_processor(self, processor: object) -> None:
+    def set_data_processor(self, processor: DataProcessor) -> None:
         """Set reference to data processor for echo detection
 
         Args:
             processor: DataProcessor instance
         """
-        self.data_processor = processor  # type: ignore
+        self.data_processor = processor
 
     def send(self, user_input: str) -> None:
-        """Send user input to MSX
+        """ユーザー入力をMSXに送信"""
+        try:
+            if self.data_processor:
+                self.data_processor.set_last_command(user_input.strip())
 
-        Args:
-            user_input: User input to send
-        """
-        # Notify data processor of the command for echo detection
-        if self.data_processor and hasattr(self.data_processor, "set_last_command"):
-            self.data_processor.set_last_command(user_input.strip())
+            lines = user_input.splitlines()
+            if not lines:
+                self._send_line("")
+                self.connection.flush()
+                return
 
-        lines = user_input.splitlines()
+            for line in lines:
+                self._send_line(line)
 
-        for line in lines:
-            if line.strip() == "^C":
-                self.connection.write(b"\x03")
-            elif line.strip() == "^[":
-                self.connection.write(b"\x1b")
-            else:
-                self.connection.write((line + "\r\n").encode(self.encoding))
+            self.connection.flush()
 
-        if len(lines) == 0:
-            self.connection.write(("\r\n").encode(self.encoding))
+        except Exception as e:
+            logger.error(f"データ送信に失敗: {e}")
+            raise
 
-        self.connection.flush()
+    def _send_line(self, line: str) -> None:
+        """1行を送信"""
+        line = line.strip()
+
+        if line in self._special_chars:
+            self.connection.write(self._special_chars[line])
+        else:
+            encoded_line = (line + "\r\n").encode(self.encoding)
+            self.connection.write(encoded_line)

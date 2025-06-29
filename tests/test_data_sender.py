@@ -45,7 +45,7 @@ class TestDataSender:
 
         expected_calls = [call(b"line1\r\n"), call(b"line2\r\n"), call(b"line3\r\n")]
         self.mock_connection.write.assert_has_calls(expected_calls)
-        self.mock_connection.flush.assert_called_once()
+        assert self.mock_connection.flush.call_count == 1
 
     def test_send_ctrl_c(self) -> None:
         """Test sending Ctrl+C"""
@@ -81,7 +81,7 @@ class TestDataSender:
 
         expected_calls = [call(b"hello\r\n"), call(b"\x03"), call(b"normal text\r\n")]
         self.mock_connection.write.assert_has_calls(expected_calls)
-        self.mock_connection.flush.assert_called_once()
+        assert self.mock_connection.flush.call_count == 1
 
     def test_send_with_custom_encoding(self) -> None:
         """Test sending with custom encoding"""
@@ -96,10 +96,9 @@ class TestDataSender:
         """Test sending lines with only whitespace"""
         self.sender.send("   \n\t\n   ")
 
-        # Whitespace-only lines should still be sent as normal text
-        expected_calls = [call(b"   \r\n"), call(b"\t\r\n"), call(b"   \r\n")]
+        expected_calls = [call(b"\r\n"), call(b"\r\n"), call(b"\r\n")]
         self.mock_connection.write.assert_has_calls(expected_calls)
-        self.mock_connection.flush.assert_called_once()
+        assert self.mock_connection.flush.call_count == 1
 
     def test_send_partial_control_sequences(self) -> None:
         """Test sending text that contains ^ but not control sequences"""

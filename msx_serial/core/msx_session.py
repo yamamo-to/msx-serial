@@ -82,6 +82,9 @@ class MSXSession:
         # DOSファイルシステムマネージャーの参照を設定（DIR自動キャッシュ用）
         self._setup_dos_filesystem_manager()
 
+        # BASICファイルシステムマネージャーの参照を設定（FILES自動キャッシュ用）
+        self._setup_basic_filesystem_manager()
+
         self.file_transfer = FileTransferManager(
             connection=self.connection,
             encoding=self.encoding,
@@ -99,10 +102,29 @@ class MSXSession:
                 if hasattr(completer, "dos_completer"):
                     dos_filesystem_manager = completer.dos_completer.filesystem_manager
                     self.data_processor.set_dos_filesystem_manager(
-                        dos_filesystem_manager
+                        dos_filesystem_manager  # type: ignore
                     )
         except Exception:
             # DOSファイルシステムマネージャーの設定に失敗した場合は無視
+            pass
+
+    def _setup_basic_filesystem_manager(self) -> None:
+        """BASICファイルシステムマネージャーの参照をDataProcessorに設定"""
+        try:
+            # UserInterfaceからBASICCompleterを取得
+            if hasattr(self.user_interface, "input_session") and hasattr(
+                self.user_interface.input_session, "completer"
+            ):
+                completer = self.user_interface.input_session.completer
+                if hasattr(completer, "basic_completer"):
+                    basic_filesystem_manager = (
+                        completer.basic_completer.filesystem_manager
+                    )
+                    self.data_processor.set_basic_filesystem_manager(
+                        basic_filesystem_manager  # type: ignore
+                    )
+        except Exception:
+            # BASICファイルシステムマネージャーの設定に失敗した場合は無視
             pass
 
     def run(self) -> None:

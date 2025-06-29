@@ -22,7 +22,7 @@ class TestMSXTerminalWithDummy(unittest.TestCase):
         self.terminal = MSXSession(
             connection=self.conn, encoding="msx-jp", prompt_style="#00ff00 bold"
         )
-        self.user_interface = UserInterface("#00ff00 bold", "msx-jp", self.conn)
+        self.user_interface = UserInterface("#00ff00 bold", self.conn, "msx-jp")
         self.file_transfer = FileTransferManager(self.conn, "msx-jp")
         self.file_transfer.set_terminal(self.terminal)
 
