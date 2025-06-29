@@ -116,3 +116,12 @@ RUN "TEST.BAS"      # 引用符は自動で追加される
 ## 📄 ライセンス
 
 このプロジェクトはMITライセンスのもとで公開されています。
+
+## 🙏 謝辞
+
+このプロジェクトは以下の素晴らしいリソースから多大な恩恵を受けています：
+
+- **MSX0からコンソール経由でのファイル転送技術**: [@enu7](https://qiita.com/enu7)による[base64を使ったファイル転送実装](https://qiita.com/enu7/items/2fd917c41514f6ea71b1)
+- **MSX BASICコマンドリファレンス**: [fu-sen/MSX-BASIC](https://github.com/fu-sen/MSX-BASIC)プロジェクト
+
+関係者の皆様に深く感謝いたします。
