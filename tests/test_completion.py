@@ -358,10 +358,12 @@ class TestBaseCompleter(unittest.TestCase):
 
 def test_dos_completer_load_commands_exception():
     """Test DOSCompleter when YAML loading fails"""
-    with patch("builtins.open", side_effect=FileNotFoundError("File not found")), \
-         patch("builtins.print") as mock_print:
+    with (
+        patch("builtins.open", side_effect=FileNotFoundError("File not found")),
+        patch("builtins.print") as mock_print,
+    ):
         completer = DOSCompleter()
-        
+
         # 基本的なコマンドが読み込まれる
         assert len(completer.dos_commands) > 0
         assert any(cmd[0] == "DIR" for cmd in completer.dos_commands)
@@ -381,9 +383,9 @@ def test_dos_completer_get_completions_command_only():
     completer = DOSCompleter()
     document = Document("DI")
     complete_event = CompleteEvent()
-    
+
     completions = list(completer.get_completions(document, complete_event))
-    
+
     # DIRコマンドの補完候補が含まれる
     assert any(c.text == "DIR" for c in completions)
 
@@ -391,19 +393,19 @@ def test_dos_completer_get_completions_command_only():
 def test_dos_completer_get_completions_with_args():
     """Test DOSCompleter get_completions with arguments"""
     completer = DOSCompleter()
-    
+
     # テストファイルを設定
     test_files = {
         "TEST.COM": DOSFileInfo("TEST.COM", False, 1000),
         "HELP": DOSFileInfo("HELP", True),
     }
     completer.filesystem_manager.set_test_files("A:\\", test_files)
-    
+
     document = Document("COPY T")
     complete_event = CompleteEvent()
-    
+
     completions = list(completer.get_completions(document, complete_event))
-    
+
     # ファイル補完候補が含まれる
     assert any(c.text == "TEST.COM" for c in completions)
 
@@ -411,18 +413,18 @@ def test_dos_completer_get_completions_with_args():
 def test_dos_completer_get_completions_with_space():
     """Test DOSCompleter get_completions with trailing space"""
     completer = DOSCompleter()
-    
+
     # テストファイルを設定
     test_files = {
         "TEST.COM": DOSFileInfo("TEST.COM", False, 1000),
     }
     completer.filesystem_manager.set_test_files("A:\\", test_files)
-    
+
     document = Document("COPY ")
     complete_event = CompleteEvent()
-    
+
     completions = list(completer.get_completions(document, complete_event))
-    
+
     # ファイル補完候補が含まれる
     assert any(c.text == "TEST.COM" for c in completions)
 

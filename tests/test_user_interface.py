@@ -109,7 +109,7 @@ class TestUserInterface:
     def test_refresh_dos_cache_not_dos_mode(self):
         """Test refresh_dos_cache when not in DOS mode"""
         self.ui.current_mode = "basic"
-        
+
         # DOSモードでない場合はFalseを返す
         result = self.ui.refresh_dos_cache()
         assert result is False
@@ -118,7 +118,7 @@ class TestUserInterface:
         """Test refresh_dos_cache when completer is not initialized"""
         self.ui.current_mode = "dos"
         self.ui.input_session.completer = None
-        
+
         # Completerが初期化されていない場合はFalseを返す
         result = self.ui.refresh_dos_cache()
         assert result is False
@@ -126,17 +126,17 @@ class TestUserInterface:
     def test_refresh_dos_cache_success(self):
         """Test refresh_dos_cache with successful refresh"""
         self.ui.current_mode = "dos"
-        
+
         # モックのCompleterとDOSCompleterを設定
         mock_completer = Mock()
         mock_dos_completer = Mock()
         mock_filesystem_manager = Mock()
         mock_filesystem_manager.refresh_directory_cache_sync.return_value = True
-        
+
         mock_dos_completer.filesystem_manager = mock_filesystem_manager
         mock_completer.dos_completer = mock_dos_completer
         self.ui.input_session.completer = mock_completer
-        
+
         with patch("builtins.print") as mock_print:
             result = self.ui.refresh_dos_cache()
             assert result is True
@@ -146,17 +146,17 @@ class TestUserInterface:
     def test_refresh_dos_cache_failure(self):
         """Test refresh_dos_cache with failed refresh"""
         self.ui.current_mode = "dos"
-        
+
         # モックのCompleterとDOSCompleterを設定
         mock_completer = Mock()
         mock_dos_completer = Mock()
         mock_filesystem_manager = Mock()
         mock_filesystem_manager.refresh_directory_cache_sync.return_value = False
-        
+
         mock_dos_completer.filesystem_manager = mock_filesystem_manager
         mock_completer.dos_completer = mock_dos_completer
         self.ui.input_session.completer = mock_completer
-        
+
         with patch("builtins.print") as mock_print:
             result = self.ui.refresh_dos_cache()
             assert result is False
@@ -169,31 +169,31 @@ class TestUserInterface:
         mock_completer = Mock()
         mock_dos_completer = Mock()
         mock_filesystem_manager = Mock()
-        
+
         # parse_dos_command_lineの戻り値を設定
         mock_filesystem_manager.parse_dos_command_line.return_value = ("TYPE", ["T"], 5)
         mock_completer.get_completions.return_value = []  # イテラブルにする
-        
+
         mock_dos_completer.filesystem_manager = mock_filesystem_manager
         mock_completer.dos_completer = mock_dos_completer
         mock_completer.current_mode = "dos"
         self.ui.input_session.completer = mock_completer
-        
+
         with patch("builtins.print") as mock_print:
             result = self.ui.debug_dos_completion("TYPE T")
-            
+
             # デバッグ情報が出力されることを確認
             mock_print.assert_any_call("デバッグ情報:")
             mock_print.assert_any_call("  現在のモード: dos")
             mock_print.assert_any_call("  Completerの現在モード: dos")
-            
+
             # リストが返されることを確認
             assert isinstance(result, list)
 
     def test_update_dos_directory_no_completer(self):
         """Test update_dos_directory when completer is not available"""
         self.ui.input_session.completer = None
-        
+
         # Completerが利用できない場合は何も起こらない
         self.ui.update_dos_directory("A:\\")
         # 例外が発生しないことを確認
@@ -208,6 +208,6 @@ class TestUserInterface:
         """Test set_data_processor method"""
         mock_processor = Mock()
         self.ui.set_data_processor(mock_processor)
-        
+
         # DataSenderにプロセッサーが設定されることを確認
         assert self.ui.data_sender.data_processor == mock_processor

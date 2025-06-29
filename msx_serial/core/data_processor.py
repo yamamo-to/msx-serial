@@ -71,7 +71,9 @@ class DataProcessor:
         self.last_prompt_content = ""  # Store content for mode detection
 
         # DIRコマンド自動キャッシュ機能
-        self.dos_filesystem_manager: Optional[object] = None  # DOSFileSystemManagerの参照
+        self.dos_filesystem_manager: Optional[object] = (
+            None  # DOSFileSystemManagerの参照
+        )
         self.dir_output_buffer = ""  # DIRコマンド出力を蓄積
         self.is_collecting_dir_output = False  # DIR出力収集中フラグ
 

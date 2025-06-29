@@ -535,7 +535,9 @@ Examples:
         else:
             print_warn(f"Failed to reset {key}")
 
-    def _handle_refresh(self, user_input: str, terminal: Optional[object] = None) -> None:
+    def _handle_refresh(
+        self, user_input: str, terminal: Optional[object] = None
+    ) -> None:
         """Handle refresh command to update DOS file cache
 
         Args:

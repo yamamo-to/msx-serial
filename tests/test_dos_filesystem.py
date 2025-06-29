@@ -208,9 +208,9 @@ AUTOEXEC BAT        57
 COMMAND2 COM     14976
     3 files
     12345 bytes free"""
-        
+
         files = self.manager.parse_dir_output(dir_output)
-        
+
         # システムメッセージは除外され、ファイルのみが抽出される
         # 現在の実装ではディレクトリの解析が正しく動作していない可能性がある
         self.assertIn("AUTOEXEC.BAT", files)
@@ -224,13 +224,13 @@ COMMAND2 COM     14976
         # 拡張子が数字のファイル
         dir_output = """PENGUIN  S02     14343
 TEST     123      456"""
-        
+
         files = self.manager.parse_dir_output(dir_output)
-        
+
         # 拡張子が数字の場合はファイル名.拡張子として結合
         self.assertIn("PENGUIN.S02", files)
         self.assertEqual(files["PENGUIN.S02"].size, 14343)
-        
+
         # 拡張子なしファイル
         self.assertIn("TEST", files)
         self.assertEqual(files["TEST"].size, 123)
@@ -239,9 +239,9 @@ TEST     123      456"""
         """Test parsing DIR output with single file pattern"""
         # 拡張子なしファイル（単一パターン）
         dir_output = """SINGLE   789"""
-        
+
         files = self.manager.parse_dir_output(dir_output)
-        
+
         self.assertIn("SINGLE", files)
         self.assertEqual(files["SINGLE"].size, 789)
         self.assertFalse(files["SINGLE"].is_directory)
@@ -256,7 +256,7 @@ TEST     123      456"""
         mock_connection = Mock()
         mock_connection.write.side_effect = Exception("Connection error")
         self.manager.set_connection(mock_connection)
-        
+
         with patch("msx_serial.completion.dos_filesystem.print") as mock_print:
             result = self.manager.refresh_directory_cache_sync("A:\\")
             self.assertFalse(result)
@@ -271,9 +271,9 @@ TEST     123      456"""
             "DATA.TXT": DOSFileInfo("DATA.TXT", False, 500),
         }
         self.manager.set_test_files("A:\\", test_files)
-        
+
         completions = self.manager.get_completions_for_command("RUN", "T", 0)
-        
+
         # RUNコマンドでは実行ファイルとディレクトリのみ、"T"で始まるもの
         completion_names = [c[0] for c in completions]
         self.assertIn("TEST.COM", completion_names)
@@ -290,9 +290,9 @@ TEST     123      456"""
             "HELP": DOSFileInfo("HELP", True),
         }
         self.manager.set_test_files("A:\\", test_files)
-        
+
         completions = self.manager.get_completions_for_command("COPY", "S", 0)
-        
+
         # COPYコマンドではファイルのみ、"S"で始まるもの
         completion_names = [c[0] for c in completions]
         self.assertIn("SOURCE.TXT", completion_names)
@@ -309,9 +309,9 @@ TEST     123      456"""
             "DATA.TXT": DOSFileInfo("DATA.TXT", False, 500),
         }
         self.manager.set_test_files("A:\\", test_files)
-        
+
         completions = self.manager.get_completions_for_command("UNKNOWN", "T", 0)
-        
+
         # 不明なコマンドでは全ファイル、"T"で始まるもの
         completion_names = [c[0] for c in completions]
         self.assertIn("TEST.COM", completion_names)
