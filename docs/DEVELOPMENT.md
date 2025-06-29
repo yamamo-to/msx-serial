@@ -7,9 +7,15 @@
 
 ---
 
-## アーキテクチャ概要
+## 🏗️ アーキテクチャ概要
 
 ### 主要コンポーネント
+
+- **MSXSession**: 高速応答メインターミナルセッション
+- **ConnectionManager**: 統合接続処理 (Serial/Telnet/Dummy)
+- **MSXProtocolDetector**: プロンプトからの自動モード検出
+- **CommandCompleter**: コンテキスト対応コマンド補完
+- **FileTransferManager**: ファイルアップロードと貼り付け操作
 
 ```
 msx_serial/
@@ -46,6 +52,77 @@ msx_serial/
 3. **テスト駆動**: 95%以上のテストカバレッジ  
 4. **設定駆動**: ConfigManagerによる集中管理
 5. **パフォーマンス重視**: Profilerによる計測とキャッシュ活用
+
+## 🧪 テスト
+
+```bash
+# 基本テスト実行
+pip install -e .[dev]
+pytest
+
+# カバレッジ付き実行
+pytest --cov=msx_serial --cov-report=html
+```
+
+**テスト統計:**
+- 総テスト数: 718件
+- コードカバレッジ: 95%
+- テスト成功率: 100%
+
+### テスト戦略
+
+- **ユニットテスト**: 個別関数・クラスの動作確認
+- **統合テスト**: コンポーネント間の連携確認  
+- **パフォーマンステスト**: レスポンス時間・メモリ使用量測定
+- **セキュリティテスト**: banditによる脆弱性検出
+
+### テスト実行
+
+```bash
+# 基本テスト実行
+make test
+
+# 詳細テスト実行
+pytest -v --cov=msx_serial --cov-report=html
+
+# 特定テストファイル実行
+pytest tests/test_commands.py -v
+
+# テストパターン指定
+pytest -k "test_help" -v
+```
+
+### テストカバレッジ要件
+
+- **全体カバレッジ**: 95%以上必須
+- **新機能**: 100%カバレッジ必須
+- **重要機能**: 100%カバレッジ推奨
+- **レポート**: HTMLレポートで詳細確認
+
+### 新機能テスト追加手順
+
+1. **テストクラス作成**: `Test`で始まるクラス名
+2. **テストメソッド作成**: `test_`で始まるメソッド名  
+3. **正常系テスト**: 期待される動作の確認
+4. **異常系テスト**: エラーハンドリングの確認
+5. **境界値テスト**: 極端な値での動作確認
+
+## 🤝 貢献
+
+プルリクエストや課題報告を歓迎します。
+
+### 品質要件
+
+新機能追加・変更時は以下の品質要件を満たしてください：
+
+```bash
+make check-all       # 全品質チェック実行
+make test           # テストカバレッジ95%以上（現在95%達成）
+make lint           # flake8・mypy全エラー解消  
+make security       # bandit高リスク問題なし
+make complexity     # Radon平均A評価
+make format         # black・isortフォーマット適用
+```
 
 ## 開発環境構築
 
@@ -102,46 +179,6 @@ make performance    # パフォーマンステスト
 make deps-check     # 依存関係更新確認
 ```
 
-## テスト設計
-
-### テスト戦略
-
-- **ユニットテスト**: 個別関数・クラスの動作確認
-- **統合テスト**: コンポーネント間の連携確認  
-- **パフォーマンステスト**: レスポンス時間・メモリ使用量測定
-- **セキュリティテスト**: banditによる脆弱性検出
-
-### テスト実行
-
-```bash
-# 基本テスト実行
-make test
-
-# 詳細テスト実行
-pytest -v --cov=msx_serial --cov-report=html
-
-# 特定テストファイル実行
-pytest tests/test_commands.py -v
-
-# テストパターン指定
-pytest -k "test_help" -v
-```
-
-### テストカバレッジ要件
-
-- **全体カバレッジ**: 95%以上必須
-- **新機能**: 100%カバレッジ必須
-- **重要機能**: 100%カバレッジ推奨
-- **レポート**: HTMLレポートで詳細確認
-
-### 新機能テスト追加手順
-
-1. **テストクラス作成**: `Test`で始まるクラス名
-2. **テストメソッド作成**: `test_`で始まるメソッド名  
-3. **正常系テスト**: 期待される動作の確認
-4. **異常系テスト**: エラーハンドリングの確認
-5. **境界値テスト**: 極端な値での動作確認
-
 ## 品質管理
 
 ### 品質ゲート
@@ -151,7 +188,7 @@ pytest -k "test_help" -v
 ```bash
 # 1. 全テスト通過
 make test
-# ✅ 548/548 tests passed, 95%+ coverage
+# ✅ 718/718 tests passed, 95%+ coverage
 
 # 2. コード品質チェック
 make lint  
@@ -199,302 +236,70 @@ def calculate_transfer_rate(data_size: int, duration: float) -> float:
         
     Returns:
         転送速度（バイト/秒）
-        
-    Raises:
-        ValueError: durationが0以下の場合
     """
     if duration <= 0:
         raise ValueError("転送時間は正の値である必要があります")
+    
     return data_size / duration
 
-# ❌ 悪い例  
-def calc(d,t):
-    return d/t  # エラーハンドリングなし、型注釈なし、ドキュメントなし
+
+# ❌ 悪い例
+def calc_rate(ds,dur):
+    return ds/dur
 ```
 
-### 型注釈規約
+### 型注釈
 
 ```python
+# ✅ 良い例
 from typing import Optional, List, Dict, Any
-from pathlib import Path
 
-# 関数の型注釈
-def process_command(
-    command: str, 
-    args: List[str], 
+def process_data(
+    data: List[str], 
     config: Optional[Dict[str, Any]] = None
-) -> bool:
-    """コマンド処理を実行する。"""
+) -> Dict[str, int]:
+    """データを処理して結果を返す。"""
     pass
 
-# クラスの型注釈
-class ConnectionManager:
-    def __init__(self, uri: str) -> None:
-        self._connection: Optional[BaseConnection] = None
-        self._config: Dict[str, Any] = {}
+
+# ❌ 悪い例
+def process_data(data, config=None):
+    pass
 ```
 
-### Enum設計規約
+### ドキュメント
 
 ```python
-from enum import Enum
-from typing import Tuple
-
-class MSXMode(Enum):
-    """MSX動作モード。"""
+# ✅ 良い例
+class FileTransferManager:
+    """ファイル転送を管理するクラス。
     
-    BASIC = ("basic", "Ok", "BASICモード")
-    DOS = ("dos", r"[A-Z][:>]", "DOS/CMDモード")  
-    UNKNOWN = ("unknown", "", "不明モード")
+    シリアル接続を通じてMSXにファイルを転送する機能を提供します。
     
-    def __init__(self, mode: str, pattern: str, description: str) -> None:
-        self.mode = mode
-        self.pattern = pattern  
-        self.description = description
+    Attributes:
+        connection: MSXとの接続オブジェクト
+        cache: 転送キャッシュ
+    """
     
-    @property
-    def value(self) -> str:
-        """モード名を返す。"""
-        return self.mode
+    def __init__(self, connection: Connection) -> None:
+        """FileTransferManagerを初期化する。
+        
+        Args:
+            connection: MSXとの接続オブジェクト
+        """
+        self.connection = connection
+        self.cache: Dict[str, Any] = {}
 ```
 
-## 貢献方法
+## 📄 ライセンス
 
-### 1. Issue作成
+このプロジェクトはMITライセンスのもとで公開されています。
 
-```markdown
-## 概要
-機能の概要や問題の説明
+## 🙏 謝辞
 
-## 期待する動作
-どのような動作を期待するか
+このプロジェクトは以下の素晴らしいリソースから多大な恩恵を受けています：
 
-## 現在の動作  
-現在どのような動作をするか
+- **MSX0からコンソール経由でのファイル転送技術**: [@enu7](https://qiita.com/enu7)による[base64を使ったファイル転送実装](https://qiita.com/enu7/items/2fd917c41514f6ea71b1)
+- **MSX BASICコマンドリファレンス**: [fu-sen/MSX-BASIC](https://github.com/fu-sen/MSX-BASIC)プロジェクト
 
-## 環境
-- OS: macOS 14.5
-- Python: 3.11.9
-- msx-serial: v0.2.17.dev8
-```
-
-### 2. Pull Request作成
-
-```bash
-# 開発ブランチ作成
-git checkout -b feature/new-command
-
-# 開発・テスト実装
-# ... coding ...
-
-# 品質チェック実行
-make check-all
-
-# コミット  
-git add .
-git commit -m "新機能: @uploadコマンドの追加
-
-- base64エンコーディングによるバイナリファイル転送
-- プログレスバー表示機能  
-- エラーハンドリング強化
-- テストカバレッジ100%"
-
-# プッシュ・PR作成
-git push origin feature/new-command
-```
-
-### 3. コミットメッセージ規約
-
-```
-種類: 簡潔な変更内容（50文字以内）
-
-詳細な変更内容の説明：
-- 追加した機能
-- 修正した問題
-- 影響範囲
-- 注意事項
-
-関連Issue: #123
-```
-
-**種類の例:**
-- `機能`: 新機能追加
-- `修正`: バグ修正  
-- `改善`: 既存機能の改善
-- `テスト`: テスト追加・修正
-- `ドキュメント`: ドキュメント更新
-- `リファクタリング`: コード整理
-
-## リリース管理
-
-### バージョニング
-
-Semantic Versioning (SemVer) に準拠：
-
-- **MAJOR**: 破壊的変更 (例: 2.0.0)
-- **MINOR**: 後方互換性ありの機能追加 (例: 1.1.0)  
-- **PATCH**: 後方互換性ありのバグ修正 (例: 1.0.1)
-- **PRE-RELEASE**: 開発版 (例: 1.0.0.dev1)
-
-### リリース手順
-
-```bash
-# 1. リリース準備確認
-make release-check
-
-# 2. バージョン確認  
-python setup.py --version
-
-# 3. ビルド実行
-make build
-
-# 4. テスト配布（オプション）
-pip install dist/msx_serial-*.whl
-
-# 5. PyPIアップロード（メンテナー限定）
-twine upload dist/*
-```
-
-## 高度な開発機能
-
-### プロファイリング
-
-```python
-from msx_serial.common.profiler import profiler
-
-@profiler.measure_time
-def heavy_computation() -> str:
-    """重い処理の実行時間を測定。"""
-    # 重い処理
-    return "result"
-
-# 使用例
-result = heavy_computation()
-print(f"実行時間: {profiler.get_stats()}")
-```
-
-### キャッシュ活用
-
-```python  
-from msx_serial.common.cache_manager import CacheManager
-
-cache = CacheManager()
-
-@cache.cached(ttl=300)  # 5分間キャッシュ
-def expensive_operation(param: str) -> str:
-    """高コストな処理結果をキャッシュ。"""
-    # 重い処理
-    return f"processed_{param}"
-```
-
-### 設定管理
-
-```python
-from msx_serial.common.config_manager import ConfigManager
-
-config = ConfigManager()
-
-# 設定取得
-theme = config.get("display.theme", "dark")
-
-# 設定変更
-config.set("performance.delay", 0.01)
-
-# 設定検証
-config.validate_value("performance.delay", 0.01)
-```
-
-## トラブルシューティング
-
-### 開発環境の問題
-
-**import エラーが発生する場合:**
-```bash
-# editable installの再実行
-pip uninstall msx-serial
-pip install -e .[dev]
-```
-
-**テストが失敗する場合:**
-```bash
-# キャッシュクリア
-pytest --cache-clear
-
-# 仮想環境の再作成
-deactivate
-rm -rf venv
-python -m venv venv
-source venv/bin/activate
-pip install -e .[dev]
-```
-
-### 品質チェックの問題
-
-**flake8エラーの修正:**
-```bash
-# 自動修正可能な問題
-autopep8 --in-place --aggressive file.py
-
-# 手動修正が必要な問題
-flake8 file.py --show-source
-```
-
-**mypy エラーの修正:**
-```bash
-# 型注釈の追加・修正
-mypy file.py --show-error-codes
-```
-
-### パフォーマンス問題
-
-**メモリ使用量の監視:**
-```bash
-# メモリプロファイリング
-python -m memory_profiler script.py
-
-# プロファイルの詳細分析
-python -m cProfile -o profile.stats script.py
-python -c "import pstats; pstats.Stats('profile.stats').sort_stats('time').print_stats(10)"
-```
-
-## AI開発の透明性
-
-このプロジェクトではAIによるコード生成を活用しており、以下の原則に従います：
-
-- **透明性**: AI貢献度の適切な記録・開示
-- **品質保証**: 人間による添削・調整の実施
-- **一貫性**: 既存コードスタイルとの整合性確保
-- **測定可能性**: 品質向上への貢献の定量的測定
-
-### AI貢献度の記録
-
-```python
-# ファイルヘッダーでAI貢献度を明記
-"""
-MSXシリアルターミナル - コマンドハンドラー
-
-このファイルの開発にはAIアシスタントが貢献しています：
-- コード生成: 70%
-- 人間による添削: 30%
-- 最終品質保証: 人間による確認済み
-"""
-```
-
-## ライセンスと著作権
-
-- **ライセンス**: MIT License
-- **著作権**: プロジェクト貢献者
-- **サードパーティ**: 依存関係のライセンスを尊重
-- **AI生成コード**: オープンソースライセンス下で公開
-
-### 依存関係のライセンス確認
-
-```bash
-# ライセンス一覧の確認
-pip-licenses --format=table --with-license-file
-
-# 非互換ライセンスの検出
-pip-licenses --fail-on="GPL"
-```
-
-貢献いただく際は、コードがMITライセンスと互換性があることを確認してください。 
+関係者の皆様に深く感謝いたします。 

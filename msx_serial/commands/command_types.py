@@ -5,17 +5,17 @@ from typing import Optional
 
 
 class CommandType(Enum):
-    """特殊コマンドの種類"""
+    """Special command types"""
 
-    CD = ("@cd", "カレントディレクトリを変更します")
-    ENCODE = ("@encode", "送受信時の文字コードを指定します")
+    HELP = ("@help", "ヘルプを表示します")
     EXIT = ("@exit", "プログラムを終了します")
-    HELP = ("@help", "コマンドのヘルプを表示します")
-    MODE = ("@mode", "MSXモードを表示または強制変更します")
-    PASTE = ("@paste", "ファイルを読み込んで送信します")
-    UPLOAD = ("@upload", "ファイルをアップロードします")
-    CONFIG = ("@config", "設定を表示・変更します")  # 新しい設定管理コマンド
-    REFRESH = ("@refresh", "DOSファイル補完キャッシュを更新します")
+    PASTE = ("@paste", "ファイルをBASICプログラムとして貼り付けます")
+    UPLOAD = ("@upload", "ファイルをBASICプログラムとしてアップロードします")
+    MODE = ("@mode", "MSXモードを表示/変更します")
+    ENCODE = ("@encode", "テキストエンコーディングを設定します")
+    PERF = ("@perf", "パフォーマンス統計を表示します")
+    CD = ("@cd", "現在のディレクトリを変更します")
+    CONFIG = ("@config", "設定を管理します")
 
     def __init__(self, command: str, description: str):
         self.command = command

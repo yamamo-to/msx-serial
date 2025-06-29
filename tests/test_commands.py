@@ -160,7 +160,7 @@ class TestCommandHandler:
     def test_handle_help_command_specific(self, mock_print_info):
         """Test specific help command"""
         self.handler._handle_help("@help exit")
-        mock_print_info.assert_called_once_with("exit: Exit the terminal application.")
+        mock_print_info.assert_called_once_with("exit: Exit the program. Usage: @exit")
 
     @patch("msx_serial.commands.handler.print_warn")
     def test_handle_help_command_unknown(self, mock_print_warn):
@@ -590,6 +590,24 @@ This is a note
             self.handler._handle_config("@config set test.key")
             mock_warn.assert_called_with("Usage: @config set <key> <value>")
 
+    def test_handle_config_reset_success(self):
+        """Test _handle_config reset with success"""
+        with patch("msx_serial.commands.handler.get_config") as mock_get_config:
+            mock_config = Mock()
+            mock_config.get_schema_info.return_value = {
+                "test.key": {
+                    "default": "default_value",
+                    "type": "str",
+                    "description": "Test setting",
+                }
+            }
+            mock_get_config.return_value = mock_config
+
+            with patch("msx_serial.commands.handler.set_setting") as mock_set_setting:
+                mock_set_setting.return_value = True
+                self.handler._handle_config("@config reset test.key")
+                mock_set_setting.assert_called_once_with("test.key", "default_value")
+
 
 class DummyFileTransfer:
     def __init__(self):
@@ -817,7 +835,7 @@ def test_show_command_help(monkeypatch):
     monkeypatch.setattr("msx_serial.commands.handler.print_info", mock_print_info)
 
     handler._show_command_help("exit")
-    mock_print_info.assert_called_with("exit: Exit the terminal application.")
+    mock_print_info.assert_called_with("exit: Exit the program. Usage: @exit")
 
 
 def test_handle_encode(monkeypatch):
@@ -995,79 +1013,6 @@ def test_handle_encode_no_encoding():
         handler._handle_encode("@encode")
         mock_print.assert_called_with(
             "Available encodings: utf-8, msx-jp, shift_jis, cp932"
-        )
-
-
-def test_handle_refresh_terminal_none():
-    """Test _handle_refresh with terminal=None"""
-    style = Style.from_dict({})
-    handler = CommandHandler(style, "basic")
-
-    with patch("msx_serial.commands.handler.print_warn") as mock_warn:
-        handler._handle_refresh("@refresh", terminal=None)
-        mock_warn.assert_called_with("Refresh command requires terminal instance")
-
-
-def test_handle_refresh_no_user_interface():
-    """Test _handle_refresh with terminal without user_interface"""
-    style = Style.from_dict({})
-    handler = CommandHandler(style, "basic")
-
-    terminal = Mock()
-    del terminal.user_interface
-
-    with patch("msx_serial.commands.handler.print_warn") as mock_warn:
-        handler._handle_refresh("@refresh", terminal=terminal)
-        mock_warn.assert_called_with("Terminal does not have user_interface")
-
-
-def test_handle_refresh_no_refresh_dos_cache():
-    """Test _handle_refresh with user_interface without refresh_dos_cache"""
-    style = Style.from_dict({})
-    handler = CommandHandler(style, "basic")
-
-    terminal = Mock()
-    user_interface = Mock()
-    del user_interface.refresh_dos_cache
-    terminal.user_interface = user_interface
-
-    with patch("msx_serial.commands.handler.print_warn") as mock_warn:
-        handler._handle_refresh("@refresh", terminal=terminal)
-        mock_warn.assert_called_with(
-            "User interface does not support DOS cache refresh"
-        )
-
-
-def test_handle_refresh_success():
-    """Test _handle_refresh with successful refresh"""
-    style = Style.from_dict({})
-    handler = CommandHandler(style, "basic")
-
-    terminal = Mock()
-    user_interface = Mock()
-    user_interface.refresh_dos_cache.return_value = True
-    terminal.user_interface = user_interface
-
-    with patch("msx_serial.commands.handler.print_info") as mock_print:
-        handler._handle_refresh("@refresh", terminal=terminal)
-        mock_print.assert_called_with("DOSファイル補完キャッシュを更新しました")
-
-
-def test_handle_refresh_failure():
-    """Test _handle_refresh with failed refresh"""
-    style = Style.from_dict({})
-    handler = CommandHandler(style, "basic")
-
-    terminal = Mock()
-    user_interface = Mock()
-    user_interface.refresh_dos_cache.return_value = False
-    terminal.user_interface = user_interface
-
-    with patch("msx_serial.commands.handler.print_info") as mock_print:
-        handler._handle_refresh("@refresh", terminal=terminal)
-        mock_print.assert_any_call("DIRコマンドを実行しました。")
-        mock_print.assert_any_call(
-            "DIRコマンドの出力が自動的にキャッシュに反映されます。"
         )
 
 

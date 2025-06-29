@@ -118,8 +118,8 @@ class CommandHandler:
         elif cmd == CommandType.CONFIG:
             self._handle_config(user_input)
             return True
-        elif cmd == CommandType.REFRESH:
-            self._handle_refresh(user_input, terminal)
+        elif cmd == CommandType.PERF:
+            self._handle_perf(user_input)
             return True
 
         return False
@@ -181,7 +181,6 @@ Available commands:
   @encode   - Change encoding
   @mode     - Switch MSX mode
   @perf     - Performance control (see @perf help)
-  @refresh  - Update DOS file completion cache
   
 MSX-specific commands (BASIC mode only):
   @paste    - Paste a file as BASIC program
@@ -195,7 +194,7 @@ Use @help <command> for detailed help on specific commands.
         """Show help for specific command"""
         # 内蔵コマンドのヘルプ
         help_texts = {
-            "exit": "Exit the terminal application.",
+            "exit": "Exit the program. Usage: @exit",
             "cd": "Change current directory. Usage: @cd [directory]",
             "help": "Show help information. Usage: @help [command]",
             "encode": "Change text encoding. Usage: @encode [encoding]",
@@ -203,7 +202,6 @@ Use @help <command> for detailed help on specific commands.
             "paste": "Paste file as BASIC program (BASIC mode only)",
             "upload": "Upload file to MSX (BASIC mode only)",
             "perf": "Performance control commands. Usage: @perf help for details",
-            "refresh": "Update DOS file completion cache. Usage: @refresh",
         }
 
         if command in help_texts:
@@ -535,33 +533,7 @@ Examples:
         else:
             print_warn(f"Failed to reset {key}")
 
-    def _handle_refresh(
-        self, user_input: str, terminal: Optional[object] = None
-    ) -> None:
-        """Handle refresh command to update DOS file cache
-
-        Args:
-            user_input: User input
-            terminal: Terminal instance
-        """
-        if not terminal:
-            print_warn("Refresh command requires terminal instance")
-            return
-
-        if not hasattr(terminal, "user_interface"):
-            print_warn("Terminal does not have user_interface")
-            return
-
-        user_interface = terminal.user_interface  # type: ignore
-        if not hasattr(user_interface, "refresh_dos_cache"):
-            print_warn("User interface does not support DOS cache refresh")
-            return
-
-        # DOSファイルキャッシュを更新
-        success = user_interface.refresh_dos_cache()
-
-        if success:
-            print_info("DOSファイル補完キャッシュを更新しました")
-        else:
-            print_info("DIRコマンドを実行しました。")
-            print_info("DIRコマンドの出力が自動的にキャッシュに反映されます。")
+    def _handle_perf(self, user_input: str) -> None:
+        """Handle performance command"""
+        # This method should be implemented to handle performance commands
+        print_warn("Performance command handling not implemented")
