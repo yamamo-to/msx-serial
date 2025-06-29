@@ -286,12 +286,20 @@ class DOSFileSystemManager:
                 f
                 for f in files.values()
                 if (f.is_executable or f.is_directory)
-                and f.name.startswith(current_word)
+                and f.name.upper().startswith(current_word)
+            ]
+        elif not command:
+            # 空のコマンド名の場合: 実行可能ファイルとディレクトリのみ
+            target_files = [
+                f
+                for f in files.values()
+                if (f.is_executable or f.is_directory)
+                and f.name.upper().startswith(current_word)
             ]
         else:
             # その他のコマンド: 全ファイル（TYPE、COPY、DELなど）
             target_files = [
-                f for f in files.values() if f.name.startswith(current_word)
+                f for f in files.values() if f.name.upper().startswith(current_word)
             ]
 
         # 補完候補を生成
@@ -310,8 +318,34 @@ class DOSFileSystemManager:
 
             completions.append((completion, description))
 
-        # アルファベット順にソート（ディレクトリを最初に）
-        completions.sort(key=lambda x: (not x[0].endswith("\\"), x[0]))
+        # 優先順位付きソート
+        # 1. ディレクトリ（最初）
+        # 2. 実行可能ファイル（.COM > .EXE > .BATの順）
+        # 3. その他のファイル（アルファベット順）
+        def get_sort_key(item: Tuple[str, str]) -> Tuple[int, int, str]:
+            completion, description = item
+
+            # ディレクトリは最優先
+            if completion.endswith("\\"):
+                return (0, 0, completion)
+
+            # 実行可能ファイルの優先順位
+            if "⚡ 実行ファイル" in description:
+                ext = description.split("(")[1].split(")")[0]
+                if ext == "COM":
+                    priority = 1
+                elif ext == "EXE":
+                    priority = 2
+                elif ext == "BAT":
+                    priority = 3
+                else:
+                    priority = 4
+                return (1, priority, completion)
+
+            # その他のファイル
+            return (2, 0, completion)
+
+        completions.sort(key=get_sort_key)
 
         return completions
 

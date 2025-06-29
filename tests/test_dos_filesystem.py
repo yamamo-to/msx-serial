@@ -319,6 +319,155 @@ TEST     123      456"""
         self.assertNotIn("HELP", completion_names)
         self.assertNotIn("DATA.TXT", completion_names)
 
+    def test_get_completions_for_command_empty_command(self):
+        """Test get_completions_for_command with empty command (A> prompt)"""
+        # テストファイルを設定
+        test_files = {
+            "GAME.COM": DOSFileInfo("GAME.COM", False, 1234),
+            "PROGRAM.EXE": DOSFileInfo("PROGRAM.EXE", False, 5678),
+            "AUTOEXEC.BAT": DOSFileInfo("AUTOEXEC.BAT", False, 456),
+            "README.TXT": DOSFileInfo("README.TXT", False, 789),
+            "TEST.BAS": DOSFileInfo("TEST.BAS", False, 123),
+            "SUBDIR": DOSFileInfo("SUBDIR", True),
+        }
+        self.manager.set_test_files("A:\\", test_files)
+
+        # 空のコマンド名で実行可能ファイルとディレクトリの補完をテスト
+        completions = self.manager.get_completions_for_command("", "", 0)
+        completion_names = [comp[0] for comp in completions]
+
+        # 実行可能ファイルとディレクトリが含まれることを確認
+        self.assertIn("GAME.COM", completion_names)
+        self.assertIn("PROGRAM.EXE", completion_names)
+        self.assertIn("AUTOEXEC.BAT", completion_names)
+        self.assertIn("SUBDIR\\", completion_names)
+
+        # 実行可能ファイルでないファイルは含まれないことを確認
+        self.assertNotIn("README.TXT", completion_names)
+        self.assertNotIn("TEST.BAS", completion_names)
+
+        # 優先順位を確認（.COM > .EXE > .BAT > その他）
+        # 最初の実行可能ファイルが.COMであることを確認
+        executable_files = [
+            name for name in completion_names if name.endswith((".COM", ".EXE", ".BAT"))
+        ]
+        if executable_files:
+            self.assertTrue(
+                executable_files[0].endswith(".COM"),
+                f"最初の実行可能ファイルは.COMであるべき: {executable_files}",
+            )
+
+    def test_get_completions_for_command_priority_order(self):
+        """ファイル補完の優先順位テスト"""
+        # テスト用ファイル情報を設定（様々な種類のファイル）
+        test_files = {
+            "GAME.COM": DOSFileInfo("GAME.COM", False, 1234),
+            "PROGRAM.EXE": DOSFileInfo("PROGRAM.EXE", False, 5678),
+            "AUTOEXEC.BAT": DOSFileInfo("AUTOEXEC.BAT", False, 456),
+            "UTILITY.COM": DOSFileInfo("UTILITY.COM", False, 2345),
+            "README.TXT": DOSFileInfo("README.TXT", False, 789),
+            "DATA.DAT": DOSFileInfo("DATA.DAT", False, 1234),
+            "SUBDIR": DOSFileInfo("SUBDIR", True),
+            "GAMES": DOSFileInfo("GAMES", True),
+        }
+
+        self.manager.directory_cache["A:\\"] = test_files
+        self.manager.cache_timestamps["A:\\"] = 9999999999  # 有効なキャッシュ
+
+        # TYPEコマンドで全ファイルの優先順位をテスト
+        completions = self.manager.get_completions_for_command("TYPE", "", 0)
+        completion_names = [comp[0] for comp in completions]
+
+        # 期待される順序:
+        # 1. ディレクトリ（アルファベット順）
+        # 2. .COMファイル（アルファベット順）
+        # 3. .EXEファイル（アルファベット順）
+        # 4. .BATファイル（アルファベット順）
+        # 5. その他のファイル（アルファベット順）
+
+        expected_order = [
+            "GAMES\\",  # ディレクトリ
+            "SUBDIR\\",  # ディレクトリ
+            "GAME.COM",  # .COMファイル
+            "UTILITY.COM",  # .COMファイル
+            "PROGRAM.EXE",  # .EXEファイル
+            "AUTOEXEC.BAT",  # .BATファイル
+            "DATA.DAT",  # その他のファイル
+            "README.TXT",  # その他のファイル
+        ]
+
+        self.assertEqual(completion_names, expected_order)
+
+    def test_get_completions_for_command_com_priority(self):
+        """.COMファイル優先表示テスト"""
+        # .COMファイルが複数ある場合のテスト
+        test_files = {
+            "GAME.COM": DOSFileInfo("GAME.COM", False, 1234),
+            "UTILITY.COM": DOSFileInfo("UTILITY.COM", False, 2345),
+            "TOOL.COM": DOSFileInfo("TOOL.COM", False, 3456),
+            "PROGRAM.EXE": DOSFileInfo("PROGRAM.EXE", False, 5678),
+            "AUTOEXEC.BAT": DOSFileInfo("AUTOEXEC.BAT", False, 456),
+            "README.TXT": DOSFileInfo("README.TXT", False, 789),
+        }
+
+        self.manager.directory_cache["A:\\"] = test_files
+        self.manager.cache_timestamps["A:\\"] = 9999999999  # 有効なキャッシュ
+
+        # COPYコマンドでファイル補完をテスト
+        completions = self.manager.get_completions_for_command("COPY", "", 0)
+        completion_names = [comp[0] for comp in completions]
+
+        # .COMファイルが最初に表示されることを確認
+        com_files = [name for name in completion_names if name.endswith(".COM")]
+        exe_files = [name for name in completion_names if name.endswith(".EXE")]
+        bat_files = [name for name in completion_names if name.endswith(".BAT")]
+        other_files = [
+            name
+            for name in completion_names
+            if not name.endswith((".COM", ".EXE", ".BAT"))
+        ]
+
+        # .COMファイルが最初に表示される
+        self.assertEqual(com_files, ["GAME.COM", "TOOL.COM", "UTILITY.COM"])
+
+        # .EXEファイルが次に表示される
+        self.assertEqual(exe_files, ["PROGRAM.EXE"])
+
+        # .BATファイルがその次に表示される
+        self.assertEqual(bat_files, ["AUTOEXEC.BAT"])
+
+        # その他のファイルが最後に表示される
+        self.assertEqual(other_files, ["README.TXT"])
+
+    def test_get_completions_for_command_partial_match(self):
+        """部分一致での優先順位テスト"""
+        # "G"で始まるファイルのテスト
+        test_files = {
+            "GAME.COM": DOSFileInfo("GAME.COM", False, 1234),
+            "GAMES": DOSFileInfo("GAMES", True),
+            "GENERAL.EXE": DOSFileInfo("GENERAL.EXE", False, 5678),
+            "GO.BAT": DOSFileInfo("GO.BAT", False, 456),
+            "GUIDE.TXT": DOSFileInfo("GUIDE.TXT", False, 789),
+        }
+
+        self.manager.directory_cache["A:\\"] = test_files
+        self.manager.cache_timestamps["A:\\"] = 9999999999  # 有効なキャッシュ
+
+        # "G"で始まるファイルの補完をテスト
+        completions = self.manager.get_completions_for_command("TYPE", "G", 0)
+        completion_names = [comp[0] for comp in completions]
+
+        # 期待される順序（"G"で始まるファイルのみ）
+        expected_order = [
+            "GAMES\\",  # ディレクトリ
+            "GAME.COM",  # .COMファイル
+            "GENERAL.EXE",  # .EXEファイル
+            "GO.BAT",  # .BATファイル
+            "GUIDE.TXT",  # その他のファイル
+        ]
+
+        self.assertEqual(completion_names, expected_order)
+
 
 if __name__ == "__main__":
     unittest.main()

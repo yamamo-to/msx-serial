@@ -46,4 +46,7 @@ coverage.xml
 # MyPy
 .mypy_cache/
 
+# AI Contribution
+ai_contribution.txt
+
 msx_serial/_version.py

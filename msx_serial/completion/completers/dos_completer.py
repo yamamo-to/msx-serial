@@ -107,6 +107,8 @@ class DOSCompleter(BaseCompleter):
         # コマンド名の補完（引数がない場合）
         if not command or (not args and not document.text_before_cursor.endswith(" ")):
             word = context.word.upper()
+
+            # DOSコマンドの補完
             for cmd, description in self.dos_commands:
                 if cmd.startswith(word):
                     yield Completion(
@@ -115,6 +117,20 @@ class DOSCompleter(BaseCompleter):
                         display=cmd,
                         display_meta=description,
                     )
+
+            # ファイル補完も必ず呼ぶ
+            self._trigger_background_refresh()
+            file_completions = self.filesystem_manager.get_completions_for_command(
+                "", word, 0
+            )
+            for completion_text, description in file_completions:
+                display_text = completion_text.rstrip("\\")
+                yield Completion(
+                    display_text,
+                    start_position=-len(context.word),
+                    display=display_text,
+                    display_meta=description,
+                )
             return
 
         # ファイル名補完（引数がある場合）
