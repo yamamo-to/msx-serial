@@ -4,6 +4,7 @@
 """
 
 import unittest
+from unittest.mock import patch
 
 from prompt_toolkit.completion import CompleteEvent, Completion
 from prompt_toolkit.document import Document
@@ -12,6 +13,8 @@ from msx_serial.commands.command_types import CommandType
 from msx_serial.completion.completers.base import (BaseCompleter,
                                                    CompletionContext)
 from msx_serial.completion.completers.command_completer import CommandCompleter
+from msx_serial.completion.completers.dos_completer import DOSCompleter
+from msx_serial.completion.dos_filesystem import DOSFileInfo
 
 
 class TestCommandCompleter(unittest.TestCase):
@@ -351,6 +354,77 @@ class TestBaseCompleter(unittest.TestCase):
         with self.assertRaises(TypeError):
             # 抽象メソッドが実装されていない場合、インスタンス化時にTypeErrorが発生
             IncompleteCompleter()
+
+
+def test_dos_completer_load_commands_exception():
+    """Test DOSCompleter when YAML loading fails"""
+    with patch("builtins.open", side_effect=FileNotFoundError("File not found")), \
+         patch("builtins.print") as mock_print:
+        completer = DOSCompleter()
+        
+        # 基本的なコマンドが読み込まれる
+        assert len(completer.dos_commands) > 0
+        assert any(cmd[0] == "DIR" for cmd in completer.dos_commands)
+        mock_print.assert_called()
+
+
+def test_dos_completer_trigger_background_refresh():
+    """Test DOSCompleter background refresh trigger"""
+    completer = DOSCompleter()
+    # _trigger_background_refreshは何もしない（自動更新は無効化）
+    completer._trigger_background_refresh()
+    # 例外が発生しないことを確認
+
+
+def test_dos_completer_get_completions_command_only():
+    """Test DOSCompleter get_completions for command only"""
+    completer = DOSCompleter()
+    document = Document("DI")
+    complete_event = CompleteEvent()
+    
+    completions = list(completer.get_completions(document, complete_event))
+    
+    # DIRコマンドの補完候補が含まれる
+    assert any(c.text == "DIR" for c in completions)
+
+
+def test_dos_completer_get_completions_with_args():
+    """Test DOSCompleter get_completions with arguments"""
+    completer = DOSCompleter()
+    
+    # テストファイルを設定
+    test_files = {
+        "TEST.COM": DOSFileInfo("TEST.COM", False, 1000),
+        "HELP": DOSFileInfo("HELP", True),
+    }
+    completer.filesystem_manager.set_test_files("A:\\", test_files)
+    
+    document = Document("COPY T")
+    complete_event = CompleteEvent()
+    
+    completions = list(completer.get_completions(document, complete_event))
+    
+    # ファイル補完候補が含まれる
+    assert any(c.text == "TEST.COM" for c in completions)
+
+
+def test_dos_completer_get_completions_with_space():
+    """Test DOSCompleter get_completions with trailing space"""
+    completer = DOSCompleter()
+    
+    # テストファイルを設定
+    test_files = {
+        "TEST.COM": DOSFileInfo("TEST.COM", False, 1000),
+    }
+    completer.filesystem_manager.set_test_files("A:\\", test_files)
+    
+    document = Document("COPY ")
+    complete_event = CompleteEvent()
+    
+    completions = list(completer.get_completions(document, complete_event))
+    
+    # ファイル補完候補が含まれる
+    assert any(c.text == "TEST.COM" for c in completions)
 
 
 if __name__ == "__main__":

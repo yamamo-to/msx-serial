@@ -479,6 +479,128 @@ class TestModuleFunctions(unittest.TestCase):
         # 元に戻す
         set_setting("display.theme", original_value)
 
+    def test_load_config_json_file(self):
+        """Test loading JSON config file"""
+        config_manager = ConfigManager()
+        
+        # 一時的なJSONファイルを作成
+        import tempfile
+        import json
+        
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            json.dump({"test.key": "test_value"}, f)
+            temp_file = f.name
+        
+        try:
+            result = config_manager.load_config(Path(temp_file))
+            assert result is True
+            assert config_manager.get("test.key") == "test_value"
+        finally:
+            Path(temp_file).unlink()
+
+    def test_load_config_file_not_found(self):
+        """Test loading config when file doesn't exist"""
+        config_manager = ConfigManager()
+        
+        result = config_manager.load_config(Path("/nonexistent/config.yaml"))
+        assert result is False
+
+    def test_load_config_exception(self):
+        """Test loading config with exception"""
+        config_manager = ConfigManager()
+        
+        # 無効なYAMLファイルを作成
+        import tempfile
+        
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+            f.write("invalid: yaml: content: [")
+            temp_file = f.name
+        
+        try:
+            result = config_manager.load_config(Path(temp_file))
+            assert result is False
+        finally:
+            Path(temp_file).unlink()
+
+    def test_save_config_exception(self):
+        """Test saving config with exception"""
+        config_manager = ConfigManager()
+        
+        # 読み取り専用ディレクトリに保存を試行
+        import tempfile
+        import os
+        
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # ディレクトリを読み取り専用にする
+            os.chmod(temp_dir, 0o444)
+            
+            try:
+                result = config_manager.save_config(Path(temp_dir) / "config.yaml")
+                assert result is False
+            finally:
+                # 権限を戻す
+                os.chmod(temp_dir, 0o755)
+
+    def test_remove_watcher_not_found(self):
+        """Test removing watcher that doesn't exist"""
+        config_manager = ConfigManager()
+        
+        def dummy_watcher(key, old_value, new_value):
+            pass
+        
+        # 存在しないwatcherを削除しても例外が発生しないことを確認
+        config_manager.remove_watcher(dummy_watcher)
+
+    def test_notify_watchers_exception(self):
+        """Test notifying watchers with exception"""
+        config_manager = ConfigManager()
+        
+        def failing_watcher(key, old_value, new_value):
+            raise Exception("Test error")
+        
+        config_manager.add_watcher(failing_watcher)
+        
+        # 例外が発生しても他の処理に影響しないことを確認
+        config_manager._notify_watchers("test.key", "old", "new")
+
+    def test_generate_sample_config_exception(self):
+        """Test generating sample config with exception"""
+        config_manager = ConfigManager()
+        
+        # 読み取り専用ディレクトリに保存を試行
+        import tempfile
+        import os
+        
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # ディレクトリを読み取り専用にする
+            os.chmod(temp_dir, 0o444)
+            
+            try:
+                result = config_manager.generate_sample_config(Path(temp_dir) / "sample.yaml")
+                assert result is False
+            finally:
+                # 権限を戻す
+                os.chmod(temp_dir, 0o755)
+
+    def test_export_current_config_exception(self):
+        """Test exporting current config with exception"""
+        config_manager = ConfigManager()
+        
+        # 読み取り専用ディレクトリに保存を試行
+        import tempfile
+        import os
+        
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # ディレクトリを読み取り専用にする
+            os.chmod(temp_dir, 0o444)
+            
+            try:
+                result = config_manager.export_current_config(Path(temp_dir) / "export.yaml")
+                assert result is False
+            finally:
+                # 権限を戻す
+                os.chmod(temp_dir, 0o755)
+
 
 if __name__ == "__main__":
     unittest.main()

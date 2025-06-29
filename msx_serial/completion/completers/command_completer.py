@@ -2,7 +2,7 @@
 コマンド補完機能
 """
 
-from typing import Iterator, List
+from typing import Any, Iterator, List, Optional
 
 from prompt_toolkit.completion import CompleteEvent, Completion
 from prompt_toolkit.document import Document
@@ -18,14 +18,18 @@ class CommandCompleter(BaseCompleter):
     """コマンド補完を提供するクラス"""
 
     def __init__(
-        self, special_commands: List[str], current_mode: str = "unknown"
+        self,
+        special_commands: List[str],
+        current_mode: str = "unknown",
+        connection: Optional[Any] = None,
     ) -> None:
         super().__init__()
         self.help_completer = HelpCompleter()
         self.special_completer = SpecialCompleter(special_commands)
         self.iot_completer = IoTCompleter()
-        self.dos_completer = DOSCompleter()
+        self.dos_completer = DOSCompleter(connection)
         self.current_mode = current_mode
+        self.connection = connection
 
     def set_mode(self, mode: str) -> None:
         """現在のモードを設定
@@ -34,6 +38,23 @@ class CommandCompleter(BaseCompleter):
             mode: モード（basic, dos, unknown）
         """
         self.current_mode = mode
+
+    def set_connection(self, connection: Any) -> None:
+        """接続オブジェクトを設定
+
+        Args:
+            connection: MSX接続オブジェクト
+        """
+        self.connection = connection
+        self.dos_completer.set_connection(connection)
+
+    def set_current_directory(self, directory: str) -> None:
+        """現在のディレクトリを設定（DOSモード用）
+
+        Args:
+            directory: 現在のディレクトリパス
+        """
+        self.dos_completer.set_current_directory(directory)
 
     def get_completions(
         self, document: Document, complete_event: CompleteEvent
@@ -146,7 +167,7 @@ class CommandCompleter(BaseCompleter):
             # BASICモード: BASICキーワードと特殊コマンド
             yield from self._complete_general_keywords(context)
         elif self.current_mode == "dos":
-            # DOSモード: DOSコマンド
+            # DOSモード: DOSコマンドのみ（DOSCompleterが全判断を行う）
             yield from self.dos_completer.get_completions(document, complete_event)
         else:
             # 不明モード: すべてのコマンド

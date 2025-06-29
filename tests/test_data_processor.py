@@ -588,3 +588,95 @@ def test_check_prompt_candidate_buffered_not_timeout():
     with patch.object(processor.buffer, "is_timeout", return_value=False):
         result = processor.check_prompt_candidate()
     assert result is None
+
+
+class TestDIRAutoCache:
+    """Test DIR command auto-cache functionality"""
+
+    def setup_method(self):
+        """Setup for each test"""
+        from unittest.mock import Mock
+
+        from msx_serial.core.data_processor import DataProcessor
+
+        self.mock_detector = Mock()
+        self.mock_detector.detect_prompt = Mock(return_value=False)
+        self.processor = DataProcessor(self.mock_detector, instant_mode=True)
+
+        # Mock DOS filesystem manager
+        self.mock_dos_manager = Mock()
+        self.mock_dos_manager.current_directory = "A:\\"
+        self.mock_dos_manager.directory_cache = {}
+        self.mock_dos_manager.cache_timestamps = {}
+        self.mock_dos_manager.parse_dir_output = Mock(return_value={"TEST.BAS": Mock()})
+
+        self.processor.set_dos_filesystem_manager(self.mock_dos_manager)
+
+    def test_dir_command_starts_collection(self):
+        """Test that DIR command starts output collection"""
+        assert not self.processor.is_collecting_dir_output
+
+        self.processor.set_last_command("DIR")
+
+        assert self.processor.is_collecting_dir_output
+        assert self.processor.dir_output_buffer == ""
+
+    def test_dir_output_collection(self):
+        """Test DIR output data collection"""
+        self.processor.set_last_command("DIR")
+
+        # Simulate DIR output
+        self.processor._process_dir_output("Volume in drive A:\n")
+        self.processor._process_dir_output("TEST.BAS    1024\n")
+
+        assert "Volume in drive A:" in self.processor.dir_output_buffer
+        assert "TEST.BAS    1024" in self.processor.dir_output_buffer
+
+    def test_dir_output_finalization(self):
+        """Test DIR output finalization and cache update"""
+        self.processor.set_last_command("DIR")
+        self.processor._process_dir_output("TEST.BAS    1024\n")
+
+        # Finalize collection
+        self.processor._finalize_dir_output_collection()
+
+        # Verify cache was updated
+        self.mock_dos_manager.parse_dir_output.assert_called_once()
+        assert not self.processor.is_collecting_dir_output
+        assert self.processor.dir_output_buffer == ""
+
+    def test_dir_auto_cache_on_prompt(self):
+        """Test automatic cache update when prompt is detected"""
+        self.processor.set_last_command("DIR")
+        self.processor._process_dir_output("TEST.BAS    1024\n")
+
+        # Simulate prompt detection
+        self.mock_detector.detect_prompt.return_value = True
+
+        self.processor._process_data_instant("A>")
+
+        # Verify finalization was called
+        self.mock_dos_manager.parse_dir_output.assert_called_once()
+        assert not self.processor.is_collecting_dir_output
+
+    def test_non_dir_command_no_collection(self):
+        """Test that non-DIR commands don't trigger collection"""
+        self.processor.set_last_command("TYPE test.bas")
+
+        assert not self.processor.is_collecting_dir_output
+
+        self.processor._process_dir_output("Program content")
+        assert self.processor.dir_output_buffer == ""
+
+    def test_dir_collection_without_dos_manager(self):
+        """Test DIR collection when DOS manager is not set"""
+        processor = DataProcessor(self.mock_detector, instant_mode=True)
+        processor.set_last_command("DIR")
+        processor._process_dir_output("TEST.BAS    1024\n")
+
+        # Should not raise exception
+        processor._finalize_dir_output_collection()
+
+        # When DOS manager is not set, collection should still be active
+        # because _finalize_dir_output_collection returns early
+        assert processor.is_collecting_dir_output

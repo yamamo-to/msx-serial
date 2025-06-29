@@ -70,6 +70,19 @@ class DataProcessor:
         self.output_buffer = ""
         self.last_prompt_content = ""  # Store content for mode detection
 
+        # DIRコマンド自動キャッシュ機能
+        self.dos_filesystem_manager: Optional[object] = None  # DOSFileSystemManagerの参照
+        self.dir_output_buffer = ""  # DIRコマンド出力を蓄積
+        self.is_collecting_dir_output = False  # DIR出力収集中フラグ
+
+    def set_dos_filesystem_manager(self, manager: Optional[object]) -> None:
+        """DOSFileSystemManagerの参照を設定
+
+        Args:
+            manager: DOSFileSystemManagerインスタンス
+        """
+        self.dos_filesystem_manager = manager
+
     def set_instant_mode(self, enabled: bool) -> None:
         """Enable or disable instant mode
 
@@ -87,6 +100,50 @@ class DataProcessor:
         self.last_sent_command = command.strip()
         self.echo_suppressed = False  # Reset echo suppression
 
+        # DIRコマンドが実行された場合、出力収集を開始
+        if self.last_sent_command.upper() == "DIR":
+            self._start_dir_output_collection()
+
+    def _start_dir_output_collection(self) -> None:
+        """DIR出力の収集を開始"""
+        self.is_collecting_dir_output = True
+        self.dir_output_buffer = ""
+
+    def _process_dir_output(self, data: str) -> None:
+        """DIR出力を処理してバッファに蓄積
+
+        Args:
+            data: 受信データ
+        """
+        if self.is_collecting_dir_output:
+            self.dir_output_buffer += data
+
+    def _finalize_dir_output_collection(self) -> None:
+        """DIR出力収集を完了し、キャッシュを更新"""
+        if not self.is_collecting_dir_output or not self.dos_filesystem_manager:
+            return
+
+        try:
+            # DIR出力を解析してキャッシュを更新
+            if self.dir_output_buffer.strip():
+                files = self.dos_filesystem_manager.parse_dir_output(  # type: ignore
+                    self.dir_output_buffer
+                )
+                current_dir = self.dos_filesystem_manager.current_directory  # type: ignore
+                self.dos_filesystem_manager.directory_cache[current_dir] = files  # type: ignore
+                self.dos_filesystem_manager.cache_timestamps[current_dir] = time.time()  # type: ignore
+
+                print(
+                    f"\n📁 DIRコマンド出力を自動キャッシュしました: {len(files)} 個のファイル/ディレクトリ"
+                )
+
+        except Exception as e:
+            print(f"\n⚠️  DIR出力の自動キャッシュに失敗しました: {e}")
+        finally:
+            # 収集状態をリセット
+            self.is_collecting_dir_output = False
+            self.dir_output_buffer = ""
+
     def process_data(self, raw_data: str) -> List[Tuple[str, bool]]:
         """Process incoming data and return formatted output
 
@@ -96,6 +153,9 @@ class DataProcessor:
         Returns:
             List of (text, is_prompt) tuples
         """
+        # DIR出力を収集
+        self._process_dir_output(raw_data)
+
         if self.instant_mode:
             return self._process_data_instant(raw_data)
         else:
@@ -128,6 +188,10 @@ class DataProcessor:
 
         # Check for prompt detection (for mode detection only)
         if self.detector.detect_prompt(current_content):
+            # DIR出力収集が完了した場合、キャッシュを更新
+            if self.is_collecting_dir_output:
+                self._finalize_dir_output_collection()
+
             self.last_prompt_content = current_content
             self.buffer.clear()
             output.append(("", True))
@@ -179,6 +243,10 @@ class DataProcessor:
         output = []
 
         if self.detector.detect_prompt(self.buffer.get_content()):
+            # DIR出力収集が完了した場合、キャッシュを更新
+            if self.is_collecting_dir_output:
+                self._finalize_dir_output_collection()
+
             lines = self._split_prompt_data()
             output.extend(lines)
             self.buffer.clear()

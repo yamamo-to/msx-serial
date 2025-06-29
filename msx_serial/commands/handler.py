@@ -118,6 +118,9 @@ class CommandHandler:
         elif cmd == CommandType.CONFIG:
             self._handle_config(user_input)
             return True
+        elif cmd == CommandType.REFRESH:
+            self._handle_refresh(user_input, terminal)
+            return True
 
         return False
 
@@ -178,6 +181,7 @@ Available commands:
   @encode   - Change encoding
   @mode     - Switch MSX mode
   @perf     - Performance control (see @perf help)
+  @refresh  - Update DOS file completion cache
   
 MSX-specific commands (BASIC mode only):
   @paste    - Paste a file as BASIC program
@@ -199,6 +203,7 @@ Use @help <command> for detailed help on specific commands.
             "paste": "Paste file as BASIC program (BASIC mode only)",
             "upload": "Upload file to MSX (BASIC mode only)",
             "perf": "Performance control commands. Usage: @perf help for details",
+            "refresh": "Update DOS file completion cache. Usage: @refresh",
         }
 
         if command in help_texts:
@@ -530,44 +535,31 @@ Examples:
         else:
             print_warn(f"Failed to reset {key}")
 
-    def _handle_config_get(self, args: list[str]) -> None:
-        """設定値取得を処理"""
-        if not args:
-            print_warn("設定キーを指定してください")
+    def _handle_refresh(self, user_input: str, terminal: Optional[object] = None) -> None:
+        """Handle refresh command to update DOS file cache
+
+        Args:
+            user_input: User input
+            terminal: Terminal instance
+        """
+        if not terminal:
+            print_warn("Refresh command requires terminal instance")
             return
 
-        key = args[0]
-        try:
-            value = get_config().get(key)
-            if value is not None:
-                print_info(f"{key}: {value}")
-            else:
-                print_warn(f"設定キー '{key}' が見つかりません")
-        except Exception as e:
-            print_exception("設定取得エラー", e)
-
-    def _handle_config_set(self, args: list[str]) -> None:
-        """設定値変更を処理"""
-        if len(args) < 2:
-            print_warn("設定キーと値を指定してください")
+        if not hasattr(terminal, "user_interface"):
+            print_warn("Terminal does not have user_interface")
             return
 
-        key, value_str = args[0], args[1]
-        try:
-            # 型変換を試行
-            converted_value: Any
-            if value_str.lower() in ("true", "false"):
-                converted_value = value_str.lower() == "true"
-            elif value_str.isdigit():
-                converted_value = int(value_str)
-            elif "." in value_str and value_str.replace(".", "").isdigit():
-                converted_value = float(value_str)
-            else:
-                converted_value = value_str
+        user_interface = terminal.user_interface  # type: ignore
+        if not hasattr(user_interface, "refresh_dos_cache"):
+            print_warn("User interface does not support DOS cache refresh")
+            return
 
-            if set_setting(key, converted_value):
-                print_info(f"設定を更新しました: {key} = {converted_value}")
-            else:
-                print_warn(f"設定の更新に失敗しました: {key}")
-        except Exception as e:
-            print_exception("設定更新エラー", e)
+        # DOSファイルキャッシュを更新
+        success = user_interface.refresh_dos_cache()
+
+        if success:
+            print_info("DOSファイル補完キャッシュを更新しました")
+        else:
+            print_info("DIRコマンドを実行しました。")
+            print_info("DIRコマンドの出力が自動的にキャッシュに反映されます。")

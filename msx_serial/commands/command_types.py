@@ -15,6 +15,7 @@ class CommandType(Enum):
     PASTE = ("@paste", "ファイルを読み込んで送信します")
     UPLOAD = ("@upload", "ファイルをアップロードします")
     CONFIG = ("@config", "設定を表示・変更します")  # 新しい設定管理コマンド
+    REFRESH = ("@refresh", "DOSファイル補完キャッシュを更新します")
 
     def __init__(self, command: str, description: str):
         self.command = command

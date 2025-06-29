@@ -79,11 +79,31 @@ class MSXSession:
         # エコー検出の設定
         self.user_interface.set_data_processor(self.data_processor)
 
+        # DOSファイルシステムマネージャーの参照を設定（DIR自動キャッシュ用）
+        self._setup_dos_filesystem_manager()
+
         self.file_transfer = FileTransferManager(
             connection=self.connection,
             encoding=self.encoding,
         )
         self.file_transfer.set_terminal(self)
+
+    def _setup_dos_filesystem_manager(self) -> None:
+        """DOSファイルシステムマネージャーの参照をDataProcessorに設定"""
+        try:
+            # UserInterfaceからDOSCompleterを取得
+            if hasattr(self.user_interface, "input_session") and hasattr(
+                self.user_interface.input_session, "completer"
+            ):
+                completer = self.user_interface.input_session.completer
+                if hasattr(completer, "dos_completer"):
+                    dos_filesystem_manager = completer.dos_completer.filesystem_manager
+                    self.data_processor.set_dos_filesystem_manager(
+                        dos_filesystem_manager
+                    )
+        except Exception:
+            # DOSファイルシステムマネージャーの設定に失敗した場合は無視
+            pass
 
     def run(self) -> None:
         """ターミナルセッションを開始"""
