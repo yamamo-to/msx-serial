@@ -4,8 +4,12 @@ Tests for URI parsing utilities
 
 import pytest
 
-from msx_serial.connection.uri_parser import (LegacyFormatParser, ParsedUri,
-                                              StandardUriParser, UriParser)
+from msx_serial.connection.uri_parser import (
+    LegacyFormatParser,
+    ParsedUri,
+    StandardUriParser,
+    UriParser,
+)
 
 
 class TestParsedUri:

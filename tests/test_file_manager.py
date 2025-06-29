@@ -6,9 +6,13 @@ import base64
 from pathlib import Path
 from unittest.mock import Mock, mock_open, patch
 
-from msx_serial.transfer.file_manager import (DataEncoder, FileReader,
-                                              FileUploader, ProgressTracker,
-                                              TransferSession)
+from msx_serial.transfer.file_manager import (
+    DataEncoder,
+    FileReader,
+    FileUploader,
+    ProgressTracker,
+    TransferSession,
+)
 
 
 class TestFileReader:
