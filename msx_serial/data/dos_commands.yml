@@ -7,6 +7,8 @@ dos_commands:
     description: "論理ドライブを物理ドライブに割り当て"
   - name: "ATDIR"
     description: "ディレクトリの属性を変更"
+  - name: "ATTRIB"
+    description: "ファイルの属性を変更"
   - name: "BASIC"
     description: "BASICを起動"
   - name: "BUFFERS"
