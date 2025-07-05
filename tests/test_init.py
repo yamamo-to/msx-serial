@@ -137,6 +137,21 @@ class TestVersionModule(unittest.TestCase):
             else:  # 追加の要素（dev, alpha等）
                 self.assertIsInstance(component, (int, str))
 
+        # バージョン文字列とタプルの一貫性を確認
+        version_str = _version.version
+        self.assertIsInstance(version_str, str)
+        self.assertGreater(len(version_str), 0)
+
+        # バージョン情報の妥当性を確認
+        self.assertEqual(_version.version, _version.__version__)
+        self.assertEqual(_version.version_tuple, _version.__version_tuple__)
+
+        # バージョン番号の妥当性を確認
+        major, minor, patch = version_tuple[:3]
+        self.assertGreaterEqual(major, 0)
+        self.assertGreaterEqual(minor, 0)
+        self.assertGreaterEqual(patch, 0)
+
 
 if __name__ == "__main__":
     unittest.main()
