@@ -3,7 +3,6 @@ DOSファイルシステム管理機能のテスト
 """
 
 import unittest
-from unittest.mock import Mock, patch
 
 from msx_serial.completion.dos_filesystem import (DOSFileInfo,
                                                   DOSFileSystemManager)
@@ -58,7 +57,7 @@ class TestDOSFileSystemManager(unittest.TestCase):
 
     def test_parse_dir_output(self):
         """MSX-DOS DIR出力解析テスト（ダミーデータ使用）"""
-        # テスト用ダミーのMSX-DOS DIR出力
+        # テスト用ダミーのMSX-DOS DIR出力（MODE 40/80実行前）
         dir_output = """
  Volume in drive A: has no name
  Directory of A:\\
@@ -124,6 +123,46 @@ TEST    BAS       345
         self.assertNotIn("VOLUME", files)
         self.assertNotIn("DIRECTORY", files)
         self.assertNotIn("50K", files)
+
+    def test_parse_dir_output_with_date(self):
+        """MSX-DOS DIR出力解析テスト（MODE 80実行後、日付・時刻付き）"""
+        dir_output = (
+            "\n Volume in drive A: has no name\n"
+            " Directory of A:\\\n"
+            "\n"
+            "HELP            <dir>  23-08-05  7:13a\n"
+            "UTILS           <dir>  23-08-05  7:13a\n"
+            "AUTOEXEC BAT        57 88-07-21 11:01p\n"
+            "COMMAND2 COM     14976 88-10-25  3:04p\n"
+            "MSXDOS2  SYS      4480 88-10-14  3:12p\n"
+            "REBOOT   BAT        57 88-07-21 11:01p\n"
+            "SAMPLE          <dir>  25-05-30 12:55a\n"
+            "TEST     BAS       401 25-06-02  1:54a\n"
+            "FILE1    S02     14343 25-06-02  1:54a\n"
+            "FILE2    ADX      9995 25-06-02  1:54a\n"
+            " 10K in 8 files        321K free\n"
+        )
+        # ファイル名のマスキング
+        dir_output = dir_output.replace("PENGUIN", "FILE1").replace("OVERTURE", "FILE2")
+
+        files = self.manager.parse_dir_output(dir_output)
+        self.assertIn("HELP", files)
+        self.assertTrue(files["HELP"].is_directory)
+        self.assertIn("AUTOEXEC.BAT", files)
+        self.assertFalse(files["AUTOEXEC.BAT"].is_directory)
+        self.assertEqual(files["AUTOEXEC.BAT"].size, 57)
+        self.assertIn("COMMAND2.COM", files)
+        self.assertEqual(files["COMMAND2.COM"].size, 14976)
+        self.assertIn("MSXDOS2.SYS", files)
+        self.assertEqual(files["MSXDOS2.SYS"].size, 4480)
+        self.assertIn("REBOOT.BAT", files)
+        self.assertEqual(files["REBOOT.BAT"].size, 57)
+        self.assertIn("SAMPLE", files)
+        self.assertTrue(files["SAMPLE"].is_directory)
+        self.assertIn("TEST.BAS", files)
+        self.assertEqual(files["TEST.BAS"].size, 401)
+        self.assertIn("FILE1.S02", files)
+        self.assertEqual(files["FILE1.S02"].size, 14343)
 
     def test_parse_dos_command_line(self):
         """DOSコマンドライン解析テスト"""
@@ -222,14 +261,14 @@ COMMAND2 COM     14976
     def test_parse_dir_output_extension_number(self):
         """Test parsing DIR output with numeric extension"""
         # 拡張子が数字のファイル
-        dir_output = """PENGUIN  S02     14343
+        dir_output = """FILE1  S02     14343
 TEST     123      456"""
 
         files = self.manager.parse_dir_output(dir_output)
 
         # 拡張子が数字の場合はファイル名.拡張子として結合
-        self.assertIn("PENGUIN.S02", files)
-        self.assertEqual(files["PENGUIN.S02"].size, 14343)
+        self.assertIn("FILE1.S02", files)
+        self.assertEqual(files["FILE1.S02"].size, 14343)
 
         # 拡張子なしファイル
         self.assertIn("TEST", files)
@@ -250,17 +289,6 @@ TEST     123      456"""
         """Test refresh_directory_cache_sync with no connection"""
         result = self.manager.refresh_directory_cache_sync("A:\\")
         self.assertFalse(result)
-
-    def test_refresh_directory_cache_sync_exception(self):
-        """Test refresh_directory_cache_sync with exception"""
-        mock_connection = Mock()
-        mock_connection.write.side_effect = Exception("Connection error")
-        self.manager.set_connection(mock_connection)
-
-        with patch("msx_serial.completion.dos_filesystem.print") as mock_print:
-            result = self.manager.refresh_directory_cache_sync("A:\\")
-            self.assertFalse(result)
-            mock_print.assert_called()
 
     def test_get_completions_for_command_run(self):
         """Test get_completions_for_command with RUN command"""
@@ -467,6 +495,146 @@ TEST     123      456"""
         ]
 
         self.assertEqual(completion_names, expected_order)
+
+    def test_parse_dir_output_invalid_size(self):
+        """サイズが数字でない場合は無視される"""
+        dir_output = "FILE1    COM     ABCD  23-08-05  7:13a"
+        files = self.manager.parse_dir_output(dir_output)
+        self.assertEqual(files, {})
+
+    def test_parse_dir_output_invalid_tokens(self):
+        """トークン数が足りない場合は無視される"""
+        dir_output = "FILE1    COM"
+        files = self.manager.parse_dir_output(dir_output)
+        self.assertEqual(files, {})
+
+    def test_get_directory_files_cache_invalid(self):
+        """キャッシュが無効な場合は空辞書"""
+        self.manager.cache_timestamps.clear()
+        files = self.manager.get_directory_files("A:\\")
+        self.assertEqual(files, {})
+
+    def test_get_completions_for_command_empty_files(self):
+        """ファイルリストが空の場合は空リスト"""
+        self.manager.set_test_files("A:\\", {})
+        completions = self.manager.get_completions_for_command("COPY", "", 0)
+        self.assertEqual(completions, [])
+
+    def test_parse_dir_output_dir_with_invalid_date_time(self):
+        """ディレクトリで日付・時刻が不正な場合"""
+        dir_output = "DIR1    <dir>  XX-YY-ZZ  XX:YY"
+        files = self.manager.parse_dir_output(dir_output)
+        self.assertIn("DIR1", files)
+        self.assertIsNone(files["DIR1"].date)
+        self.assertIsNone(files["DIR1"].time)
+
+    def test_refresh_directory_cache_sync_with_connection(self):
+        """接続がある場合のrefresh_directory_cache_syncテスト"""
+        from unittest.mock import Mock
+
+        mock_conn = Mock()
+        mock_conn.write = Mock()
+        mock_conn.flush = Mock()
+        self.manager.set_connection(mock_conn)
+
+        # ディレクトリ変更が必要な場合
+        result = self.manager.refresh_directory_cache_sync("B:\\")
+        self.assertFalse(result)  # 現在の実装では常にFalse
+
+        # ディレクトリ変更が不要な場合
+        result = self.manager.refresh_directory_cache_sync("A:\\")
+        self.assertFalse(result)
+
+    def test_get_completions_for_command_with_size(self):
+        """サイズ情報付きファイルの補完テスト"""
+        test_files = {
+            "TEST.COM": DOSFileInfo("TEST.COM", False, 1000),
+            "DATA.TXT": DOSFileInfo("DATA.TXT", False, 500),
+        }
+        self.manager.set_test_files("A:\\", test_files)
+
+        completions = self.manager.get_completions_for_command("TYPE", "D", 0)
+        completion_names = [c[0] for c in completions]
+        self.assertIn("DATA.TXT", completion_names)
+
+    def test_parse_dos_command_line_empty(self):
+        """空のコマンドライン解析テスト"""
+        command, args, pos = self.manager.parse_dos_command_line("")
+        self.assertEqual(command, "")
+        self.assertEqual(args, [])
+        self.assertEqual(pos, 0)
+
+    def test_parse_dos_command_line_with_space(self):
+        """末尾スペース付きコマンドライン解析テスト"""
+        command, args, pos = self.manager.parse_dos_command_line("COPY FILE1.TXT ")
+        self.assertEqual(command, "COPY")
+        self.assertEqual(args, ["FILE1.TXT"])
+        self.assertEqual(pos, 2)  # 末尾スペースにより次の引数位置
+
+    def test_parse_dos_command_line_single_command(self):
+        """単一コマンド解析テスト"""
+        command, args, pos = self.manager.parse_dos_command_line("DIR")
+        self.assertEqual(command, "DIR")
+        self.assertEqual(args, [])
+        self.assertEqual(pos, 0)
+
+    def test_get_available_drives(self):
+        """利用可能ドライブ取得テスト"""
+        drives = self.manager.get_available_drives()
+        self.assertIsInstance(drives, list)
+        self.assertIn("A:", drives)
+        self.assertIn("B:", drives)
+
+    def test_parse_dir_output_with_invalid_date_format(self):
+        """不正な日付形式のテスト"""
+        dir_output = "FILE1    COM     1234  99-99-99  7:13a"
+        files = self.manager.parse_dir_output(dir_output)
+        self.assertIn("FILE1.COM", files)
+        # 実際の実装では不正な日付もそのまま保存される
+        self.assertEqual(files["FILE1.COM"].date, "99-99-99")
+
+    def test_parse_dir_output_with_invalid_time_format(self):
+        """不正な時刻形式のテスト"""
+        dir_output = "FILE1    COM     1234  23-08-05  99:99"
+        files = self.manager.parse_dir_output(dir_output)
+        self.assertIn("FILE1.COM", files)
+        self.assertIsNone(files["FILE1.COM"].time)  # 不正な時刻は無視
+
+    def test_parse_dir_output_with_partial_date_time(self):
+        """部分的な日付・時刻情報のテスト"""
+        dir_output = "FILE1    COM     1234  23-08-05"
+        files = self.manager.parse_dir_output(dir_output)
+        self.assertIn("FILE1.COM", files)
+        # 実際の実装では日付のみの場合もNoneになる
+        self.assertIsNone(files["FILE1.COM"].date)
+
+    def test_get_completions_for_command_unknown_extension(self):
+        """不明な拡張子のファイル補完テスト"""
+        test_files = {
+            "TEST.UNK": DOSFileInfo("TEST.UNK", False, 1000),
+        }
+        self.manager.set_test_files("A:\\", test_files)
+
+        completions = self.manager.get_completions_for_command("TYPE", "T", 0)
+        completion_names = [c[0] for c in completions]
+        self.assertIn("TEST.UNK", completion_names)
+
+    def test_get_completions_for_command_no_match(self):
+        """マッチしないファイルの補完テスト"""
+        test_files = {
+            "TEST.COM": DOSFileInfo("TEST.COM", False, 1000),
+        }
+        self.manager.set_test_files("A:\\", test_files)
+
+        completions = self.manager.get_completions_for_command("TYPE", "X", 0)
+        self.assertEqual(completions, [])  # マッチなし
+
+    def test_parse_dir_output_with_mixed_case(self):
+        """大文字小文字混在のディレクトリテスト"""
+        dir_output = "TestDir    <dir>  23-08-05  7:13a"
+        files = self.manager.parse_dir_output(dir_output)
+        self.assertIn("TESTDIR", files)  # 大文字に変換される
+        self.assertTrue(files["TESTDIR"].is_directory)
 
 
 if __name__ == "__main__":

@@ -99,32 +99,22 @@ class DOSFileSystemManager:
         return time.time() - self.cache_timestamps[directory] < self.cache_timeout
 
     def parse_dir_output(self, dir_output: str) -> Dict[str, DOSFileInfo]:
-        """DIR コマンドの出力を解析してファイル情報を抽出
+        """DIRコマンドの出力を解析してファイル情報を抽出
 
         Args:
-            dir_output: DIR コマンドの出力文字列
+            dir_output: DIRコマンドの出力文字列
 
         Returns:
             ファイル名をキーとするDOSFileInfo辞書
         """
         files = {}
-
-        # 実際のMSX-DOS DIR出力の分析
-        # 例:
-        # HELP            <dir>
-        # AUTOEXEC BAT        57
-        # COMMAND2 COM     14976
-        # PENGUIN  S02     14343
-
         lines = dir_output.split("\n")
 
         for line in lines:
-            # 先頭と末尾の空白は残す（MSX-DOSの出力フォーマットのため）
-            line = line.rstrip()
-            if not line:
+            line = line.rstrip("\r\n")
+            if not line.strip():
                 continue
 
-            # システムメッセージや集計行をスキップ（単語境界を考慮）
             lower_line = line.lower().strip()
             if (
                 lower_line.startswith("volume")
@@ -135,48 +125,84 @@ class DOSFileSystemManager:
             ):
                 continue
 
-            # ディレクトリパターン: "HELP            <dir> "
-            dir_match = re.match(r"^(\S+)\s+<dir>\s*$", line, re.IGNORECASE)
-            if dir_match:
-                dirname = dir_match.group(1)
-                files[dirname.upper()] = DOSFileInfo(
-                    name=dirname.upper(),
-                    is_directory=True,
-                )
+            tokens = line.split()
+            if not tokens:
                 continue
 
-            # ファイルパターン1: "AUTOEXEC BAT        57" (ファイル名 拡張子 サイズ)
-            file_match = re.match(r"^(\S+)\s+(\S+)\s+(\d+)\s*$", line)
-            if file_match:
-                filename, extension, size_str = file_match.groups()
-                # 拡張子が数字のみでない場合はファイル名.拡張子として結合
-                if not extension.isdigit():
-                    full_filename = f"{filename}.{extension}".upper()
-                    files[full_filename] = DOSFileInfo(
-                        name=full_filename,
-                        is_directory=False,
-                        size=int(size_str),
+            if "<dir>" in line.lower():
+                dir_index = -1
+                for i, token in enumerate(tokens):
+                    if token.lower() == "<dir>":
+                        dir_index = i
+                        break
+                if dir_index >= 0:
+                    dirname = " ".join(tokens[:dir_index])
+                    date_str = None
+                    time_str = None
+                    if dir_index + 1 < len(tokens):
+                        date_candidate = tokens[dir_index + 1]
+                        if re.match(r"^\d{2}-\d{2}-\d{2}$", date_candidate):
+                            date_str = date_candidate
+                            if dir_index + 2 < len(tokens):
+                                time_candidate = tokens[dir_index + 2]
+                                if re.match(r"^\d{1,2}:\d{2}[ap]m?$", time_candidate):
+                                    time_str = time_candidate
+                    files[dirname.upper()] = DOSFileInfo(
+                        name=dirname.upper(),
+                        is_directory=True,
+                        date=date_str,
+                        time=time_str,
                     )
                     continue
-                else:
-                    # 拡張子が数字の場合は、それがサイズ（拡張子なしファイル）
+
+            if len(tokens) >= 2:
+                filename = tokens[0]
+                second_token = tokens[1]
+                if second_token.isdigit():
+                    size = int(second_token)
+                    date_str = None
+                    time_str = None
+                    if len(tokens) >= 4:
+                        date_candidate = tokens[2]
+                        if re.match(r"^\d{2}-\d{2}-\d{2}$", date_candidate):
+                            date_str = date_candidate
+                            if len(tokens) >= 5:
+                                time_candidate = tokens[3]
+                                if re.match(r"^\d{1,2}:\d{2}[ap]m?$", time_candidate):
+                                    time_str = time_candidate
                     files[filename.upper()] = DOSFileInfo(
                         name=filename.upper(),
                         is_directory=False,
-                        size=int(extension),
+                        size=size,
+                        date=date_str,
+                        time=time_str,
                     )
                     continue
-
-            # ファイルパターン2: 拡張子なしファイル（万一の場合）
-            single_match = re.match(r"^(\S+)\s+(\d+)\s*$", line)
-            if single_match:
-                filename, size_str = single_match.groups()
-                files[filename.upper()] = DOSFileInfo(
-                    name=filename.upper(),
-                    is_directory=False,
-                    size=int(size_str),
-                )
-                continue
+                elif len(tokens) >= 3:
+                    extension = second_token
+                    if tokens[2].isdigit():
+                        size = int(tokens[2])
+                        date_str = None
+                        time_str = None
+                        if len(tokens) >= 5:
+                            date_candidate = tokens[3]
+                            if re.match(r"^\d{2}-\d{2}-\d{2}$", date_candidate):
+                                date_str = date_candidate
+                                if len(tokens) >= 6:
+                                    time_candidate = tokens[4]
+                                    if re.match(
+                                        r"^\d{1,2}:\d{2}[ap]m?$", time_candidate
+                                    ):
+                                        time_str = time_candidate
+                        full_filename = f"{filename}.{extension}".upper()
+                        files[full_filename] = DOSFileInfo(
+                            name=full_filename,
+                            is_directory=False,
+                            size=size,
+                            date=date_str,
+                            time=time_str,
+                        )
+                        continue
 
         return files
 
