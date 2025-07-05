@@ -10,7 +10,8 @@ from prompt_toolkit.completion import CompleteEvent, Completion
 from prompt_toolkit.document import Document
 
 from msx_serial.commands.command_types import CommandType
-from msx_serial.completion.completers.base import BaseCompleter, CompletionContext
+from msx_serial.completion.completers.base import (BaseCompleter,
+                                                   CompletionContext)
 from msx_serial.completion.completers.command_completer import CommandCompleter
 from msx_serial.completion.completers.dos_completer import DOSCompleter
 from msx_serial.completion.dos_filesystem import DOSFileInfo
@@ -290,7 +291,8 @@ class TestCommandCompleterExtended(unittest.TestCase):
     """CommandCompleterの拡張テスト"""
 
     def setUp(self):
-        from msx_serial.completion.completers.command_completer import CommandCompleter
+        from msx_serial.completion.completers.command_completer import \
+            CommandCompleter
 
         self.completer = CommandCompleter(["@help", "@mode", "@exit"], "basic")
 
@@ -421,7 +423,8 @@ class TestBASICFileCompletion(unittest.TestCase):
     """BASICモードでのファイル補完機能のテスト"""
 
     def setUp(self):
-        from msx_serial.completion.completers.command_completer import CommandCompleter
+        from msx_serial.completion.completers.command_completer import \
+            CommandCompleter
 
         self.completer = CommandCompleter(["@help", "@mode", "@exit"], "basic")
 

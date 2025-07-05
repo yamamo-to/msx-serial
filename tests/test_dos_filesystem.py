@@ -5,7 +5,8 @@ DOSファイルシステム管理機能のテスト
 import unittest
 from unittest.mock import Mock, patch
 
-from msx_serial.completion.dos_filesystem import DOSFileInfo, DOSFileSystemManager
+from msx_serial.completion.dos_filesystem import (DOSFileInfo,
+                                                  DOSFileSystemManager)
 
 
 class TestDOSFileInfo(unittest.TestCase):

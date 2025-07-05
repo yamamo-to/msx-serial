@@ -7,13 +7,9 @@ import unittest
 from pathlib import Path
 from typing import Any
 
-from msx_serial.common.config_manager import (
-    ConfigManager,
-    ConfigSchema,
-    get_config,
-    get_setting,
-    set_setting,
-)
+from msx_serial.common.config_manager import (ConfigManager, ConfigSchema,
+                                              get_config, get_setting,
+                                              set_setting)
 
 
 class TestConfigSchema(unittest.TestCase):

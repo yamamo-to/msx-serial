@@ -5,7 +5,8 @@ BASICファイルシステム管理のテスト
 import unittest
 from unittest.mock import Mock
 
-from msx_serial.completion.basic_filesystem import BASICFileInfo, BASICFileSystemManager
+from msx_serial.completion.basic_filesystem import (BASICFileInfo,
+                                                    BASICFileSystemManager)
 
 
 class TestBASICFileInfo(unittest.TestCase):
